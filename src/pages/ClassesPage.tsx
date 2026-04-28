@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useClasses } from '../hooks/useClasses'
 import ClassFiltersComponent from '../components/ClassFilters'
 import ClassDetail from '../components/ClassDetail'
