@@ -3,7 +3,7 @@ import json
 import time
 
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
-TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc0Mzg0MjMsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzQzODQyNCwiZXhwIjoxNzc3NDQyMDI0LCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.QIMEIug4FFnqpCQCe-DXORZF_sLUzP5aNOKQiOCr8_xvdFIz486DhG9_hxqCNdjGf6tSkt1M216jqLs2W6l-p3H4c3kewX9o3Nw2FitibJgRDY_xrbuU--TDVX3Lb5WBfQPDXqn7wmQHOM3gpPbeG6zWzzdqwBeq20g2bKOsLtylW7UJAuMxRF-NVU9Qwwaduby0V6aICUvvM18_4ugJebGGEqN3zMimd9Is8nSI0DJQV124Dtc9OPyd12JGCzjKYcYnB7um1RppoqygQKJtx3AIlut9CRTyWY6J8FF8q1jJhBcIFz3DfZ2u3PaXDC6d_RHGYT08dWHNv54LZXnpUQ"
+TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc0NTA3NzYsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzQ1MDc3NiwiZXhwIjoxNzc3NDU0Mzc2LCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.g1-D8_Nb9McILgxcOUuemjqhRCiGpJ3TxoWR6SG1rxWRpJSiHZH61FySmN5LtSJFri_KSh-BhWcf_WWgviOJVnhqxeEG3lUogXsqUSkhSy73Pjd3SKTQoHmVFq7v3OBCeBm8HMdx6KJvVzNeXOH-1-vtNnMMBuNsC4aOmCLvQTUPf4omJ0r0ldOwY-HKscJXvrZUG-1L-fTFHffm5LNrmIS0rY4w1ZnYZiguEjUB5nwR06xrH0ZMbwizj-Nv9S--d54LL4bROM1GUi2S-WExxs8omM7fjoKgGkVpfdoim0dVi9vRGiT7A58BzyHmXbmoumZYag5wYjpH03RJAhj4yQ"
 
 HEADERS = {
     "Authorization": TOKEN,
@@ -257,13 +257,13 @@ def fetch_all():
                 completion_rate = round((completed_count / attended_count) * 100)
             # ────────────────────────────────────────────────────────────────
 
-            # Xác định khối từ course name
+            # Xác định khối từ course name — gộp "4+" vào "Robotics"
             course_name = c.get("course", {}).get("name", "")
             block = "Coding"
             if course_name:
                 course_lower = course_name.lower()
-                if "4+" in course_name or "robotics 4" in course_lower:
-                    block = "4+"
+                if "4+" in course_name or "robotics 4" in course_lower or "kind" in course_lower:
+                    block = "Robotics"
                 elif "robotics" in course_lower or "robot" in course_lower:
                     block = "Robotics"
                 elif any(x in course_lower for x in ["visual", "graphic", "art", "design", "multimedia", "creative"]):
