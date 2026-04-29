@@ -259,6 +259,7 @@ export default function ClassesPage() {
         statuses={statuses}
         mentors={mentors}
         blocks={blocks}
+        filteredClasses={filteredClasses}
       />
 
       <div className="card-grid">

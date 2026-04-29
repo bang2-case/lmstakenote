@@ -29,6 +29,9 @@ export interface ClassItem {
   block: string
   slots: Slot[]
   studentCount: number
+  attendedCount: number
+  completedCount: number
+  completionRate: number
   commentPercentage: number
   totalSlotsWithStudents: number
   slotsWithFullComments: number

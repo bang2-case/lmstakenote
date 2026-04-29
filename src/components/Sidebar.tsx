@@ -1,18 +1,22 @@
-type Page = 'classes' | 'mentors'
+type Page = 'classes' | 'mentors' | 'cr'
 
 interface SidebarProps {
   activePage: Page
   onNavigate: (page: Page) => void
+  isOpen?: boolean
+  onClose?: () => void
 }
 
 const navItems: { key: Page; label: string; icon: string }[] = [
   { key: 'classes', label: 'Quản lý lớp học', icon: '🚩' },
   { key: 'mentors', label: 'Quản lý giáo viên', icon: '🎓' },
+  { key: 'cr',      label: 'Quản lý CR',        icon: '📊' },
 ]
 
-export default function Sidebar({ activePage, onNavigate }: SidebarProps) {
+export default function Sidebar({ activePage, onNavigate, isOpen, onClose }: SidebarProps) {
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'sidebar-open' : ''}`}>
+      <button className="sidebar-close" onClick={onClose} aria-label="Đóng menu">✕</button>
       <div className="sidebar-logo">
         <img src="/image/logo_white.svg" alt="Logo" className="logo-image" />
       </div>

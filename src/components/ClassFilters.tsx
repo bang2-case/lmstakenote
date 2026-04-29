@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { ClassFilters } from '../types'
+import type { ClassFilters, ClassItem } from '../types'
 
 interface Props {
   filters: ClassFilters
@@ -9,15 +9,17 @@ interface Props {
   statuses: string[]
   mentors: string[]
   blocks: string[]
+  filteredClasses?: ClassItem[]
 }
 
-export default function ClassFiltersComponent({ filters, onChange, centres, courses, statuses, mentors, blocks }: Props) {
+export default function ClassFiltersComponent({ filters, onChange, centres, courses, statuses, mentors, blocks, filteredClasses = [] }: Props) {
   const [startDateRange, setStartDateRange] = useState<[string, string]>(['', ''])
   const [endDateRange, setEndDateRange] = useState<[string, string]>(['', ''])
   const [slotRange, setSlotRange] = useState<[string, string]>(['', ''])
   const [startDateClicks, setStartDateClicks] = useState(0)
   const [endDateClicks, setEndDateClicks] = useState(0)
   const [slotClicks, setSlotClicks] = useState(0)
+  const [showSummary, setShowSummary] = useState(false)
 
   // Local state for filters to avoid prop dependency issues
   const [localFilters, setLocalFilters] = useState<ClassFilters>(filters)
@@ -262,22 +264,82 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
       <div className="filter-group">
         <label className="filter-label">&nbsp;</label>
         <button className="btn-reset" onClick={() => {
-          setStartDateRange(['', ''])
-          setEndDateRange(['', ''])
-          setSlotRange(['', ''])
-          setStartDateClicks(0)
-          setEndDateClicks(0)
-          setSlotClicks(0)
-          const resetFilters = {
-            centre: '', startDate: '', startDateTo: '', endDate: '', endDateTo: '', 
-            slot: '', slotTo: '', course: '', status: '', hasComments: '', mentor: '', block: ''
-          }
-          setLocalFilters(resetFilters)
-          onChange(resetFilters)
-        }}>
+            setStartDateRange(['', ''])
+            setEndDateRange(['', ''])
+            setSlotRange(['', ''])
+            setStartDateClicks(0)
+            setEndDateClicks(0)
+            setSlotClicks(0)
+            const resetFilters = {
+              centre: '', startDate: '', startDateTo: '', endDate: '', endDateTo: '', 
+              slot: '', slotTo: '', course: '', status: '', hasComments: '', mentor: '', block: ''
+            }
+            setLocalFilters(resetFilters)
+            onChange(resetFilters)
+          }}>
           Xóa bộ lọc
         </button>
       </div>
+
+      <div className="filter-group">
+        <label className="filter-label">&nbsp;</label>
+        <button className="btn-summary" onClick={() => setShowSummary(true)}>
+          📋 Tổng hợp
+        </button>
+      </div>
+
+      {/* Summary Modal */}
+      {showSummary && (
+        <div className="modal-overlay" onClick={() => setShowSummary(false)}>
+          <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowSummary(false)}>✕</button>
+            <div className="modal-header">
+              <h2 className="modal-title">
+                Tổng hợp danh sách lớp
+                <span className="summary-count">{filteredClasses.length} lớp</span>
+              </h2>
+            </div>
+            <div className="summary-table-wrapper">
+              {filteredClasses.length === 0 ? (
+                <p className="state-msg">Không có lớp nào phù hợp với bộ lọc.</p>
+              ) : (
+                <table className="summary-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Tên lớp</th>
+                      <th>Khóa học</th>
+                      <th>Cơ sở</th>
+                      <th>Trạng thái</th>
+                      <th>Giáo viên</th>
+                      <th>Học viên</th>
+                      <th>Nhận xét</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredClasses.map((c, i) => (
+                      <tr key={c.id}>
+                        <td>{i + 1}</td>
+                        <td className="summary-name">{c.name}</td>
+                        <td>{c.course || '—'}</td>
+                        <td>{c.centre || '—'}</td>
+                        <td>{c.status}</td>
+                        <td>{c.teachers[0]?.name || '—'}</td>
+                        <td>{c.studentCount}</td>
+                        <td>
+                          {c.totalSlotsWithStudents > 0
+                            ? `${c.commentPercentage}%`
+                            : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
