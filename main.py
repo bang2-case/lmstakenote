@@ -3,7 +3,7 @@ import json
 import time
 
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
-TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc0NjU0ODIsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzQ2NTQ4MiwiZXhwIjoxNzc3NDY5MDgyLCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.scU2UvDM-AEcH0IngeZ2aCyyPG6orVyv-hLNP5Taw1uX_dVqewIA06IhxIEltogOYPMKrkRmYKEyQRCNchkOM4ggXqSkMMQtXrsOQuqKFus03Jqrt2gjMxQ986a61B_wQ887jLwWy3oJQeEUFr62wIAV945iGuFqKUJj4eTMkgY0LRAWEA6gUMJFWZsgPjJCOYjwF-ISbN4Z_jb7aDHfN1CRoPpMd_VQB8p5G6gTtqwU4eYNNIZh4AgrTbRIe2e6RY96a88TbxW0dVJb8gnsI3m327daqfgZfp1Ii1AtEQRJF5CBpSNAZ9ONrvpazo9SNO1Ubl6ufNOB-spaInuIOA"
+TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc0ODQ2MjIsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzQ4NDYyMiwiZXhwIjoxNzc3NDg4MjIyLCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.UzUrtccagzwYRAF38kE8S7cyV38jN1JcBH2bNj1wo2WYqU-5ahRGrQXpM0Ike2SoB3uW3T2Lw0lRxsYK2pIVQXuFJ-2huMOCwsKJSLHYSyKmfXeQA2BidP-Btafi3wy2g0jaw0yD_pYUsdLNAHlRtsLV5bbn7s04FIWRtG97vaw2YgJ1QF32kXM-YdkV13vp-eCLRh1d5943TW7FHbuKGEYb8OyxU7vtVmsm6HgB-PdQAuuKNrGEfZjxhx0_7rOlmD6JYIMs1qhFv2h9Ms81kIETQKse7FSV4J9n6CMsGopa9QNzsNyskZV1czkcURuVOvPZ8-twKDIm80X0S2dtMg"
 
 HEADERS = {
     "Authorization": TOKEN,
@@ -301,11 +301,163 @@ def fetch_all():
 
     return all_data
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TEACHER FETCH
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_teacher_block(course_lines: list) -> list:
+    """Map courseLines names → khối Art / Robotics / Coding"""
+    blocks = set()
+    for cl in course_lines:
+        name = cl.get("name", "").upper()
+        if "XART" in name or "ART" in name:
+            blocks.add("Art")
+        elif "ROB" in name or "KIND" in name:
+            blocks.add("Robotics")
+        else:
+            blocks.add("Coding")
+    return sorted(list(blocks))
+
+def build_teacher_payload(page_index):
+    return {
+        "operationName": "GetTeachers",
+        "variables": {
+            "search": "",
+            "centres": CENTRE_IDS,
+            "pageIndex": page_index,
+            "itemsPerPage": 100,
+            "orderBy": "createdAt_desc",
+        },
+        "query": """query GetTeachers($search: String, $centres: [String], $pageIndex: Int!, $itemsPerPage: Int!, $orderBy: String) {
+  teachers(payload: {
+    filter_textSearch: $search,
+    centres_in: $centres,
+    pageIndex: $pageIndex,
+    itemsPerPage: $itemsPerPage,
+    orderBy: $orderBy
+  }) {
+    data {
+      id
+      fullName
+      code
+      username
+      email
+      personalEmail
+      phoneNumber
+      gender
+      dob
+      address
+      isActive
+      teacherPoint
+      joinedDate
+      createdAt
+      courseLines {
+        id
+        name
+      }
+      centres {
+        id
+        name
+      }
+    }
+    pagination {
+      total
+    }
+  }
+}"""
+    }
+
+def fetch_teachers():
+    all_teachers = []
+    page = 0
+
+    while True:
+        print(f"Fetching teachers page {page}...")
+        res = requests.post(GRAPHQL_URL, headers=HEADERS, json=build_teacher_payload(page), timeout=30)
+
+        if res.status_code != 200:
+            print(f"  ❌ Status: {res.status_code} - {res.text[:300]}")
+            break
+
+        data = res.json()
+
+        if "errors" in data:
+            print(f"  ❌ Lỗi: {data['errors'][0]['message']}")
+            break
+
+        try:
+            teachers = data["data"]["teachers"]["data"]
+            total = data["data"]["teachers"]["pagination"]["total"]
+            print(f"  → {len(teachers)} giáo viên (tổng: {total})")
+        except Exception as e:
+            print(f"  ❌ Parse error: {e}")
+            print(json.dumps(data, indent=2, ensure_ascii=False)[:500])
+            break
+
+        if not teachers:
+            break
+
+        for t in teachers:
+            # Chỉ lấy giáo viên có ít nhất 1 centre thuộc HCM4
+            centres = t.get("centres", [])
+            hcm4_centres = [
+                c for c in centres
+                if any(kw in c.get("name", "") for kw in HCM4_CENTRES)
+            ]
+            if not hcm4_centres:
+                continue
+
+            course_lines = t.get("courseLines", [])
+            blocks = get_teacher_block(course_lines)
+
+            all_teachers.append({
+                "id": t.get("id"),
+                "fullName": t.get("fullName"),
+                "code": t.get("code"),
+                "username": t.get("username"),
+                "email": t.get("email"),
+                "personalEmail": t.get("personalEmail"),
+                "phoneNumber": t.get("phoneNumber"),
+                "gender": t.get("gender"),
+                "dob": t.get("dob"),
+                "address": t.get("address"),
+                "isActive": t.get("isActive"),
+                "teacherPoint": t.get("teacherPoint", 0),
+                "joinedDate": t.get("joinedDate"),
+                "courseLines": [cl.get("name") for cl in course_lines],
+                "blocks": blocks,
+                "centres": [c.get("name") for c in hcm4_centres],
+            })
+
+        fetched_so_far = (page + 1) * 100
+        if fetched_so_far >= total:
+            break
+
+        page += 1
+        time.sleep(0.2)
+
+    return all_teachers
+
 def save(data):
     with open("public/classes.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"\n✅ Đã lưu {len(data)} lớp vào public/classes.json")
 
+def save_teachers(data):
+    with open("public/teachers.json", "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"✅ Đã lưu {len(data)} giáo viên vào public/teachers.json")
+
 if __name__ == "__main__":
+    print("=" * 50)
+    print("📚 Fetching classes...")
+    print("=" * 50)
     data = fetch_all()
     save(data)
+
+    print()
+    print("=" * 50)
+    print("👨‍🏫 Fetching teachers...")
+    print("=" * 50)
+    teachers = fetch_teachers()
+    save_teachers(teachers)

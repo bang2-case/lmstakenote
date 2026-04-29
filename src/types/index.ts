@@ -44,6 +44,25 @@ export interface Mentor {
   phone?: string
 }
 
+export interface TeacherItem {
+  id: string
+  fullName: string
+  code: string
+  username: string
+  email: string | null
+  personalEmail: string | null
+  phoneNumber: string | null
+  gender: string | null
+  dob: string | null
+  address: string | null
+  isActive: boolean
+  teacherPoint: number
+  joinedDate: string | null
+  courseLines: string[]
+  blocks: string[]
+  centres: string[]
+}
+
 export interface ClassFilters {
   centre: string
   startDate: string
