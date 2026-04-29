@@ -24,7 +24,7 @@ interface CRFilters {
   centre: string
   block: string
   mentor: string
-  status: string
+  rateFilter: string  // 'high' = >=80%, 'low' = <80%
 }
 
 function CRBar({ rate }: { rate: number }) {
@@ -43,7 +43,7 @@ function CRBar({ rate }: { rate: number }) {
 
 export default function CRPage() {
   const { classes, loading, error } = useClasses()
-  const [filters, setFilters] = useState<CRFilters>({ centre: '', block: '', mentor: '', status: '' })
+  const [filters, setFilters] = useState<CRFilters>({ centre: '', block: '', mentor: '', rateFilter: '' })
 
   // Chỉ lấy lớp FINISHED và chính quy
   const finishedClasses = useMemo(
@@ -52,37 +52,35 @@ export default function CRPage() {
   )
 
   // Options cho bộ lọc
-  const { centres, blocks, mentors, statuses } = useMemo(() => {
+  const { centres, blocks, mentors } = useMemo(() => {
     const cs = new Set<string>()
     const bs = new Set<string>()
     const ms = new Set<string>()
-    const ss = new Set<string>()
     finishedClasses.forEach((c) => {
       if (c.centre) cs.add(c.centre)
       if (c.block) bs.add(c.block)
-      if (c.status) ss.add(c.status)
       c.teachers.forEach((t) => ms.add(t.name))
     })
     return {
       centres: Array.from(cs).sort(),
       blocks: Array.from(bs).sort(),
       mentors: Array.from(ms).sort(),
-      statuses: Array.from(ss).sort(),
     }
   }, [finishedClasses])
 
   const update = (key: keyof CRFilters, value: string) =>
     setFilters((f) => ({ ...f, [key]: value }))
 
-  const resetFilters = () => setFilters({ centre: '', block: '', mentor: '', status: '' })
+  const resetFilters = () => setFilters({ centre: '', block: '', mentor: '', rateFilter: '' })
 
   // Áp dụng bộ lọc
   const filtered = useMemo(() => {
     return finishedClasses.filter((c) => {
       if (filters.centre && c.centre !== filters.centre) return false
       if (filters.block && c.block !== filters.block) return false
-      if (filters.status && c.status !== filters.status) return false
       if (filters.mentor && !c.teachers.some((t) => t.name === filters.mentor)) return false
+      if (filters.rateFilter === 'high' && c.completionRate < 80) return false
+      if (filters.rateFilter === 'low' && c.completionRate >= 80) return false
       return true
     })
   }, [finishedClasses, filters])
@@ -162,10 +160,11 @@ export default function CRPage() {
         </div>
 
         <div className="filter-group">
-          <label className="filter-label">Trạng thái</label>
-          <select value={filters.status} onChange={(e) => update('status', e.target.value)}>
+          <label className="filter-label">Tỉ lệ CR</label>
+          <select value={filters.rateFilter} onChange={(e) => update('rateFilter', e.target.value)}>
             <option value="">Tất cả</option>
-            {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+            <option value="high">Từ 80% trở lên</option>
+            <option value="low">Dưới 80%</option>
           </select>
         </div>
 

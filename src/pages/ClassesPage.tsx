@@ -28,6 +28,64 @@ const STATUS_COLOR: Record<string, string> = {
   REJECT: 'status-abandoned',
 }
 
+function SummaryModal({ classes, onClose }: { classes: ClassItem[]; onClose: () => void }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>✕</button>
+
+        <div className="modal-header">
+          <h2 className="modal-title">
+            Tổng hợp
+            <span className="summary-count">{classes.length} lớp</span>
+          </h2>
+        </div>
+
+        <div className="summary-table-wrapper">
+          <table className="summary-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Tên lớp</th>
+                <th>Cơ sở</th>
+                <th>Khóa học</th>
+                <th>Giáo viên</th>
+                <th>Trạng thái</th>
+                <th>Số buổi</th>
+                <th>Học viên</th>
+                <th>Nhận xét</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classes.map((c, i) => (
+                <tr key={c.id}>
+                  <td>{i + 1}</td>
+                  <td><span className="summary-name">{c.name}</span></td>
+                  <td>{c.centre || '—'}</td>
+                  <td>{c.course || '—'}</td>
+                  <td>{c.teachers[0]?.name || '—'}</td>
+                  <td>
+                    <span className={`status-badge ${STATUS_COLOR[c.status] ?? ''}`}>
+                      {STATUS_MAP[c.status] ?? c.status}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>{c.sessions ?? '—'}</td>
+                  <td style={{ textAlign: 'center' }}>{c.studentCount}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    {c.totalSlotsWithStudents > 0
+                      ? `${c.commentPercentage}% (${c.slotsWithFullComments}/${c.totalSlotsWithStudents})`
+                      : '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ClassCard({ item, onClick, hasUncommentedSlots }: { item: ClassItem; onClick: () => void; hasUncommentedSlots: boolean }) {
   const mainTeacher = item.teachers[0]?.name || '—'
 
@@ -62,10 +120,10 @@ export default function ClassesPage() {
     slot: '',
     slotTo: '',
     course: '',
-    status: '',
+    status: [],
     hasComments: '',
     mentor: '',
-    block: '',
+    block: [],
   })
 
   // Debug setFilters
@@ -73,6 +131,7 @@ export default function ClassesPage() {
     setFilters(newFilters)
   }
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null)
+  const [showSummary, setShowSummary] = useState(false)
 
   // Extract unique values for filters
   const { centres, courses, statuses, mentors, blocks } = useMemo(() => {
@@ -104,9 +163,9 @@ export default function ClassesPage() {
     return classes.filter((c) => {
       if (filters.centre && c.centre !== filters.centre) return false
       if (filters.course && c.course !== filters.course) return false
-      if (filters.status && c.status !== filters.status) return false
+      if (filters.status.length > 0 && !filters.status.includes(c.status)) return false
       if (filters.mentor && !c.teachers.some((t) => t.name === filters.mentor)) return false
-      if (filters.block && c.block !== filters.block) return false
+      if (filters.block.length > 0 && !filters.block.includes(c.block)) return false
       
       // Lọc ngày bắt đầu (startDate trong data)
       if (filters.startDate && c.startDate) {
@@ -259,7 +318,7 @@ export default function ClassesPage() {
         statuses={statuses}
         mentors={mentors}
         blocks={blocks}
-        filteredClasses={filteredClasses}
+        onSummary={() => setShowSummary(true)}
       />
 
       <div className="card-grid">
@@ -275,6 +334,10 @@ export default function ClassesPage() {
 
       {selectedClass && (
         <ClassDetail classItem={selectedClass} onClose={() => setSelectedClass(null)} />
+      )}
+
+      {showSummary && (
+        <SummaryModal classes={filteredClasses} onClose={() => setShowSummary(false)} />
       )}
     </div>
   )

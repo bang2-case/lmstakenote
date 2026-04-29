@@ -1015,3 +1015,176 @@
     margin-bottom: 0;
   }
 }
+
+/* ── Date Picker ─────────────────────────────────────────────────────────── */
+.date-picker-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  min-height: 40px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  user-select: none;
+}
+
+.date-picker-input:hover {
+  border-color: #dc2626;
+}
+
+.date-picker-input.active {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.date-picker-placeholder {
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.date-picker-value {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.date-picker-icon {
+  color: #9ca3af;
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-left: 6px;
+}
+
+.date-picker-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 13px;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.date-picker-clear:hover {
+  color: #dc2626;
+}
+
+.date-picker-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 999;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  min-width: 300px;
+}
+
+/* Override react-day-picker styles to match theme */
+.date-picker-popup .rdp-root {
+  --rdp-accent-color: #dc2626;
+  --rdp-accent-background-color: #fef2f2;
+  font-family: 'Poppins', system-ui, sans-serif;
+  font-size: 14px;
+}
+
+.date-picker-popup .rdp-day_button:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.date-picker-popup .rdp-selected .rdp-day_button {
+  background-color: #dc2626;
+  color: white;
+  border-radius: 50%;
+}
+
+.date-picker-popup .rdp-range_middle .rdp-day_button {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-radius: 0;
+}
+
+.date-picker-popup .rdp-range_start .rdp-day_button,
+.date-picker-popup .rdp-range_end .rdp-day_button {
+  background-color: #dc2626;
+  color: white;
+}
+
+.date-picker-popup .rdp-today .rdp-day_button {
+  font-weight: 700;
+  color: #dc2626;
+}
+
+.date-picker-popup .rdp-nav button:hover {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+/* ── MultiSelect Dropdown ────────────────────────────────────────────────── */
+.multiselect-popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 999;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 100%;
+  overflow: hidden;
+  padding: 6px;
+}
+
+.multiselect-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  transition: background 0.12s;
+  user-select: none;
+}
+
+.multiselect-item:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.multiselect-item-selected {
+  background: #fef2f2;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.multiselect-item-selected:hover {
+  background: #fee2e2;
+}
+
+.multiselect-item-text {
+  flex: 1;
+}
+
+.multiselect-item-check {
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.multiselect-empty {
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+}

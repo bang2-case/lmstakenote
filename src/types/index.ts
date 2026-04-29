@@ -53,8 +53,8 @@ export interface ClassFilters {
   slot: string
   slotTo: string
   course: string
-  status: string
+  status: string[]    // multi-select
   hasComments: string
   mentor: string
-  block: string
+  block: string[]     // multi-select
 }

@@ -12,9 +12,7 @@ export function useClasses() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
       })
-      .then((data: ClassItem[]) => {
-        setClasses(data)
-      })
+      .then((data: ClassItem[]) => setClasses(data))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [])
