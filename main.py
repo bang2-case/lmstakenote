@@ -1,9 +1,10 @@
 import requests
 import json
 import time
+import os
 
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
-TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc1Mjc2NDAsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzUyNzY0MCwiZXhwIjoxNzc3NTMxMjQwLCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.B_MdnZRE_ja_Zn2A6X2LoPUwAy2qFfrbPmaAxn9Xgl7XVOrqtjgAMt-vZWkOMVSnAFTOf4mh6WCmg0ItpJLpM12RHFA3VZ2o4bcKyHu9DRi5G9UZtVp2hrfDkeT6pMowj9JiqX6qyz2PXfKHUqygaTqyzR1NUegr8orN-EExrzazPRhWsVTSCE0i4A_PjVy4FP2x68aDwlpz8d7DFgPA1adWuWLDij1DjmY964HYCOvvlhqsS7NvIhxYO1D2T8jXA1vysY4fL-tkJQIqjonJ2c87rkEMBK_VGCwDzW8cxc4689ol44Bp4FCxf7eKEXQPxzFeMrsNhtww87rfbl15DQ"
+TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc1NjA3NTEsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzU2MDc1MiwiZXhwIjoxNzc3NTY0MzUyLCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.DtC5bpFtWyp86s1AGLmqyJUMpKQyS8oH_3kaZHd463m7Yr3FAljef-Tmgz3tUXrY7BkS3L9k8wnqckAUkhZ8BgSN5vw460FUAp11yC3x2SUN2RaUPwVU66-I0M2m5Wwdt06IQG4mY8_Roy1HxJhNazAUZ03rbCDFHkwjBGDiDqmlRhExLGP8aFMi3DLkqa5BozrWs0xftMRF3kHcXtj_wsPuIdlwDl69FEIp2UsB2zceYedhcqTqx3YeExwjBfMtNbNKLMekrO1I4s7aby_y-MgCK1jUwjuYRj9BiQMVwmrZaGEg5yzj1IAaOo-NcD-yQFQlCrT1CW1I-xDtmsuTRA"
 
 HEADERS = {
     "Authorization": TOKEN,
@@ -456,6 +457,392 @@ def save_teachers(data):
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"✅ Đã lưu {len(data)} giáo viên vào public/teachers.json")
 
+# ─────────────────────────────────────────────────────────────────────────────
+# TEACHER POINT (TP) FETCH
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_survey_id_for_class(class_id):
+    """Lấy surveyId của lớp qua findOneClassSurvey."""
+    payload = {
+        "operationName": "FindOneClassSurvey",
+        "variables": {"classId": class_id},
+        "query": """
+        query FindOneClassSurvey($classId: String) {
+          findOneClassSurvey(payload: { classId: $classId }) {
+            id
+            surveyId
+          }
+        }
+        """
+    }
+    try:
+        res = requests.post(GRAPHQL_URL, headers=HEADERS, json=payload, timeout=15)
+        data = res.json()
+        result = data.get("data", {}).get("findOneClassSurvey")
+        if result:
+            return result.get("surveyId")
+    except Exception as e:
+        print(f"    ⚠ get_survey_id error for {class_id}: {e}")
+    return None
+
+
+def get_survey_responses(survey_id, class_id):
+    """Lấy tất cả responses của một surveyId, filter theo classId trong metadata."""
+    all_responses = []
+    page = 0
+    # API trả về total=0 dù có data — dùng limit lớn và dừng khi không còn items
+    while True:
+        payload = {
+            "operationName": "FindSurveyResponses",
+            "variables": {"surveyId": survey_id, "page": page, "limit": 100},
+            "query": """
+            query FindSurveyResponses($surveyId: String, $page: Int, $limit: Int) {
+              findSurveyResponses(payload: {
+                filter: { surveyId: $surveyId }
+                pagination: { page: $page, limit: $limit }
+              }) {
+                data {
+                  id
+                  submittedAt
+                  metadata
+                  answers { questionId value }
+                }
+                pagination { total }
+              }
+            }
+            """
+        }
+        try:
+            res = requests.post(GRAPHQL_URL, headers=HEADERS, json=payload, timeout=15)
+            data = res.json()
+            result = data.get("data", {}).get("findSurveyResponses", {})
+            items = result.get("data", [])
+            if not items:
+                break
+            # Filter theo classId trong metadata
+            for r in items:
+                try:
+                    meta = json.loads(r.get("metadata", "{}"))
+                except Exception:
+                    meta = {}
+                if meta.get("classId") == class_id:
+                    all_responses.append(r)
+            # Nếu trả về ít hơn limit thì đã hết
+            if len(items) < 100:
+                break
+            page += 1
+        except Exception as e:
+            print(f"    warning get_survey_responses: {e}")
+            break
+    return all_responses
+
+
+def parse_score(value: str) -> float | None:
+    """Lấy số điểm từ đầu chuỗi, ví dụ '4. Dễ hiểu' → 4.0"""
+    if not value:
+        return None
+    try:
+        return float(value.strip()[0])
+    except (ValueError, IndexError):
+        return None
+
+
+def calc_tp_from_responses(responses: list) -> dict:
+    """
+    Tính TP1 và TP2 từ danh sách responses.
+    - Sort theo submittedAt
+    - Nhóm theo sessionId (trong metadata)
+    - Lần đầu = TP1, lần sau = TP2
+    - Điểm mỗi HV = trung bình các câu SINGLE_CHOICE
+    - Điểm lớp = trung bình điểm các HV
+    """
+    # Group responses by sessionId
+    sessions = {}
+    for r in responses:
+        meta_raw = r.get("metadata", "{}")
+        try:
+            meta = json.loads(meta_raw)
+        except Exception:
+            meta = {}
+        session_id = meta.get("sessionId", "unknown")
+        submitted_at = int(r.get("submittedAt", 0))
+        if session_id not in sessions:
+            sessions[session_id] = {"submittedAt": submitted_at, "responses": []}
+        sessions[session_id]["responses"].append(r)
+        # Keep earliest submittedAt for sorting
+        if submitted_at < sessions[session_id]["submittedAt"]:
+            sessions[session_id]["submittedAt"] = submitted_at
+
+    # Sort sessions by earliest submittedAt
+    sorted_sessions = sorted(sessions.values(), key=lambda x: x["submittedAt"])
+
+    result = {"tp1": None, "tp2": None, "tp1_students": [], "tp2_students": []}
+
+    for idx, session in enumerate(sorted_sessions[:2]):  # Only TP1 and TP2
+        tp_key = "tp1" if idx == 0 else "tp2"
+        students_key = "tp1_students" if idx == 0 else "tp2_students"
+
+        student_scores = []
+        student_details = []
+
+        for r in session["responses"]:
+            meta_raw = r.get("metadata", "{}")
+            try:
+                meta = json.loads(meta_raw)
+            except Exception:
+                meta = {}
+            student_name = meta.get("studentName", "—")
+
+            # Tính điểm trung bình của HV (chỉ SINGLE_CHOICE — có số ở đầu)
+            scores = []
+            text_answers = []
+            for ans in r.get("answers", []):
+                score = parse_score(ans.get("value", ""))
+                if score is not None:
+                    scores.append(score)
+                else:
+                    # TEXT answer
+                    text_answers.append({
+                        "questionId": ans.get("questionId"),
+                        "value": ans.get("value", "")
+                    })
+
+            avg = round(sum(scores) / len(scores), 2) if scores else None
+            if avg is not None:
+                student_scores.append(avg)
+
+            student_details.append({
+                "name": student_name,
+                "score": avg,
+                "textAnswers": text_answers
+            })
+
+        class_avg = round(sum(student_scores) / len(student_scores), 2) if student_scores else None
+        result[tp_key] = class_avg
+        result[students_key] = student_details
+
+    return result
+
+
+def is_regular_class(name: str) -> bool:
+    """
+    Lớp chính quy:
+    - 2 phần: TL-JSB01 → True
+    - 3+ phần, phần giữa là ROB/KIND/XART/C4K: TL-ROB-ARMB13 → True
+    - 3+ phần, phần giữa khác: 01TC-THT-D30301 → False
+    Bỏ qua phần trong ngoặc như (1:1), (ONL) trước khi xử lý.
+    """
+    import re
+    cleaned = re.sub(r'\s*\(.*?\)', '', name).strip()
+    parts = cleaned.split('-')
+    if len(parts) < 2:
+        return False
+    if len(parts) == 2:
+        return True
+    return parts[1].upper() in {'ROB', 'KIND', 'XART', 'C4K'}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ASYNC TP FETCH  (parallel + cache)
+# ─────────────────────────────────────────────────────────────────────────────
+import asyncio
+import aiohttp
+
+TP_CACHE_FILE = "public/tp.json"
+CONCURRENCY   = 10   # số lớp fetch song song
+
+
+def load_tp_cache() -> dict:
+    """Load cache từ tp.json, trả về dict {classId: record}."""
+    if not os.path.exists(TP_CACHE_FILE):
+        return {}
+    try:
+        with open(TP_CACHE_FILE, encoding="utf-8") as f:
+            data = json.load(f)
+        # Chỉ giữ lại lớp đã có đủ TP1 + TP2 (không cần fetch lại)
+        return {
+            r["classId"]: r
+            for r in data
+            if r.get("tp1") is not None and r.get("tp2") is not None
+        }
+    except Exception:
+        return {}
+
+
+async def async_post(session: aiohttp.ClientSession, payload: dict) -> dict:
+    """POST GraphQL và trả về JSON, retry 1 lần nếu lỗi."""
+    for attempt in range(2):
+        try:
+            async with session.post(
+                GRAPHQL_URL,
+                json=payload,
+                headers=HEADERS,
+                timeout=aiohttp.ClientTimeout(total=20)
+            ) as resp:
+                return await resp.json()
+        except Exception as e:
+            if attempt == 0:
+                await asyncio.sleep(1)
+            else:
+                return {}
+    return {}
+
+
+async def async_get_survey_id(session: aiohttp.ClientSession, class_id: str) -> str | None:
+    payload = {
+        "operationName": "FindOneClassSurvey",
+        "variables": {"classId": class_id},
+        "query": """
+        query FindOneClassSurvey($classId: String) {
+          findOneClassSurvey(payload: { classId: $classId }) {
+            id surveyId
+          }
+        }
+        """
+    }
+    data = await async_post(session, payload)
+    result = (data.get("data") or {}).get("findOneClassSurvey")
+    return result.get("surveyId") if result else None
+
+
+async def async_get_responses(session: aiohttp.ClientSession, survey_id: str, class_id: str) -> list:
+    """Fetch tất cả pages của survey, filter theo classId."""
+    all_responses = []
+    page = 0
+    while True:
+        payload = {
+            "operationName": "FindSurveyResponses",
+            "variables": {"surveyId": survey_id, "page": page, "limit": 100},
+            "query": """
+            query FindSurveyResponses($surveyId: String, $page: Int, $limit: Int) {
+              findSurveyResponses(payload: {
+                filter: { surveyId: $surveyId }
+                pagination: { page: $page, limit: $limit }
+              }) {
+                data { id submittedAt metadata answers { questionId value } }
+                pagination { total }
+              }
+            }
+            """
+        }
+        data = await async_post(session, payload)
+        result = (data.get("data") or {}).get("findSurveyResponses") or {}
+        items = result.get("data") or []
+        if not items:
+            break
+        for r in items:
+            try:
+                meta = json.loads(r.get("metadata", "{}"))
+            except Exception:
+                meta = {}
+            if meta.get("classId") == class_id:
+                all_responses.append(r)
+        if len(items) < 100:
+            break
+        page += 1
+    return all_responses
+
+
+async def fetch_tp_for_class(
+    session: aiohttp.ClientSession,
+    c: dict,
+    semaphore: asyncio.Semaphore
+) -> dict:
+    """Fetch TP cho 1 lớp (survey id + responses + tính điểm)."""
+    class_id   = c["id"]
+    class_name = c.get("name", "")
+
+    async with semaphore:
+        survey_id = await async_get_survey_id(session, class_id)
+        if not survey_id:
+            return {
+                "classId": class_id, "className": class_name,
+                "centre": c.get("centre"), "block": c.get("block"),
+                "teachers": c.get("teachers", []),
+                "tp1": None, "tp2": None,
+                "tp1_students": [], "tp2_students": []
+            }
+
+        responses = await async_get_responses(session, survey_id, class_id)
+        tp = calc_tp_from_responses(responses)
+
+        return {
+            "classId": class_id, "className": class_name,
+            "centre": c.get("centre"), "block": c.get("block"),
+            "teachers": c.get("teachers", []),
+            "tp1": tp["tp1"], "tp2": tp["tp2"],
+            "tp1_students": tp["tp1_students"],
+            "tp2_students": tp["tp2_students"]
+        }
+
+
+async def _fetch_tp_async(classes_to_fetch: list) -> list:
+    semaphore = asyncio.Semaphore(CONCURRENCY)
+    connector = aiohttp.TCPConnector(limit=CONCURRENCY)
+    async with aiohttp.ClientSession(connector=connector) as session:
+        tasks = [
+            fetch_tp_for_class(session, c, semaphore)
+            for c in classes_to_fetch
+        ]
+        results = []
+        # Chạy và in tiến độ
+        done = 0
+        total = len(tasks)
+        for coro in asyncio.as_completed(tasks):
+            result = await coro
+            done += 1
+            tp1 = result.get("tp1")
+            tp2 = result.get("tp2")
+            print(f"  [{done}/{total}] {result['className']} → TP1={tp1} TP2={tp2}")
+            results.append(result)
+        return results
+
+
+def fetch_tp(classes_data: list) -> list:
+    """
+    Fetch TP với parallel requests + cache thông minh.
+    - Lớp FINISHED Coding chính quy đã có đủ TP1+TP2 trong cache → giữ nguyên
+    - Lớp mới hoặc chưa đủ data → fetch async song song
+    """
+    # Lọc lớp cần xử lý
+    candidates = [
+        c for c in classes_data
+        if c.get("status") == "FINISHED"
+        and c.get("block") == "Coding"
+        and is_regular_class(c.get("name", ""))
+    ]
+    print(f"\n📊 TP candidates: {len(candidates)} lớp FINISHED Coding chính quy")
+
+    # Load cache
+    cache = load_tp_cache()
+    print(f"   Cache hit: {len(cache)} lớp đã có đủ TP1+TP2 → bỏ qua")
+
+    # Tách lớp cần fetch vs lớp đã cache
+    to_fetch  = [c for c in candidates if c["id"] not in cache]
+    cached    = [cache[c["id"]] for c in candidates if c["id"] in cache]
+
+    print(f"   Cần fetch: {len(to_fetch)} lớp (parallel, {CONCURRENCY} concurrent)")
+
+    if not to_fetch:
+        print("   Tất cả đã có cache!")
+        return cached
+
+    # Fetch async
+    new_results = asyncio.run(_fetch_tp_async(to_fetch))
+
+    # Gộp cache + kết quả mới, giữ thứ tự theo candidates
+    result_map = {r["classId"]: r for r in new_results}
+    result_map.update({r["classId"]: r for r in cached})
+
+    return [result_map[c["id"]] for c in candidates if c["id"] in result_map]
+
+
+def save_tp(data):
+    with open(TP_CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"✅ Đã lưu {len(data)} lớp TP vào {TP_CACHE_FILE}")
+
+
 if __name__ == "__main__":
     print("=" * 50)
     print("📚 Fetching classes...")
@@ -469,3 +856,10 @@ if __name__ == "__main__":
     print("=" * 50)
     teachers = fetch_teachers()
     save_teachers(teachers)
+
+    print()
+    print("=" * 50)
+    print("📊 Fetching Teacher Points (TP)...")
+    print("=" * 50)
+    tp_data = fetch_tp(data)
+    save_tp(tp_data)

@@ -1,4 +1,4 @@
-type Page = 'classes' | 'mentors' | 'cr'
+type Page = 'classes' | 'mentors' | 'cr' | 'tp'
 
 interface SidebarProps {
   activePage: Page
@@ -9,8 +9,9 @@ interface SidebarProps {
 
 const navItems: { key: Page; label: string; icon: string }[] = [
   { key: 'classes', label: 'Quản lý lớp học', icon: '🚩' },
+  { key: 'tp',      label: 'Quản lý TP',       icon: '⭐' },
   { key: 'mentors', label: 'Quản lý giáo viên', icon: '🎓' },
-  { key: 'cr',      label: 'Quản lý CPR',        icon: '📊' },
+  { key: 'cr',      label: 'Quản lý CR',        icon: '📊' },
 ]
 
 export default function Sidebar({ activePage, onNavigate, isOpen, onClose }: SidebarProps) {

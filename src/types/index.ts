@@ -77,3 +77,21 @@ export interface ClassFilters {
   mentor: string
   block: string[]     // multi-select
 }
+
+export interface TPStudentDetail {
+  name: string
+  score: number | null
+  textAnswers: { questionId: string; value: string }[]
+}
+
+export interface TPRecord {
+  classId: string
+  className: string
+  centre: string | null
+  block: string
+  teachers: Teacher[]
+  tp1: number | null
+  tp2: number | null
+  tp1_students: TPStudentDetail[]
+  tp2_students: TPStudentDetail[]
+}

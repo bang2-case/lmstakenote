@@ -3,9 +3,10 @@ import Sidebar from './components/Sidebar'
 import ClassesPage from './pages/ClassesPage'
 import MentorsPage from './pages/MentorsPage'
 import CRPage from './pages/CRPage'
+import TPPage from './pages/TPPage'
 import './App.css'
 
-type Page = 'classes' | 'mentors' | 'cr'
+type Page = 'classes' | 'mentors' | 'cr' | 'tp'
 
 export default function App() {
   const [activePage, setActivePage] = useState<Page>('classes')
@@ -41,6 +42,7 @@ export default function App() {
         {activePage === 'classes' && <ClassesPage />}
         {activePage === 'mentors' && <MentorsPage />}
         {activePage === 'cr' && <CRPage />}
+        {activePage === 'tp' && <TPPage />}
       </main>
     </div>
   )
