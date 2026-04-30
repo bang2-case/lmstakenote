@@ -36758,18 +36758,18 @@
         "date": "2026-04-29T08:01:00.000Z",
         "startTime": "2026-04-29T11:00:00.000Z",
         "endTime": "2026-04-29T13:00:00.000Z",
-        "commentStatus": "Chưa nhận xét",
+        "commentStatus": "Đã nhận xét",
         "studentsInSlot": 6,
-        "studentsWithComment": 0
+        "studentsWithComment": 6
       }
     ],
     "studentCount": 6,
     "attendedCount": 6,
     "completedCount": 6,
     "completionRate": 100,
-    "commentPercentage": 93,
+    "commentPercentage": 100,
     "totalSlotsWithStudents": 14,
-    "slotsWithFullComments": 13
+    "slotsWithFullComments": 14
   },
   {
     "id": "696b17cd37d80b8de0920779",

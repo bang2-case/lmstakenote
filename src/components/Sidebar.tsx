@@ -10,7 +10,7 @@ interface SidebarProps {
 const navItems: { key: Page; label: string; icon: string }[] = [
   { key: 'classes', label: 'Quản lý lớp học', icon: '🚩' },
   { key: 'mentors', label: 'Quản lý giáo viên', icon: '🎓' },
-  { key: 'cr',      label: 'Quản lý CR',        icon: '📊' },
+  { key: 'cr',      label: 'Quản lý CPR',        icon: '📊' },
 ]
 
 export default function Sidebar({ activePage, onNavigate, isOpen, onClose }: SidebarProps) {

@@ -3,7 +3,7 @@ import json
 import time
 
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
-TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc0ODQ2MjIsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzQ4NDYyMiwiZXhwIjoxNzc3NDg4MjIyLCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.UzUrtccagzwYRAF38kE8S7cyV38jN1JcBH2bNj1wo2WYqU-5ahRGrQXpM0Ike2SoB3uW3T2Lw0lRxsYK2pIVQXuFJ-2huMOCwsKJSLHYSyKmfXeQA2BidP-Btafi3wy2g0jaw0yD_pYUsdLNAHlRtsLV5bbn7s04FIWRtG97vaw2YgJ1QF32kXM-YdkV13vp-eCLRh1d5943TW7FHbuKGEYb8OyxU7vtVmsm6HgB-PdQAuuKNrGEfZjxhx0_7rOlmD6JYIMs1qhFv2h9Ms81kIETQKse7FSV4J9n6CMsGopa9QNzsNyskZV1czkcURuVOvPZ8-twKDIm80X0S2dtMg"
+TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc1Mjc2NDAsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzUyNzY0MCwiZXhwIjoxNzc3NTMxMjQwLCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.B_MdnZRE_ja_Zn2A6X2LoPUwAy2qFfrbPmaAxn9Xgl7XVOrqtjgAMt-vZWkOMVSnAFTOf4mh6WCmg0ItpJLpM12RHFA3VZ2o4bcKyHu9DRi5G9UZtVp2hrfDkeT6pMowj9JiqX6qyz2PXfKHUqygaTqyzR1NUegr8orN-EExrzazPRhWsVTSCE0i4A_PjVy4FP2x68aDwlpz8d7DFgPA1adWuWLDij1DjmY964HYCOvvlhqsS7NvIhxYO1D2T8jXA1vysY4fL-tkJQIqjonJ2c87rkEMBK_VGCwDzW8cxc4689ol44Bp4FCxf7eKEXQPxzFeMrsNhtww87rfbl15DQ"
 
 HEADERS = {
     "Authorization": TOKEN,
@@ -398,6 +398,15 @@ def fetch_teachers():
             break
 
         for t in teachers:
+            # Chỉ lấy giáo viên còn hoạt động
+            if not t.get("isActive", False):
+                continue
+
+            # Bỏ qua giáo viên có courseLines chứa "18+"
+            course_lines = t.get("courseLines", [])
+            if any(cl.get("name", "") == "18+" for cl in course_lines):
+                continue
+
             # Chỉ lấy giáo viên có ít nhất 1 centre thuộc HCM4
             centres = t.get("centres", [])
             hcm4_centres = [
@@ -407,7 +416,6 @@ def fetch_teachers():
             if not hcm4_centres:
                 continue
 
-            course_lines = t.get("courseLines", [])
             blocks = get_teacher_block(course_lines)
 
             all_teachers.append({
@@ -426,7 +434,7 @@ def fetch_teachers():
                 "joinedDate": t.get("joinedDate"),
                 "courseLines": [cl.get("name") for cl in course_lines],
                 "blocks": blocks,
-                "centres": [c.get("name") for c in hcm4_centres],
+                "centres": [c.get("name") for c in hcm4_centres],  # Chỉ lưu cơ sở HCM4
             })
 
         fetched_so_far = (page + 1) * 100

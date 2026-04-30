@@ -115,13 +115,13 @@ export default function CRPage() {
       {/* Header */}
       <div className="page-header cr-page-header">
         <div className="cr-header-left">
-          <h1>Quản lý CR</h1>
+          <h1>Quản lý CPR</h1>
           <span className="count-badge">{filtered.length} / {finishedClasses.length} lớp Finished</span>
         </div>
 
         {/* HCM4 tổng CR — góc phải */}
         <div className="hcm4-summary">
-          <div className="hcm4-label">Tổng CR HCM4</div>
+          <div className="hcm4-label">Tổng CPR HCM4</div>
           <div className="hcm4-rate" style={{
             color: hcm4Stats.rate >= 80 ? '#16a34a' : hcm4Stats.rate >= 50 ? '#d97706' : '#dc2626'
           }}>

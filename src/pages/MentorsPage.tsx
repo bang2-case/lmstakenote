@@ -126,11 +126,15 @@ function TeacherDetail({ teacher, onClose }: { teacher: TeacherItem; onClose: ()
               </span>
             </div>
             <div className="detail-item">
-              <span className="detail-label">Trạng thái</span>
+              <span className="detail-label">Khối</span>
               <span className="detail-value">
-                <span className={`status-badge ${teacher.isActive ? 'status-running' : 'status-abandoned'}`}>
-                  {teacher.isActive ? 'Đang hoạt động' : 'Ngừng hoạt động'}
-                </span>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {teacher.blocks.length > 0
+                    ? teacher.blocks.map((b, i) => (
+                        <span key={i} className="summary-count" style={{ marginLeft: 0 }}>{b}</span>
+                      ))
+                    : '—'}
+                </div>
               </span>
             </div>
           </div>
@@ -143,17 +147,6 @@ function TeacherDetail({ teacher, onClose }: { teacher: TeacherItem; onClose: ()
                   <div key={i} className="teacher-item">
                     <span className="teacher-name">🏢 {c}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {teacher.courseLines.length > 0 && (
-            <div className="detail-section">
-              <h3>Khóa học phụ trách</h3>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {teacher.courseLines.map((cl, i) => (
-                  <span key={i} className="summary-count" style={{ marginLeft: 0 }}>{cl}</span>
                 ))}
               </div>
             </div>
@@ -171,12 +164,75 @@ interface TeacherFilters {
   centres: string[]
   blocks: string[]
   pointFilter: string
+  birthMonth: string  // '1' - '12' hoặc ''
+}
+
+const MONTH_LABELS = [
+  '', 'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4',
+  'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8',
+  'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12',
+]
+
+// ── Summary Modal ─────────────────────────────────────────────────────────────
+
+function SummaryModal({ teachers, onClose }: { teachers: TeacherItem[]; onClose: () => void }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>✕</button>
+        <div className="modal-header">
+          <h2 className="modal-title">
+            Tổng hợp
+            <span className="summary-count">{teachers.length} giáo viên</span>
+          </h2>
+        </div>
+        <div className="summary-table-wrapper">
+          <table className="summary-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Ngày sinh</th>
+                <th>Khối</th>
+                <th>Cơ sở</th>
+                <th>Điểm</th>
+              </tr>
+            </thead>
+            <tbody>
+              {teachers.map((t, i) => {
+                const pointColor =
+                  t.teacherPoint >= 8 ? '#16a34a' :
+                  t.teacherPoint >= 5 ? '#d97706' : '#dc2626'
+                return (
+                  <tr key={t.id}>
+                    <td>{i + 1}</td>
+                    <td><span className="summary-name">{t.fullName}</span></td>
+                    <td>{t.email || '—'}</td>
+                    <td>{t.phoneNumber || '—'}</td>
+                    <td>{formatDate(t.dob)}</td>
+                    <td>{t.blocks.join(', ') || '—'}</td>
+                    <td>{t.centres.join(', ') || '—'}</td>
+                    <td style={{ textAlign: 'center', fontWeight: 700, color: pointColor }}>
+                      {t.teacherPoint}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function MentorsPage() {
   const { teachers, loading, error } = useTeachers()
-  const [filters, setFilters] = useState<TeacherFilters>({ search: '', centres: [], blocks: [], pointFilter: '' })
+  const [filters, setFilters] = useState<TeacherFilters>({ search: '', centres: [], blocks: [], pointFilter: '', birthMonth: '' })
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherItem | null>(null)
+  const [showSummary, setShowSummary] = useState(false)
 
   // Extract unique centres from data
   const { centreOptions, blockOptions } = useMemo(() => {
@@ -202,6 +258,11 @@ export default function MentorsPage() {
       if (filters.blocks.length > 0 && !filters.blocks.some((b) => t.blocks.includes(b))) return false
       if (filters.pointFilter === 'high' && t.teacherPoint < 8) return false
       if (filters.pointFilter === 'low' && t.teacherPoint >= 8) return false
+      if (filters.birthMonth) {
+        if (!t.dob) return false
+        const month = new Date(t.dob).getMonth() + 1  // getMonth() trả về 0-11
+        if (month !== parseInt(filters.birthMonth)) return false
+      }
       return true
     })
   }, [teachers, filters])
@@ -273,9 +334,26 @@ export default function MentorsPage() {
         </div>
 
         <div className="filter-group">
+          <label className="filter-label">Tháng sinh</label>
+          <select value={filters.birthMonth} onChange={(e) => update('birthMonth', e.target.value)}>
+            <option value="">Tất cả</option>
+            {MONTH_LABELS.slice(1).map((label, i) => (
+              <option key={i + 1} value={String(i + 1)}>{label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="filter-group">
           <label className="filter-label">&nbsp;</label>
-          <button className="btn-reset" onClick={() => setFilters({ search: '', centres: [], blocks: [], pointFilter: '' })}>
+          <button className="btn-reset" onClick={() => setFilters({ search: '', centres: [], blocks: [], pointFilter: '', birthMonth: '' })}>
             Xóa bộ lọc
+          </button>
+        </div>
+
+        <div className="filter-group">
+          <label className="filter-label">&nbsp;</label>
+          <button className="btn-summary" onClick={() => setShowSummary(true)}>
+            📋 Tổng hợp
           </button>
         </div>
       </div>
@@ -293,6 +371,10 @@ export default function MentorsPage() {
 
       {selectedTeacher && (
         <TeacherDetail teacher={selectedTeacher} onClose={() => setSelectedTeacher(null)} />
+      )}
+
+      {showSummary && (
+        <SummaryModal teachers={filtered} onClose={() => setShowSummary(false)} />
       )}
     </div>
   )

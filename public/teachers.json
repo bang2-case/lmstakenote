@@ -443,30 +443,6 @@
     ]
   },
   {
-    "id": "69719a9eba5f7b078f007275",
-    "fullName": "Từ Tấn Lộc",
-    "code": "loctt",
-    "username": "loctt",
-    "email": "loctt@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84937258507",
-    "gender": "MALE",
-    "dob": "",
-    "address": "Ho Chi Minh, Vietnam",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2026-01-21T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "69704a67657df291b1ae57db",
     "fullName": "Trương Ánh Dương",
     "code": "duongta",
@@ -654,30 +630,6 @@
     ]
   },
   {
-    "id": "6925c0b63e8a8113b56fb062",
-    "fullName": "Sằm Thanh Hiếu",
-    "code": "hieust",
-    "username": "hieust",
-    "email": "hieust@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84961386221",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 10,
-    "joinedDate": "2025-11-04T14:42:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "691c06a337bfaaacaae3558a",
     "fullName": "Nguyễn Đức Anh",
     "code": "anhnd6",
@@ -753,30 +705,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "691546a30bf79cd8cb5070ac",
-    "fullName": "Huỳnh Minh Quang",
-    "code": "quanghm",
-    "username": "quanghm",
-    "email": "quanghm@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84382333045",
-    "gender": "MALE",
-    "dob": "",
-    "address": "P.Tân Thuận, TP.HCM (Quận7)",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2025-10-31T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -1278,30 +1206,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "68a2900fe752c05ffd6b38e0",
-    "fullName": "Phan Thị Mỹ Duyên",
-    "code": "duyenptm1",
-    "username": "duyendtm1",
-    "email": "duyendtm1@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84333308690",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2025-08-01T02:27:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -2241,30 +2145,6 @@
     ]
   },
   {
-    "id": "6807bd5233dc8888796111a2",
-    "fullName": "Ngô Hà Gia Bảo",
-    "code": "baonhg",
-    "username": "baonhg",
-    "email": "baonhg@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84834427196",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 10,
-    "joinedDate": "2025-03-05T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "68045ef999170d5f26d3c430",
     "fullName": "Đoàn Thị Bích Tuyền",
     "code": "tuyendtb",
@@ -2564,30 +2444,6 @@
     ]
   },
   {
-    "id": "67302fc5c7698bd58585abea",
-    "fullName": "Phan Tuấn Anh",
-    "code": "anhpt4",
-    "username": "anhpt4",
-    "email": "anhpt4@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84909922603",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2024-11-07T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "67249c47905b74dc81a3682c",
     "fullName": "Nguyễn Thị Trâm Anh",
     "code": "anhntt3",
@@ -2715,30 +2571,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "670de295a41756d726408ceb",
-    "fullName": "Giang Thanh Tuấn",
-    "code": "tuangt",
-    "username": "tuangt",
-    "email": "tuangt@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84902371025",
-    "gender": "MALE",
-    "dob": "2022-09-28T17:00:00.000Z",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2024-06-06T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -2893,32 +2725,6 @@
     ]
   },
   {
-    "id": "66f0cd0905e5351f0b3d19f1",
-    "fullName": "Mai Ngọc Anh",
-    "code": "anhmn",
-    "username": "anhmn",
-    "email": "anhmn@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84774259005",
-    "gender": "FEMALE",
-    "dob": "1998-07-14T17:00:00.000Z",
-    "address": "16/23/4/4 đường số 4, phường Bình Hưng Hoà, Bình Tân, TP.HCM",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-09-23T02:03:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
     "id": "66e3eb3405e5351f0b34e9a1",
     "fullName": "Vũ Hoàng Tuấn Kiệt",
     "code": "kietvht",
@@ -2996,89 +2802,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 414 Lũy Bán Bích",
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "67e21d292fc9d4d86577553f",
-    "fullName": "Sales Đỗ Văn Tiệp",
-    "code": "tiepdv",
-    "username": "tiepdv",
-    "email": "tiepdv@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84328978321",
-    "gender": "MALE",
-    "dob": "2001-02-08T17:00:00.000Z",
-    "address": "9/2/2001",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2025-03-25T03:00:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T",
-      "ROB"
-    ],
-    "blocks": [
-      "Coding",
-      "Robotics"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích",
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "66d2f64205e5351f0b2a4ae4",
-    "fullName": "Võ Trần Xuân Lan",
-    "code": "lanvtx",
-    "username": "lanvtx",
-    "email": "lanvtx@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84792390298",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "119 Bình Long, BHHA, Bình Tân",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-09-04T10:52:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "66d2f55905e5351f0b2a4a7c",
-    "fullName": "Trần Tân Minh",
-    "code": "minhtt",
-    "username": "minhtt",
-    "email": "minhtt@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84899778048",
-    "gender": "MALE",
-    "dob": "2001-07-21T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 5,
-    "joinedDate": "2024-09-04T10:48:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
     ]
   },
   {
@@ -3202,85 +2925,6 @@
     "joinedDate": "2024-08-04T10:09:00.000Z",
     "courseLines": [
       "C4K"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "66ab6d4005702f3f57424b88",
-    "fullName": "Nguyễn Khánh Duy",
-    "code": "duynk",
-    "username": "duynk",
-    "email": "duynk@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84962336422",
-    "gender": "MALE",
-    "dob": "2003-01-26T17:00:00.000Z",
-    "address": "29 Nguyễn Đỗ Cung, Tây Thạnh, Tân Phú",
-    "isActive": false,
-    "teacherPoint": 5,
-    "joinedDate": "2024-08-01T11:09:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "66ab6ae741c618311b5016c5",
-    "fullName": "Trần Thị Hoàng Anh",
-    "code": "anhtth",
-    "username": "anhtth",
-    "email": "anhtth@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84968752799",
-    "gender": "FEMALE",
-    "dob": "2002-10-15T17:00:00.000Z",
-    "address": "21C Nguyễn Suý phường Tân Quý quận Tân Phú",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-08-01T10:59:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T",
-      "ROB"
-    ],
-    "blocks": [
-      "Coding",
-      "Robotics"
-    ],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "66ab1a1476b83f06abb47aec",
-    "fullName": "Nguyễn Mai Thiên An",
-    "code": "annmt",
-    "username": "annmt",
-    "email": "annmt@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84774610823",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-08-01T05:14:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
     ],
     "blocks": [
       "Coding"
@@ -3461,30 +3105,6 @@
     ]
   },
   {
-    "id": "66a86ae83b4c911770c5896d",
-    "fullName": "Dương Thị Diễm My",
-    "code": "mydtd",
-    "username": "mydtd",
-    "email": "mydtd@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84844790479",
-    "gender": "MALE",
-    "dob": "2004-12-06T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-08-01T04:23:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "669a20e2c9f76f0d522c9b89",
     "fullName": "Cao Thị Yến Vy",
     "code": "vycty",
@@ -3536,30 +3156,6 @@
     ]
   },
   {
-    "id": "6690f76f57f50500121432e8",
-    "fullName": "Trần Kim Ngân",
-    "code": "ngantk",
-    "username": "ngantk",
-    "email": "ngantk@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84368973772",
-    "gender": "FEMALE",
-    "dob": "2000-01-07T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-07-12T09:27:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "66867f69f4d4704f61531a8c",
     "fullName": "Đỗ Thanh Trường",
     "code": "truongdt",
@@ -3583,58 +3179,6 @@
     "centres": [
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "6686237a0ae2a17860e97ea7",
-    "fullName": "Nguyễn Thị Nhả Thư",
-    "code": "thuntn",
-    "username": "thuntn",
-    "email": "thuntn@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84394883457",
-    "gender": "FEMALE",
-    "dob": "2001-04-19T17:00:00.000Z",
-    "address": "đường Phạm Đăng Giảng, phường Bình Hưng Hòa, quận Bình Tân, TPHCM",
-    "isActive": false,
-    "teacherPoint": 5,
-    "joinedDate": "2024-07-04T04:21:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "668622d9faff94375d682047",
-    "fullName": "Trần Kiên Quốc",
-    "code": "quoctk",
-    "username": "quoctk",
-    "email": "quoctk@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84985353475",
-    "gender": "MALE",
-    "dob": "1999-04-30T17:00:00.000Z",
-    "address": "741/7 Lũy Bán Bích, phường Phú Thọ Hòa, quận Tân Phú, TP Hồ Chí Minh",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-07-04T04:18:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
       "HCM - 414 Lũy Bán Bích"
     ]
   },
@@ -3720,78 +3264,6 @@
     ]
   },
   {
-    "id": "6670fe416b20267f2fc1cd03",
-    "fullName": "Thái Công Mẫn",
-    "code": "mantc",
-    "username": "mantc",
-    "email": "mantc@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84382807712",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2024-06-17T03:24:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "6670fdd34f08dd149f056264",
-    "fullName": "Phùng Hoàng Phú",
-    "code": "phuph1",
-    "username": "phuph1",
-    "email": "phuph1@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84707637526",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2024-06-14T03:16:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "66703b551cd3b5721abee365",
-    "fullName": "Trần Danh Ngân",
-    "code": "ngantd",
-    "username": "ngantd",
-    "email": "ngantd@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84962105063",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2024-05-13T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "6667bff084695b3d2c4fdba7",
     "fullName": "Ngô Trương Đức Tín",
     "code": "tinntd",
@@ -3840,56 +3312,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "666173c34f460867c3a65610",
-    "fullName": "Nguyễn Thanh Cảnh",
-    "code": "canhnt",
-    "username": "canhnt",
-    "email": "canhnt@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84325690224",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-06-01T08:29:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "665fcc9c404c47ef0015e5e9",
-    "fullName": "Nguyễn Huy Thuận",
-    "code": "thuannh",
-    "username": "thuannh",
-    "email": "thuannh@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84328314905",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-06-01T02:23:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -3965,30 +3387,6 @@
     "courseLines": [
       "C4K",
       "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "6656d48a787a7f2e60950033",
-    "fullName": "Đinh Huỳnh Minh Huy",
-    "code": "huydhm",
-    "username": "huydhm",
-    "email": "huydhm@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84334080572",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2024-05-01T17:00:00.000Z",
-    "courseLines": [
-      "18+"
     ],
     "blocks": [
       "Coding"
@@ -4134,30 +3532,6 @@
     ]
   },
   {
-    "id": "6621dcd34a3dd33d5edecef0",
-    "fullName": "Trương Nguyễn Ly Ly",
-    "code": "lytnl",
-    "username": "lytnl",
-    "email": "lytnl@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84943156342",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-04-20T02:51:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "6618eb6355644e47b785e5f7",
     "fullName": "Nguyễn Văn Sơn",
     "code": "sonnv1",
@@ -4174,102 +3548,6 @@
     "courseLines": [
       "C4K",
       "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "66179c3c63cb1ba3f2cb8958",
-    "fullName": "Huỳnh Nguyễn Quốc Bảo",
-    "code": "baohnq",
-    "username": "baohnq",
-    "email": "baohnq@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84707191380",
-    "gender": "MALE",
-    "dob": "2003-04-11T17:00:00.000Z",
-    "address": "11A Lê Lư, Phú Thọ Hòa, Tân Phú, TP.HCM",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-04-08T08:14:00.000Z",
-    "courseLines": [
-      "ROB"
-    ],
-    "blocks": [
-      "Robotics"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "6613b5d4a047564349d45878",
-    "fullName": "Nguyễn Thành Lâm",
-    "code": "lamnt01",
-    "username": "lamnt01",
-    "email": "lamnt01@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84397229505",
-    "gender": "MALE",
-    "dob": "2000-06-09T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-04-01T09:14:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "660fd861e65063253d8c6447",
-    "fullName": "Nguyễn Phương Thảo Vy",
-    "code": "vynpt",
-    "username": "vynpt",
-    "email": "vynpt@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84349152474",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2024-04-04T10:53:00.000Z",
-    "courseLines": [
-      "XART",
-      "MDD"
-    ],
-    "blocks": [
-      "Art",
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "660cdd1943c12b6075d130ad",
-    "fullName": "Phạm Trần Anh Xuân",
-    "code": "xuanptna1",
-    "username": "xuanpta",
-    "email": "xuanpta@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84797170818",
-    "gender": "FEMALE",
-    "dob": "1998-01-01T04:36:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-03-01T04:36:00.000Z",
-    "courseLines": [
-      "C4K"
     ],
     "blocks": [
       "Coding"
@@ -4356,79 +3634,6 @@
     ]
   },
   {
-    "id": "65faa033bf61bee2b29b14e3",
-    "fullName": "Nguyễn Tố Bình",
-    "code": "binhnt",
-    "username": "nguyentobinh",
-    "email": "nguyentobinh@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84389265954",
-    "gender": "MALE",
-    "dob": "2003-06-11T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-03-20T08:31:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "65f98692648230302fc93583",
-    "fullName": "Lê Công Hậu",
-    "code": "haulc",
-    "username": "haulc",
-    "email": "haulc@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84937183639",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2024-01-22T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "65f91a76755fe94c9e0aa995",
-    "fullName": "Nguyễn Minh Hiền",
-    "code": "hiennm1",
-    "username": "hiennm1",
-    "email": "hiennm1@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84909415643",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 10,
-    "joinedDate": "2024-03-01T04:53:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "65f2b393a271ed64b05795f3",
     "fullName": "TE Phạm Phương Thuỳ",
     "code": "thuytpp1",
@@ -4458,56 +3663,6 @@
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích",
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "65f06e8804e8df9950ab151f",
-    "fullName": "Trần Thiện Mỹ Ngọc",
-    "code": "ngocttm",
-    "username": "ngocttm",
-    "email": "ngocttm@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84363533573",
-    "gender": "FEMALE",
-    "dob": "2002-08-07T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-03-12T15:01:00.000Z",
-    "courseLines": [
-      "C4K"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "65f00b0396175c72f664ad5c",
-    "fullName": "Phan Hoàng Minh Nguyệt",
-    "code": "nguyetphm",
-    "username": "nguyetphm",
-    "email": "nguyetphm@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84909607527",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2024-03-11T07:56:00.000Z",
-    "courseLines": [
-      "XART",
-      "MDD"
-    ],
-    "blocks": [
-      "Art",
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
     ]
   },
   {
@@ -4688,26 +3843,6 @@
     ]
   },
   {
-    "id": "65a2a019dedda9bd640ba58e",
-    "fullName": "Lê Đoàn Quỳnh Như",
-    "code": "nhuldq",
-    "username": "nhuldq",
-    "email": "nhuldq@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84933369602",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2024-01-11T14:35:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "659f67da0b1a061eb9d7a4f9",
     "fullName": "Trần Phúc Anh",
     "code": "anhtp",
@@ -4759,46 +3894,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "6562e825d9abb6f4a3027a4e",
-    "fullName": "Nguyễn Trần Huỳnh Long",
-    "code": "longnth1",
-    "username": "longnth1",
-    "email": "longnth1@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84708435990",
-    "gender": "MALE",
-    "dob": "1997-09-10T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "656062e0a438899db17e6915",
-    "fullName": "Nguyễn Thanh Thuận",
-    "code": "thuannt",
-    "username": "thuannt2003",
-    "email": "thuannt2003@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84833054309",
-    "gender": "MALE",
-    "dob": "2003-04-03T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2023-11-01T08:43:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -4878,51 +3973,6 @@
     ]
   },
   {
-    "id": "65461fd91b95b8d34595bd33",
-    "fullName": "Nguyễn Hoài Nam",
-    "code": "namnh2",
-    "username": "namnh",
-    "email": "namnh@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84364071735",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2023-11-01T10:40:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "6540b1c6d06c4c02d35f7df4",
-    "fullName": "Tống Mỹ Linh",
-    "code": "linhtm2",
-    "username": "tmlinh",
-    "email": "tmlinh@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84764379168",
-    "gender": "FEMALE",
-    "dob": "2000-08-14T17:00:00.000Z",
-    "address": "10 - 12 đường 53 phường tân tạo quận bình tân",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2023-10-27T07:49:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
     "id": "65405adf9bcdb6ee3df8b923",
     "fullName": "Nguyễn Trần Ánh Linh",
     "code": "linhnta02",
@@ -4967,26 +4017,6 @@
     "blocks": [
       "Coding"
     ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "6532368c1dce83b71b7d6554",
-    "fullName": "Nguyễn Thanh Tùng",
-    "code": "tungnt1",
-    "username": "tulaniez",
-    "email": "tulaniez@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84335386354",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 10,
-    "joinedDate": "2023-10-19T08:12:00.000Z",
-    "courseLines": [],
-    "blocks": [],
     "centres": [
       "HCM - 01 Trường Chinh"
     ]
@@ -5045,30 +4075,6 @@
     ]
   },
   {
-    "id": "65269cd042921ba4188e2d8e",
-    "fullName": "Nguyễn Viết Nin",
-    "code": "ninnv",
-    "username": "ninnguyenviet16050311",
-    "email": "ninnguyenviet16050311@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84889490752",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 1,
-    "joinedDate": "2023-10-10T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "65212af32714197b3b19eb22",
     "fullName": "Ngô Tuấn Anh",
     "code": "anhnt9",
@@ -5092,26 +4098,6 @@
     "centres": [
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "652106c3a2c9935fbf1fa215",
-    "fullName": "Đỗ Thảo Quyên",
-    "code": "quyendt",
-    "username": "peaquyen",
-    "email": "peaquyen@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84817865277",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
       "HCM - 414 Lũy Bán Bích"
     ]
   },
@@ -5140,30 +4126,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "651813b9467d00e4581510e7",
-    "fullName": "Huỳnh Quốc Diện",
-    "code": "dienhq",
-    "username": "diendevv",
-    "email": "diendevv@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84347249767",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-12-01T13:39:00.000Z",
-    "courseLines": [
-      "ROB"
-    ],
-    "blocks": [
-      "Robotics"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -5269,46 +4231,6 @@
     ]
   },
   {
-    "id": "6512889e97ccd1e8593da375",
-    "fullName": "Lai Trần Trúc Linh",
-    "code": "linhltt",
-    "username": "tranlinh011104",
-    "email": "tranlinh011104@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84938308131",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
-    "id": "6512545cbfc43de259e7b988",
-    "fullName": "Võ Quang Huy",
-    "code": "huyvq2",
-    "username": "vqh.official",
-    "email": "vqh.official@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84934863157",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "6511002ca2c4dba882d46af7",
     "fullName": "Lê Minh Tương Nguyên",
     "code": "nguyenlmt",
@@ -5404,46 +4326,6 @@
     ],
     "centres": [
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "64fb54ea2ac4fe8e19dcded5",
-    "fullName": "Trần Trương Gia Phát",
-    "code": "phatttg",
-    "username": "giaphat24072002",
-    "email": "giaphat24072002@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84708726964",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "64ec305342889659a56844ea",
-    "fullName": "Trần Công Thuần",
-    "code": "thuantc1",
-    "username": "thuantc1507",
-    "email": "thuantc1507@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84856834768",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
     ]
   },
   {
@@ -5549,33 +4431,6 @@
     ],
     "centres": [
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "64e363c13db15a309bd261f9",
-    "fullName": "Tạ Hoàng Hồng Phát",
-    "code": "phatthh",
-    "username": "tahoanghongphat",
-    "email": "tahoanghongphat@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84969964430",
-    "gender": "MALE",
-    "dob": "1998-07-15T17:00:00.000Z",
-    "address": "155 nguyễn hữu tiến tân phú",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
     ]
   },
   {
@@ -5712,26 +4567,6 @@
     ]
   },
   {
-    "id": "64ce14b339fbef9c3dbcf8e9",
-    "fullName": "Phan Nhất Duy",
-    "code": "duypn1",
-    "username": "abcduy39",
-    "email": "abcduy39@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84908816542",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "64cbe7ce7aee124b65078d8c",
     "fullName": "Trần Kỳ Đại",
     "code": "daitk",
@@ -5809,26 +4644,6 @@
     ]
   },
   {
-    "id": "64c9d850401722efbfdec71d",
-    "fullName": "Ngô Ngọc Khải Huyền",
-    "code": "huyennnk",
-    "username": "khaihuyen18",
-    "email": "khaihuyen18@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84902646918",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "64c78bd086be9dcf53f18e08",
     "fullName": "Nguyễn Bá Văn",
     "code": "vannb",
@@ -5880,46 +4695,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "64c4ac7e8cbcea731c826893",
-    "fullName": "Ngô Trường Khải",
-    "code": "khaint",
-    "username": "ngotruongkhai",
-    "email": "ngotruongkhai@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84763508200",
-    "gender": "MALE",
-    "dob": "2001-03-15T17:00:00.000Z",
-    "address": "99 an dương vương p16 quận 8",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "64bb61b58c8f25765caf4207",
-    "fullName": "Nguyễn Minh Quân",
-    "code": "quannm1",
-    "username": "dev.quannguyen",
-    "email": "dev.quannguyen@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84977437144",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:39:05.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -6210,26 +4985,6 @@
     ]
   },
   {
-    "id": "64a7d56e478cb8b57dfe470d",
-    "fullName": "Lê Phan Thiên Ân",
-    "code": "anlpt",
-    "username": "lephanthienan0707",
-    "email": "lephanthienan0707@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84798746501",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
     "id": "64a7d18a52fc0ee8ba0a7b17",
     "fullName": "Lê Tuấn Kiệt",
     "code": "kietlt1",
@@ -6280,26 +5035,6 @@
     ]
   },
   {
-    "id": "649e84eb501ff6603d657491",
-    "fullName": "Huỳnh Phạm Chí Bảo",
-    "code": "baohpc",
-    "username": "dev.hpcbao20",
-    "email": "dev.hpcbao20@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84798292708",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "649e848054cff469dc6e548b",
     "fullName": "Trần Ngọc Hiếu Thảo",
     "code": "thaotnh",
@@ -6324,46 +5059,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "649e83d13dc6d24d75740a64",
-    "fullName": "Hoàng Công Tuấn Anh",
-    "code": "anhhct",
-    "username": "tuananh.technical",
-    "email": "tuananh.technical@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84355019627",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:44:40.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
-    "id": "649e82e23dc6d24d7574008d",
-    "fullName": "Vũ Thiên Phú",
-    "code": "phuvt",
-    "username": "vuthienphu.working",
-    "email": "vuthienphu.working@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84935390076",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:38:36.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
     ]
   },
   {
@@ -6495,48 +5190,6 @@
     ]
   },
   {
-    "id": "64814da08b628bdc61f4dc06",
-    "fullName": "Chung Gia Huy",
-    "code": "huycg",
-    "username": "chunggiahuy041",
-    "email": "chunggiahuy041@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84812349928",
-    "gender": "MALE",
-    "dob": "2001-01-17T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích",
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "6480611300e150ffb282f5bb",
-    "fullName": "Đặng Công Định",
-    "code": "dinhdc",
-    "username": "dangcongdinh2002",
-    "email": "dangcongdinh2002@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84339917822",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
     "id": "647f20a616f377c6c424b8ca",
     "fullName": "Trần Đông Khuê",
     "code": "khuetd",
@@ -6588,80 +5241,6 @@
     ]
   },
   {
-    "id": "647c383ce098e058f8232b9c",
-    "fullName": "Đoàn Thiên Quý",
-    "code": "quydt",
-    "username": "doanthienquy",
-    "email": "doanthienquy@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84936560299",
-    "gender": "MALE",
-    "dob": "2001-06-22T17:00:00.000Z",
-    "address": "Chung cư lê thành đường lê tấn bê phường an lạc quận bình tân",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 414 Lũy Bán Bích",
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
-    "id": "647a28a9ae2193f71a583eb5",
-    "fullName": "Phạm Yến Thành",
-    "code": "thanhpy",
-    "username": "phamyenthanh",
-    "email": "phamyenthanh@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84987463126",
-    "gender": "MALE",
-    "dob": "2001-01-02T17:00:00.000Z",
-    "address": "213/79 khuông việt",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "647a28a2ae2193f71a583eb2",
-    "fullName": "Phạm Đình Phương nam",
-    "code": "nampdp",
-    "username": "phamdinhphuongnam",
-    "email": "phamdinhphuongnam@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84396812565",
-    "gender": "MALE",
-    "dob": "2001-07-08T17:00:00.000Z",
-    "address": "Đường số 7,Bình Hưng Hoà, Bình Tân, TpHCM",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
     "id": "64786413fef10db53d868763",
     "fullName": "Nguyễn Hoàng Cúc",
     "code": "cucnh",
@@ -6683,94 +5262,6 @@
     ],
     "centres": [
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "647718084f85fa68bd884cc0",
-    "fullName": "Phạm Lê Sơn Lộc",
-    "code": "locpls",
-    "username": "phamlesonloc",
-    "email": "phamlesonloc@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84908979860",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "6471e0ae318a0f1cb712dfd1",
-    "fullName": "Phan Thị Thu Minh",
-    "code": "minhptt",
-    "username": "minnmin1344",
-    "email": "minnmin1344@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84389845144",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:45:02.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "646dd5e4795d6c8046e9c421",
-    "fullName": "Phạm Vũ Minh Duy",
-    "code": "duypvm",
-    "username": "phamvuminhduy",
-    "email": "phamvuminhduy@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84902855312",
-    "gender": "MALE",
-    "dob": "2002-11-14T17:00:00.000Z",
-    "address": "797 Hậu Giang Phường 11 Quận 6",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "646dd5dbfe07ad4836f8a935",
-    "fullName": "Nguyễn Thanh Duy",
-    "code": "duynt",
-    "username": "nguyenthanhduy",
-    "email": "nguyenthanhduy@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84796904308",
-    "gender": "MALE",
-    "dob": "2001-02-03T17:00:00.000Z",
-    "address": "3/35 Nguyễn Quý Anh, phường Tân Sơn Nhì, Tân Phú",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh",
-      "HCM - Khu Tên Lửa"
     ]
   },
   {
@@ -6799,27 +5290,6 @@
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích",
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "646d8807795d6c8046de7ed9",
-    "fullName": "Nguyễn Hoàng Anh",
-    "code": "anhnh3",
-    "username": "nguyenhoanganh",
-    "email": "nguyenhoanganh@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84866838675",
-    "gender": "MALE",
-    "dob": "2002-03-12T17:00:00.000Z",
-    "address": "49 đường 55a Tân tạo bình tân TpHCM",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích",
-      "HCM - 322 Tây Thạnh"
     ]
   },
   {
@@ -6902,87 +5372,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích",
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "645a089e111ba3a3cac5969d",
-    "fullName": "Trương Thuận Hòa",
-    "code": "hoatt2",
-    "username": "truongthuanhoa",
-    "email": "truongthuanhoa@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84378953728",
-    "gender": "MALE",
-    "dob": "2002-09-24T17:00:00.000Z",
-    "address": "174/17/7 Thái Phiên Phường 8 Quận 11",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "647716fc243af0646563c0b5",
-    "fullName": "Nguyễn Ngọc Đức Anh",
-    "code": "anhnnd",
-    "username": "nnducanh0112",
-    "email": "nnducanh0112@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84835002614",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "644b47f3731659f50c38ffee",
-    "fullName": "Nguyễn Văn Thành Đạt",
-    "code": "datnvt",
-    "username": "nguyenvanthanhdat",
-    "email": "nguyenvanthanhdat@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84963150360",
-    "gender": "MALE",
-    "dob": "2002-10-18T03:53:00.000Z",
-    "address": "356/10/25 tỉnh lộ 10 khu phố 14 phường Bình Trị Đông quận Bình Tân TPHCM",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "6446476236b36f0dd40114ce",
-    "fullName": "Huỳnh Thị Bảo Trân",
-    "code": "tranhtb",
-    "username": "htbtran19",
-    "email": "htbtran19@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84368080230",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:16:52.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
       "HCM - 01 Trường Chinh"
     ]
   },
@@ -7136,28 +5525,6 @@
     ]
   },
   {
-    "id": "6427b3a53a4a6c437eabde8e",
-    "fullName": "Phạm Đặng Sơn Hà",
-    "code": "hapds",
-    "username": "phamdangsonha0203",
-    "email": "phamdangsonha0203@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84838679003",
-    "gender": "MALE",
-    "dob": "2003-03-02T04:26:00.000Z",
-    "address": "83/107 Năm Châu, phường 11, quận Tâm Bình, TP.HCM",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
     "id": "641fef51d39d626256d50402",
     "fullName": "Vương Minh Tuấn",
     "code": "tuanvm",
@@ -7211,30 +5578,6 @@
     ]
   },
   {
-    "id": "6413dcb7f93c925a74745485",
-    "fullName": "Võ Minh Nhật",
-    "code": "nhatvm",
-    "username": "qnvo0402",
-    "email": "qnvo0402@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84944540402",
-    "gender": "MALE",
-    "dob": "2002-04-07T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:15:46.000Z",
-    "courseLines": [
-      "ROB"
-    ],
-    "blocks": [
-      "Robotics"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "641192f8f26f783babceb975",
     "fullName": "Cao Ngọc Sơn",
     "code": "soncn",
@@ -7255,26 +5598,6 @@
     "blocks": [
       "Coding"
     ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "645b107ebd152bd886a926d8",
-    "fullName": "CS 18+ Vũ Hoàng Quân",
-    "code": "quanvh",
-    "username": "quanhv",
-    "email": "quanhv@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84528535754",
-    "gender": "MALE",
-    "dob": "2000-02-21T02:46:58.352Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
     "centres": [
       "HCM - 01 Trường Chinh"
     ]
@@ -7332,46 +5655,6 @@
     ]
   },
   {
-    "id": "638efeca1e46895c2619c72c",
-    "fullName": "Đào Ngọc Anh Khôi",
-    "code": "khoidna",
-    "username": "daongocanhkhoi",
-    "email": "daongocanhkhoi@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84865100640",
-    "gender": "MALE",
-    "dob": "2003-01-31T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:42:52.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "638efda71e46895c2618bb36",
-    "fullName": "Trương Nguyễn Bảo Khánh",
-    "code": "khanhtnb",
-    "username": "khanhtnb220",
-    "email": "khanhtnb220@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84916022815",
-    "gender": "MALE",
-    "dob": "2002-08-26T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
     "id": "63858e4a2e3cd766f3877c22",
     "fullName": "TE Trương Khắc Anh Tiến",
     "code": "tientka",
@@ -7422,31 +5705,6 @@
     ]
   },
   {
-    "id": "6381b09aa7b3d24a2c58f471",
-    "fullName": "Dịp Lâm Tuấn",
-    "code": "tuandl",
-    "username": "diplamtuan",
-    "email": "diplamtuan@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84768862538",
-    "gender": "MALE",
-    "dob": "2001-09-17T17:00:00.000Z",
-    "address": "256/27 Lãnh Binh Thăng P13 Q11",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2022-10-31T17:00:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
     "id": "637ee7c66d2db95c25e8835b",
     "fullName": "Phạm Nguyễn Cao Duy",
     "code": "duypnc",
@@ -7465,158 +5723,6 @@
     ],
     "blocks": [
       "Art"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "6367735334b3f371c9468d7f",
-    "fullName": "Vũ Lỗ Hương Giang",
-    "code": "giangvlh",
-    "username": "vulohuonggiang0",
-    "email": "vulohuonggiang0@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84977218874",
-    "gender": "FEMALE",
-    "dob": "2001-09-30T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
-    "id": "63624afd7b4e9c15a9d0688a",
-    "fullName": "Đoàn A Tỷ",
-    "code": "tyda",
-    "username": "tydoan.28052001",
-    "email": "tydoan.28052001@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84398823698",
-    "gender": "MALE",
-    "dob": "2001-05-27T17:00:00.000Z",
-    "address": "135/57/1 đường Gò Xoài, phường Bình Hưng Hòa A, quận Bình Tân, TPHCM",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 01 Trường Chinh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "635344a46d7a6b1ee8a93b63",
-    "fullName": "Nguyễn Thị Ngà",
-    "code": "ngant",
-    "username": "nguyen.t.nga1194",
-    "email": "nguyen.t.nga1194@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84394237376",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh",
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "6352b4257b271a642a3586ed",
-    "fullName": "Nguyễn Phạm Ngọc Văn",
-    "code": "vannpn",
-    "username": "npnv.vn1",
-    "email": "npnv.vn1@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84948379723",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "63521d23f108bc1de77457eb",
-    "fullName": "Đỗ Thu Phương",
-    "code": "phuongdt",
-    "username": "lanaphuongdo",
-    "email": "lanaphuongdo@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84868682512",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 1,
-    "joinedDate": "2022-02-17T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "634e1980f0248505128eeea9",
-    "fullName": "Nguyễn Quốc Hưng",
-    "code": "hungnq1",
-    "username": "thanhyasouvn",
-    "email": "thanhyasouvn@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84358322693",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "634d382e79a34b0186ec6924",
-    "fullName": "Mai Nguyễn Xuân Kiều",
-    "code": "kieumnx",
-    "username": "kieumnx",
-    "email": "kieumnx@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84374727547",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 1,
-    "joinedDate": "2022-10-16T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
     ],
     "centres": [
       "HCM - 01 Trường Chinh"
@@ -7756,28 +5862,6 @@
     ]
   },
   {
-    "id": "632a77b664ee911c2e2d82de",
-    "fullName": "Võ Đình Luân",
-    "code": "luanvd",
-    "username": "luandinhvo2002",
-    "email": "luandinhvo2002@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84909746315",
-    "gender": "MALE",
-    "dob": "2002-04-30T17:00:00.000Z",
-    "address": "87 đường 27 phường Sơn Kỳ quận Tân Phú",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "632334f25e824e336b023bcf",
     "fullName": "Mai Gia Minh",
     "code": "minhmg",
@@ -7831,26 +5915,6 @@
     ]
   },
   {
-    "id": "631abe8cbfcf7b689948782b",
-    "fullName": "Nguyễn Lý Văn Bình",
-    "code": "binhnlv",
-    "username": "binhnlv.1804",
-    "email": "binhnlv.1804@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84878750200",
-    "gender": "MALE",
-    "dob": "2002-04-17T17:00:00.000Z",
-    "address": "82 Trần Huy Liệu, Phú Nhuận",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "6319f2560faef0205fdee04c",
     "fullName": "Trần Lê Chí Hải",
     "code": "haitlc",
@@ -7871,26 +5935,6 @@
     "blocks": [
       "Coding"
     ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "63196668fcbc4c5d1d33299c",
-    "fullName": "Nguyễn Thị Ngọc Trang",
-    "code": "trangntn",
-    "username": "nguyenngoctrang9911",
-    "email": "nguyenngoctrang9911@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84906741322",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
     "centres": [
       "HCM - 01 Trường Chinh"
     ]
@@ -7948,71 +5992,6 @@
     ]
   },
   {
-    "id": "631203c8da208f35dbe674d8",
-    "fullName": "Lê Huỳnh Đức",
-    "code": "duclh",
-    "username": "lehuynhduc04032",
-    "email": "lehuynhduc04032@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84338362842",
-    "gender": "MALE",
-    "dob": "2003-03-03T17:00:00.000Z",
-    "address": "https://www.facebook.com/HuynhDuc.04032003",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2022-08-01T08:54:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "63078fcfa52f2b559a3c64e6",
-    "fullName": "Phu Huỳnh Mạnh Triển",
-    "code": "trienphm",
-    "username": "trien8642",
-    "email": "trien8642@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84926502726",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2022-01-13T02:11:38.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "63078ed1a52f2b559a3a97c9",
-    "fullName": "Hồ Thành Danh",
-    "code": "danhht",
-    "username": "thanhdanh.ute2002",
-    "email": "thanhdanh.ute2002@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84396626628",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:48:35.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "63064a9940a59676bfac2ab9",
     "fullName": "Nguyễn Thái Việt Long",
     "code": "longntv",
@@ -8037,70 +6016,6 @@
       "HCM - Khu Tên Lửa",
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "6305c6638aba6565bb61c45a",
-    "fullName": "Mã Quốc Phong",
-    "code": "phongmq",
-    "username": "mqphong.dev",
-    "email": "mqphong.dev@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84902269417",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2022-01-13T02:11:04.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "62fc6cf1cc0df13b6f271f56",
-    "fullName": "Nguyễn Hoàng Anh",
-    "code": "anhnh2",
-    "username": "nguyenanh1999zzz",
-    "email": "nguyenanh1999zzz@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84888207212",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "62fa0d7de1a6ea0d280ac164",
-    "fullName": "Lê Văn Cường",
-    "code": "cuonglv",
-    "username": "cuonglvse04314",
-    "email": "cuonglvse04314@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84979240563",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 1,
-    "joinedDate": "2022-08-14T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
     ]
   },
   {
@@ -8156,26 +6071,6 @@
     ]
   },
   {
-    "id": "62eccc8a89ce244f0e48ebe3",
-    "fullName": "Trần Thanh Bảo",
-    "code": "baott",
-    "username": "thanh.bao",
-    "email": "thanh.bao@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84943417917",
-    "gender": "MALE",
-    "dob": "2000-11-14T22:25:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
     "id": "62ebc9dc1e254653a88a3228",
     "fullName": "Vũ Phạm Tuấn Kiệt",
     "code": "kietvpt",
@@ -8198,120 +6093,6 @@
     ],
     "centres": [
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "62ebc4041e254653a889902c",
-    "fullName": "Nhiêu Thanh Quỳnh",
-    "code": "quynhnt",
-    "username": "nhieuquynh13",
-    "email": "nhieuquynh13@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84379970334",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 5,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "62e78d5596219a163921389e",
-    "fullName": "Phan Mỹ Dung",
-    "code": "dungpm",
-    "username": "mydungdaisy2210",
-    "email": "mydungdaisy2210@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84763103729",
-    "gender": "FEMALE",
-    "dob": "2002-10-21T17:00:00.000Z",
-    "address": "72/9a bùi dương lịch p.bhh b q.bình tân",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "62e387abd7e3fd2687cc7e4d",
-    "fullName": "Võ Linh Kha",
-    "code": "khavl",
-    "username": "khav2318",
-    "email": "khav2318@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84832767217",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
-    "id": "62da1f49f6274e0a2337d6c0",
-    "fullName": "Nguyễn Quốc Hưng",
-    "code": "hungnq",
-    "username": "hung1582002",
-    "email": "hung1582002@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84327037178",
-    "gender": "MALE",
-    "dob": "2002-08-14T17:00:00.000Z",
-    "address": "338/63/42 Ấp Chiến Lược, P. Bình Trị Đông A, Q. Bình Tân",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "62d615742f0c3553389dfc41",
-    "fullName": "Nguyễn Phú Thành",
-    "code": "thanhnp",
-    "username": "phuthanh1032002",
-    "email": "phuthanh1032002@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84703897267",
-    "gender": "MALE",
-    "dob": "2002-03-09T17:00:00.000Z",
-    "address": "37e Phú Thọ Phường 1 Quận 11",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
     ]
   },
   {
@@ -8368,96 +6149,6 @@
     ]
   },
   {
-    "id": "62cf7f3647204724d94e6581",
-    "fullName": "Lê Minh Anh",
-    "code": "anhlm",
-    "username": "minhanh2512007",
-    "email": "minhanh2512007@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84945610426",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2021-04-16T17:00:00.000Z",
-    "courseLines": [
-      "XART"
-    ],
-    "blocks": [
-      "Art"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "62c6939dfa316a4cd25b157b",
-    "fullName": "Sì Nhật Toàn",
-    "code": "toansn",
-    "username": "s.toan883",
-    "email": "s.toan883@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84945737116",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-11-25T17:00:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "62c6933ffa316a4cd25b14bc",
-    "fullName": "Đinh Thế Anh",
-    "code": "anhdt2",
-    "username": "anhthedinh.work",
-    "email": "anhthedinh.work@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84906643433",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:48:59.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "62c69281fa316a4cd25b1339",
-    "fullName": "Ngô Song Tuyết Ngân",
-    "code": "ngannst",
-    "username": "stngan32",
-    "email": "stngan32@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84969830296",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:49:21.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T",
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "62bdcdbac70d4e546c3ac10a",
     "fullName": "Bùi Ngọc Hoa",
     "code": "hoabn",
@@ -8479,33 +6170,6 @@
     ],
     "centres": [
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "62b94751ba7bee79efc15a0e",
-    "fullName": "Bùi Ngọc Diễm Quỳnh",
-    "code": "quynhbnd",
-    "username": "bngocdiemquynh52",
-    "email": "bngocdiemquynh52@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84522765436",
-    "gender": "FEMALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [
-      "C4K",
-      "C4T"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
     ]
   },
   {
@@ -8534,26 +6198,6 @@
     ]
   },
   {
-    "id": "62af238ca67d9b60b5f0bf71",
-    "fullName": "Trương Hoàng Kha",
-    "code": "khath",
-    "username": "hoangkhatruong2003",
-    "email": "hoangkhatruong2003@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84903611145",
-    "gender": "MALE",
-    "dob": "2003-01-28T17:00:00.000Z",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
     "id": "62abdd4e8d48bb209b17bff9",
     "fullName": "Lê Vũ Ngân Lam",
     "code": "lamlvn",
@@ -8571,26 +6215,6 @@
     "blocks": [],
     "centres": [
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "62abdce38d48bb209b17beef",
-    "fullName": "Nguyễn Hồ Bảo Khánh",
-    "code": "khanhnhb",
-    "username": "baokhanhnguyenho",
-    "email": "baokhanhnguyenho@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84982079332",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
     ]
   },
   {
@@ -8672,46 +6296,6 @@
     ]
   },
   {
-    "id": "6281169aa4c623739ec1e452",
-    "fullName": "Võ Chí Khánh",
-    "code": "khanhvc",
-    "username": "khanhworktime",
-    "email": "khanhworktime@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84372646539",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "627dd2b82f0e17144ac3166b",
-    "fullName": "Lục Tú Văn",
-    "code": "vanlt",
-    "username": "luctuvan2001",
-    "email": "luctuvan2001@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84774684719",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2023-01-13T02:49:53.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "627dd1562f0e17144ac3148b",
     "fullName": "Lê Thế Khiêm",
     "code": "khiemlt",
@@ -8743,46 +6327,6 @@
     ]
   },
   {
-    "id": "626bdeb49bfdae354051bc0e",
-    "fullName": "Nguyễn Minh Quang",
-    "code": "quangnm",
-    "username": "nguyenquang1208",
-    "email": "nguyenquang1208@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84356316638",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
-    "id": "6261b4115ab7b554588b4b11",
-    "fullName": "Nguyễn Đức Trung",
-    "code": "trungnd1",
-    "username": "trung.ngduc.work",
-    "email": "trung.ngduc.work@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84902237278",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2021-01-01T02:07:00.000Z",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
     "id": "6261b35c5ab7b554588b4a42",
     "fullName": "TE Nguyễn Hoàng Tuấn",
     "code": "tuannh",
@@ -8808,30 +6352,6 @@
       "HCM - 322 Tây Thạnh",
       "HCM - 414 Lũy Bán Bích",
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "625e70db91741864e7d4ba56",
-    "fullName": "Nguyễn Lê Hoàng Thông",
-    "code": "thongnlh",
-    "username": "nguyenlehoangthong2002",
-    "email": "nguyenlehoangthong2002@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84859411334",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "2022-04-18T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa"
     ]
   },
   {
@@ -8917,72 +6437,6 @@
     ]
   },
   {
-    "id": "614346253820844e441d19e6",
-    "fullName": "Lưu Minh Thắng",
-    "code": "thanglm",
-    "username": "minhthang14101998",
-    "email": "minhthang14101998@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84909369037",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích"
-    ]
-  },
-  {
-    "id": "6124fa5b6e09ed5a864c2e82",
-    "fullName": "Trần Đăng Khoa",
-    "code": "khoatd",
-    "username": "khoatranpc603",
-    "email": "khoatranpc603@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84353923603",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 1,
-    "joinedDate": "2021-08-23T17:00:00.000Z",
-    "courseLines": [
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "6108c37ad4e8675e892a3e84",
-    "fullName": "Phan Thị Thanh Vân",
-    "code": "vanptt",
-    "username": "thanhvan14999",
-    "email": "thanhvan14999@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84704852358",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
     "id": "60de9efaf83b824a23ab476e",
     "fullName": "TEGL Nguyen Hong Ha",
     "code": "hanh1",
@@ -9039,35 +6493,6 @@
     ]
   },
   {
-    "id": "5f8e609f7ab32a5da16eebdb",
-    "fullName": "Trần Huy Vũ",
-    "code": "vuth",
-    "username": "vuth001",
-    "email": "vuth001@mindx.net.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84775463088",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": true,
-    "teacherPoint": 5,
-    "joinedDate": "2021-07-20T03:34:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T",
-      "18+"
-    ],
-    "blocks": [
-      "Coding"
-    ],
-    "centres": [
-      "HCM - 01 Trường Chinh",
-      "HCM - 322 Tây Thạnh",
-      "HCM - 414 Lũy Bán Bích",
-      "HCM - Khu Tên Lửa"
-    ]
-  },
-  {
     "id": "5f3b83c0ca6d3c0fb20afabc",
     "fullName": "TE Cao Quang Sơn",
     "code": "soncq",
@@ -9114,56 +6539,6 @@
     ],
     "centres": [
       "HCM - 01 Trường Chinh"
-    ]
-  },
-  {
-    "id": "5f3b8332ca6d3c0fb20afa74",
-    "fullName": "Lê Phương Hoàng Ân",
-    "code": "anlph",
-    "username": "anlph",
-    "email": "lephuonghoangan97@gmail.com",
-    "personalEmail": null,
-    "phoneNumber": "+84903956650",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 1,
-    "joinedDate": "",
-    "courseLines": [],
-    "blocks": [],
-    "centres": [
-      "HCM - 414 Lũy Bán Bích",
-      "HCM - 01 Trường Chinh",
-      "HCM - Khu Tên Lửa",
-      "HCM - 322 Tây Thạnh"
-    ]
-  },
-  {
-    "id": "660a1fa67e18d3560521612d",
-    "fullName": "telesale 02",
-    "code": "lamnt1",
-    "username": "lamnt",
-    "email": "lamnt@mindx.edu.vn",
-    "personalEmail": null,
-    "phoneNumber": "+84397229505",
-    "gender": "MALE",
-    "dob": "",
-    "address": "",
-    "isActive": false,
-    "teacherPoint": 4,
-    "joinedDate": "2024-04-01T02:43:00.000Z",
-    "courseLines": [
-      "C4K",
-      "C4T",
-      "ROB"
-    ],
-    "blocks": [
-      "Coding",
-      "Robotics"
-    ],
-    "centres": [
-      "HCM - Khu Tên Lửa"
     ]
   }
 ]
