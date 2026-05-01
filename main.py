@@ -2,9 +2,110 @@ import requests
 import json
 import time
 import os
+import sqlite3
+import base64
+import sys
+from datetime import datetime, timezone
+
+# ─────────────────────────────────────────────────────────────────────────────
+# TOKEN — đọc từ .env (không hardcode trong code)
+# ─────────────────────────────────────────────────────────────────────────────
+
+def load_token() -> str:
+    """Đọc LMS_TOKEN từ file .env."""
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(env_path):
+        print("❌ Không tìm thấy file .env")
+        print("   Hãy tạo file .env với nội dung: LMS_TOKEN=<token của bạn>")
+        sys.exit(1)
+
+    # utf-8-sig tự động bỏ BOM nếu có
+    with open(env_path, encoding="utf-8-sig") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith("LMS_TOKEN="):
+                token = line[len("LMS_TOKEN="):].strip().strip('"').strip("'")
+                if token:
+                    return token
+
+    print("❌ Không tìm thấy LMS_TOKEN trong file .env")
+    print("   Đảm bảo file .env có dòng: LMS_TOKEN=<token>")
+    sys.exit(1)
+
+
+def check_token_expiry(token: str) -> bool:
+    """
+    Kiểm tra token JWT có còn hạn không.
+    Trả về True nếu còn hạn, False nếu đã hết.
+    """
+    try:
+        # JWT có dạng header.payload.signature — decode phần payload
+        parts = token.split(".")
+        if len(parts) != 3:
+            return False
+        # Thêm padding nếu cần
+        payload_b64 = parts[1] + "=" * (4 - len(parts[1]) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+        exp = payload.get("exp", 0)
+        now = datetime.now(timezone.utc).timestamp()
+        remaining = exp - now
+        if remaining <= 0:
+            print(f"❌ Token đã hết hạn {abs(int(remaining // 60))} phút trước.")
+            return False
+        print(f"✅ Token còn hạn: {int(remaining // 60)} phút {int(remaining % 60)} giây")
+        return True
+    except Exception as e:
+        print(f"⚠ Không kiểm tra được token: {e}")
+        return True  # Cho qua, để API tự báo lỗi
+
+
+def update_env_token(new_token: str):
+    """Cập nhật LMS_TOKEN trong file .env."""
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    lines = []
+    found = False
+    if os.path.exists(env_path):
+        with open(env_path, encoding="utf-8") as f:
+            lines = f.readlines()
+    new_lines = []
+    for line in lines:
+        if line.strip().startswith("LMS_TOKEN="):
+            new_lines.append(f"LMS_TOKEN={new_token}\n")
+            found = True
+        else:
+            new_lines.append(line)
+    if not found:
+        new_lines.append(f"LMS_TOKEN={new_token}\n")
+    with open(env_path, "w", encoding="utf-8") as f:
+        f.writelines(new_lines)
+    print("✅ Đã cập nhật token vào .env")
+
 
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
-TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJiMzZhYjQxYTczOTJlMTRlNjM1ZmRlM2M2YWYwOWZlYmFhM2YyZDYiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVEUgUGhhbiBOZ-G7jWMgSG_DoG5nIEFuaCIsImlkIjoiNWZmMjZiOWYzNzI5MjAwOTlkMjU4ODIzIiwidXNlcm5hbWUiOiJhbmhwbmgwMDEiLCJyb2xlcyI6WyI1ZmIzNzk4NTBkZGNjYTQ3OGU5M2RlZjgiXSwiaXNzIjoiaHR0cHM6Ly9zZWN1cmV0b2tlbi5nb29nbGUuY29tL21pbmR4LWVkdS1wcm9kIiwiYXVkIjoibWluZHgtZWR1LXByb2QiLCJhdXRoX3RpbWUiOjE3Nzc1NjA3NTEsInVzZXJfaWQiOiJaakVuTW9ha3FZVE1mNUdOdkVXZEl1OXlPRGEyIiwic3ViIjoiWmpFbk1vYWtxWVRNZjVHTnZFV2RJdTl5T0RhMiIsImlhdCI6MTc3NzU2MDc1MiwiZXhwIjoxNzc3NTY0MzUyLCJlbWFpbCI6ImFuaHBuaEBtaW5keC5jb20udm4iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwicGhvbmVfbnVtYmVyIjoiKzg0MzY2NzU0MzQyIiwiZmlyZWJhc2UiOnsiaWRlbnRpdGllcyI6eyJlbWFpbCI6WyJhbmhwbmhAbWluZHguY29tLnZuIl0sInBob25lIjpbIis4NDM2Njc1NDM0MiJdfSwic2lnbl9pbl9wcm92aWRlciI6ImN1c3RvbSJ9fQ.DtC5bpFtWyp86s1AGLmqyJUMpKQyS8oH_3kaZHd463m7Yr3FAljef-Tmgz3tUXrY7BkS3L9k8wnqckAUkhZ8BgSN5vw460FUAp11yC3x2SUN2RaUPwVU66-I0M2m5Wwdt06IQG4mY8_Roy1HxJhNazAUZ03rbCDFHkwjBGDiDqmlRhExLGP8aFMi3DLkqa5BozrWs0xftMRF3kHcXtj_wsPuIdlwDl69FEIp2UsB2zceYedhcqTqx3YeExwjBfMtNbNKLMekrO1I4s7aby_y-MgCK1jUwjuYRj9BiQMVwmrZaGEg5yzj1IAaOo-NcD-yQFQlCrT1CW1I-xDtmsuTRA"
+TOKEN = load_token()
+
+# Kiểm tra token ngay khi khởi động
+if not check_token_expiry(TOKEN):
+    print("\n👉 Hãy lấy token mới từ LMS và chạy lệnh sau:")
+    print('   python main.py --update-token "TOKEN_MỚI_CỦA_BẠN"')
+    print("\n   Hoặc cập nhật trực tiếp trong file .env")
+    # Cho phép update token qua CLI
+    if len(sys.argv) == 3 and sys.argv[1] == "--update-token":
+        new_token = sys.argv[2]
+        update_env_token(new_token)
+        TOKEN = new_token
+        print("✅ Token đã được cập nhật, tiếp tục chạy...")
+    else:
+        sys.exit(1)
+
+# Cho phép update token qua CLI ngay cả khi token còn hạn
+if len(sys.argv) == 3 and sys.argv[1] == "--update-token":
+    new_token = sys.argv[2]
+    update_env_token(new_token)
+    TOKEN = new_token
+    print("✅ Token đã được cập nhật")
 
 HEADERS = {
     "Authorization": TOKEN,
@@ -451,11 +552,173 @@ def save(data):
     with open("public/classes.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"\n✅ Đã lưu {len(data)} lớp vào public/classes.json")
+    save_classes_to_sqlite(data)
 
 def save_teachers(data):
     with open("public/teachers.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"✅ Đã lưu {len(data)} giáo viên vào public/teachers.json")
+    save_teachers_to_sqlite(data)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SQLITE SAVE
+# ─────────────────────────────────────────────────────────────────────────────
+
+def get_sqlite_conn():
+    db_path = os.path.join(os.path.dirname(__file__), "classroom_data.db")
+    conn = sqlite3.connect(db_path)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
+    return conn
+
+
+def save_classes_to_sqlite(data: list):
+    """Upsert classes, teachers, slots, incomplete_students vào SQLite."""
+    conn = get_sqlite_conn()
+    c = conn.cursor()
+    try:
+        for item in data:
+            cid = item["id"]
+            c.execute("""
+                INSERT OR REPLACE INTO classes
+                (id, name, status, course, centre, block, level, sessions,
+                 studentCount, attendedCount, completedCount, completionRate,
+                 commentPercentage, totalSlotsWithStudents, slotsWithFullComments,
+                 startDate, endDate, createdAt)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                cid, item.get("name"), item.get("status"), item.get("course"),
+                item.get("centre"), item.get("block"), item.get("level"),
+                item.get("sessions"), item.get("studentCount", 0),
+                item.get("attendedCount", 0), item.get("completedCount", 0),
+                item.get("completionRate", 0), item.get("commentPercentage", 0),
+                item.get("totalSlotsWithStudents", 0), item.get("slotsWithFullComments", 0),
+                item.get("startDate"), item.get("endDate"), item.get("createdAt"),
+            ))
+
+            # Teachers
+            c.execute("DELETE FROM class_teachers WHERE classId=?", (cid,))
+            for t in item.get("teachers", []):
+                c.execute(
+                    "INSERT INTO class_teachers (classId, name, email, role) VALUES (?,?,?,?)",
+                    (cid, t.get("name"), t.get("email"), t.get("role"))
+                )
+
+            # Slots
+            c.execute("DELETE FROM slots WHERE classId=?", (cid,))
+            for s in item.get("slots", []):
+                c.execute("""
+                    INSERT OR REPLACE INTO slots
+                    (id, classId, date, startTime, endTime, commentStatus,
+                     studentsInSlot, studentsWithComment)
+                    VALUES (?,?,?,?,?,?,?,?)
+                """, (
+                    s.get("id"), cid, s.get("date"), s.get("startTime"),
+                    s.get("endTime"), s.get("commentStatus"),
+                    s.get("studentsInSlot", 0), s.get("studentsWithComment", 0),
+                ))
+
+            # Incomplete students
+            c.execute("DELETE FROM incomplete_students WHERE classId=?", (cid,))
+            for name in item.get("incompleteStudents", []):
+                c.execute(
+                    "INSERT INTO incomplete_students (classId, name) VALUES (?,?)",
+                    (cid, name)
+                )
+
+        conn.commit()
+        print(f"✅ Đã lưu {len(data)} lớp vào SQLite")
+    except Exception as e:
+        conn.rollback()
+        print(f"⚠ SQLite error (classes): {e}")
+    finally:
+        conn.close()
+
+
+def save_teachers_to_sqlite(data: list):
+    """Upsert teachers vào SQLite."""
+    conn = get_sqlite_conn()
+    c = conn.cursor()
+    try:
+        for t in data:
+            tid = t["id"]
+            c.execute("""
+                INSERT OR REPLACE INTO teachers
+                (id, fullName, code, username, email, personalEmail, phoneNumber,
+                 gender, dob, address, isActive, teacherPoint, joinedDate)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """, (
+                tid, t.get("fullName"), t.get("code"), t.get("username"),
+                t.get("email"), t.get("personalEmail"), t.get("phoneNumber"),
+                t.get("gender"), t.get("dob"), t.get("address"),
+                1 if t.get("isActive") else 0,
+                t.get("teacherPoint", 0), t.get("joinedDate"),
+            ))
+
+            c.execute("DELETE FROM teacher_centres WHERE teacherId=?", (tid,))
+            for centre in t.get("centres", []):
+                c.execute("INSERT INTO teacher_centres (teacherId, centre) VALUES (?,?)", (tid, centre))
+
+            c.execute("DELETE FROM teacher_blocks WHERE teacherId=?", (tid,))
+            for block in t.get("blocks", []):
+                c.execute("INSERT INTO teacher_blocks (teacherId, block) VALUES (?,?)", (tid, block))
+
+            c.execute("DELETE FROM teacher_course_lines WHERE teacherId=?", (tid,))
+            for cl in t.get("courseLines", []):
+                c.execute("INSERT INTO teacher_course_lines (teacherId, courseLine) VALUES (?,?)", (tid, cl))
+
+        conn.commit()
+        print(f"✅ Đã lưu {len(data)} giáo viên vào SQLite")
+    except Exception as e:
+        conn.rollback()
+        print(f"⚠ SQLite error (teachers): {e}")
+    finally:
+        conn.close()
+
+
+def save_tp_to_sqlite(data: list):
+    """Upsert TP records vào SQLite."""
+    conn = get_sqlite_conn()
+    c = conn.cursor()
+    try:
+        for r in data:
+            cid = r["classId"]
+            c.execute("""
+                INSERT OR REPLACE INTO tp_records
+                (classId, className, centre, block, tp1, tp2)
+                VALUES (?,?,?,?,?,?)
+            """, (cid, r.get("className"), r.get("centre"), r.get("block"),
+                  r.get("tp1"), r.get("tp2")))
+
+            c.execute("DELETE FROM tp_students WHERE classId=?", (cid,))
+            for s in r.get("tp1_students", []):
+                c.execute(
+                    "INSERT INTO tp_students (classId, round, name, score, textAnswers) VALUES (?,?,?,?,?)",
+                    (cid, 1, s.get("name"), s.get("score"),
+                     json.dumps(s.get("textAnswers", []), ensure_ascii=False))
+                )
+            for s in r.get("tp2_students", []):
+                c.execute(
+                    "INSERT INTO tp_students (classId, round, name, score, textAnswers) VALUES (?,?,?,?,?)",
+                    (cid, 2, s.get("name"), s.get("score"),
+                     json.dumps(s.get("textAnswers", []), ensure_ascii=False))
+                )
+
+            c.execute("DELETE FROM tp_teachers WHERE classId=?", (cid,))
+            for t in r.get("teachers", []):
+                c.execute(
+                    "INSERT INTO tp_teachers (classId, name, email, role) VALUES (?,?,?,?)",
+                    (cid, t.get("name"), t.get("email"), t.get("role"))
+                )
+
+        conn.commit()
+        print(f"✅ Đã lưu {len(data)} TP records vào SQLite")
+    except Exception as e:
+        conn.rollback()
+        print(f"⚠ SQLite error (tp): {e}")
+    finally:
+        conn.close()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEACHER POINT (TP) FETCH
@@ -841,6 +1104,7 @@ def save_tp(data):
     with open(TP_CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
     print(f"✅ Đã lưu {len(data)} lớp TP vào {TP_CACHE_FILE}")
+    save_tp_to_sqlite(data)
 
 
 if __name__ == "__main__":

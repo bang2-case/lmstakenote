@@ -1,15 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
 
-interface Props {
+interface Option {
+  value: string
   label: string
-  options: string[]
-  selected: string[]
-  onChange: (selected: string[]) => void
-  placeholder?: string
-  renderOption?: (value: string) => string
 }
 
-export default function MultiSelect({ label, options, selected, onChange, placeholder = 'Tất cả', renderOption }: Props) {
+interface Props {
+  label: string
+  options: Option[]
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+}
+
+export default function SingleSelect({ label, options, value, onChange, placeholder = 'Tất cả' }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -23,39 +27,30 @@ export default function MultiSelect({ label, options, selected, onChange, placeh
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const toggle = (value: string) => {
-    if (selected.includes(value)) {
-      onChange(selected.filter((v) => v !== value))
-    } else {
-      onChange([...selected, value])
-    }
+  const selected = options.find((o) => o.value === value)
+  const hasValue = !!value
+
+  const handleSelect = (optValue: string) => {
+    onChange(optValue === value ? '' : optValue) // bấm lại để bỏ chọn
+    setOpen(false)
   }
-
-  const displayText = selected.length === 0
-    ? placeholder
-    : selected.map(v => renderOption ? renderOption(v) : v).join(', ')
-
-  const hasValue = selected.length > 0
 
   return (
     <div className="filter-group" ref={containerRef} style={{ position: 'relative' }}>
       <label className="filter-label">{label}</label>
 
-      {/* Trigger button */}
       <div
         className={`filter-select-trigger ${open ? 'active' : ''} ${hasValue ? 'has-value' : ''}`}
         onClick={() => setOpen(!open)}
       >
-        <span
-          className={hasValue ? 'filter-select-value' : 'filter-select-placeholder'}
-        >
-          {displayText}
+        <span className={hasValue ? 'filter-select-value' : 'filter-select-placeholder'}>
+          {selected ? selected.label : placeholder}
         </span>
         <span className="filter-select-icon">
           {hasValue ? (
             <button
               className="filter-select-clear"
-              onClick={(e) => { e.stopPropagation(); onChange([]) }}
+              onClick={(e) => { e.stopPropagation(); onChange('') }}
             >
               ✕
             </button>
@@ -65,20 +60,17 @@ export default function MultiSelect({ label, options, selected, onChange, placeh
         </span>
       </div>
 
-      {/* Dropdown */}
       {open && (
         <div className="multiselect-popup">
           {options.map((opt) => {
-            const isSelected = selected.includes(opt)
+            const isSelected = opt.value === value
             return (
               <div
-                key={opt}
+                key={opt.value}
                 className={`multiselect-item ${isSelected ? 'multiselect-item-selected' : ''}`}
-                onClick={() => toggle(opt)}
+                onClick={() => handleSelect(opt.value)}
               >
-                <span className="multiselect-item-text">
-                  {renderOption ? renderOption(opt) : opt}
-                </span>
+                <span className="multiselect-item-text">{opt.label}</span>
                 {isSelected && <span className="multiselect-item-check">✓</span>}
               </div>
             )

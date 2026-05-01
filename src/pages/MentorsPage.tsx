@@ -284,9 +284,12 @@ export default function MentorsPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Quản lý giáo viên</h1>
-        <span className="count-badge">{filtered.length} / {teachers.length} giáo viên</span>
+      <div className="page-banner">
+        <div>
+          <h1 className="page-banner-title">Quản lý giáo viên</h1>
+          <p className="page-banner-sub">Danh sách giáo viên HCM4</p>
+        </div>
+        <span className="page-banner-badge">{filtered.length} / {teachers.length} giáo viên</span>
       </div>
 
       {/* Bộ lọc */}

@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useClasses } from '../hooks/useClasses'
+import SingleSelect from '../components/SingleSelect'
 import type { ClassItem } from '../types'
 
 const HCM4_CENTRES = ['Tên Lửa', 'Tây Thạnh', 'Lũy Bán Bích', 'Trường Chinh']
@@ -113,15 +114,17 @@ export default function CRPage() {
   return (
     <div className="page">
       {/* Header */}
-      <div className="page-header cr-page-header">
-        <div className="cr-header-left">
-          <h1>Quản lý CPR</h1>
-          <span className="count-badge">{filtered.length} / {finishedClasses.length} lớp Finished</span>
+      <div className="page-banner cr-page-banner">
+        <div className="cr-banner-left">
+          <div>
+            <h1 className="page-banner-title">Quản lý CR</h1>
+            <p className="page-banner-sub">Completion Rate · Lớp chính quy · FINISHED</p>
+          </div>
+          <span className="page-banner-badge">{filtered.length} / {finishedClasses.length} lớp</span>
         </div>
-
         {/* HCM4 tổng CR — góc phải */}
         <div className="hcm4-summary">
-          <div className="hcm4-label">Tổng CPR HCM4</div>
+          <div className="hcm4-label">Tổng CR HCM4</div>
           <div className="hcm4-rate" style={{
             color: hcm4Stats.rate >= 80 ? '#16a34a' : hcm4Stats.rate >= 50 ? '#d97706' : '#dc2626'
           }}>
@@ -135,39 +138,33 @@ export default function CRPage() {
 
       {/* Bộ lọc */}
       <div className="filters-container">
-        <div className="filter-group">
-          <label className="filter-label">Cơ sở</label>
-          <select value={filters.centre} onChange={(e) => update('centre', e.target.value)}>
-            <option value="">Tất cả</option>
-            {centres.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label className="filter-label">Khối</label>
-          <select value={filters.block} onChange={(e) => update('block', e.target.value)}>
-            <option value="">Tất cả</option>
-            {blocks.map((b) => <option key={b} value={b}>{b}</option>)}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label className="filter-label">Giáo viên</label>
-          <select value={filters.mentor} onChange={(e) => update('mentor', e.target.value)}>
-            <option value="">Tất cả</option>
-            {mentors.map((m) => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-
-        <div className="filter-group">
-          <label className="filter-label">Tỉ lệ CR</label>
-          <select value={filters.rateFilter} onChange={(e) => update('rateFilter', e.target.value)}>
-            <option value="">Tất cả</option>
-            <option value="high">Từ 80% trở lên</option>
-            <option value="low">Dưới 80%</option>
-          </select>
-        </div>
-
+        <SingleSelect
+          label="Cơ sở"
+          options={centres.map((c) => ({ value: c, label: c }))}
+          value={filters.centre}
+          onChange={(v) => update('centre', v)}
+        />
+        <SingleSelect
+          label="Khối"
+          options={blocks.map((b) => ({ value: b, label: b }))}
+          value={filters.block}
+          onChange={(v) => update('block', v)}
+        />
+        <SingleSelect
+          label="Giáo viên"
+          options={mentors.map((m) => ({ value: m, label: m }))}
+          value={filters.mentor}
+          onChange={(v) => update('mentor', v)}
+        />
+        <SingleSelect
+          label="Tỉ lệ CR"
+          options={[
+            { value: 'high', label: 'Từ 80% trở lên' },
+            { value: 'low', label: 'Dưới 80%' },
+          ]}
+          value={filters.rateFilter}
+          onChange={(v) => update('rateFilter', v)}
+        />
         <div className="filter-group">
           <label className="filter-label">&nbsp;</label>
           <button className="btn-reset" onClick={resetFilters}>Xóa bộ lọc</button>

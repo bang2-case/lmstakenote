@@ -7,13 +7,22 @@ export function useTP() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/tp.json')
+    fetch('/api/tp')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
       })
       .then((data: TPRecord[]) => setTpData(data))
-      .catch((e) => setError(e.message))
+      .catch(() => {
+        // Fallback: đọc từ JSON tĩnh
+        fetch('/tp.json')
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return res.json()
+          })
+          .then((data: TPRecord[]) => setTpData(data))
+          .catch((e) => setError(e.message))
+      })
       .finally(() => setLoading(false))
   }, [])
 

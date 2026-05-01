@@ -7,13 +7,23 @@ export function useClasses() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/classes.json')
+    // Thử API server trước, fallback về JSON nếu server chưa chạy
+    fetch('/api/classes')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
       })
       .then((data: ClassItem[]) => setClasses(data))
-      .catch((e) => setError(e.message))
+      .catch(() => {
+        // Fallback: đọc từ JSON tĩnh
+        fetch('/classes.json')
+          .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            return res.json()
+          })
+          .then((data: ClassItem[]) => setClasses(data))
+          .catch((e) => setError(e.message))
+      })
       .finally(() => setLoading(false))
   }, [])
 

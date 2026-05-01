@@ -305,9 +305,12 @@ export default function ClassesPage() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Danh sách lớp học</h1>
-        <span className="count-badge">{filteredClasses.length} / {classes.length} lớp</span>
+      <div className="page-banner">
+        <div>
+          <h1 className="page-banner-title">Danh sách lớp học</h1>
+          <p className="page-banner-sub">Quản lý và theo dõi tất cả lớp học</p>
+        </div>
+        <span className="page-banner-badge">{filteredClasses.length} / {classes.length} lớp</span>
       </div>
 
       <ClassFiltersComponent

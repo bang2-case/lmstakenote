@@ -1449,3 +1449,613 @@
     padding: 14px 16px;
   }
 }
+
+/* TP Modal info row */
+.tp-modal-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.tp-modal-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tp-modal-info-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.tp-modal-info-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.tp-modal-score {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* TP student row — fix layout */
+.tp-student-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.tp-student-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tp-student-main .cr-student-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════
+   TP MODAL REDESIGN
+═══════════════════════════════════════ */
+
+.tp-modal-wrap {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  max-width: 680px;
+  width: 100%;
+  height: 80vh;          /* cố định chiều cao */
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+  overflow: hidden;
+}
+
+/* Banner header with dark background */
+.tp-modal-banner {
+  background: linear-gradient(135deg, #5c1a1a 0%, #991b1b 100%);
+  padding: 28px 28px 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.tp-modal-banner-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.tp-modal-banner-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.tp-modal-banner-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+/* Score cards inside banner */
+.tp-modal-cards {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.tp-modal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 80px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.tp-modal-card:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.4);
+}
+
+.tp-modal-card-active {
+  background: rgba(255,255,255,0.2) !important;
+  border-color: #fff !important;
+}
+
+.tp-modal-card-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.7);
+}
+
+.tp-modal-card-count {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+}
+
+/* Score pill */
+.tp-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  font-weight: 800;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.tp-pill-denom {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.tp-pill-green  { color: #16a34a; background: rgba(22,163,74,0.12); }
+.tp-pill-yellow { color: #d97706; background: rgba(217,119,6,0.12); }
+.tp-pill-red    { color: #dc2626; background: rgba(220,38,38,0.12); }
+.tp-pill-na     { color: rgba(255,255,255,0.4); background: transparent; font-size: 16px; }
+
+/* Student list section */
+.tp-modal-list-wrap {
+  flex: 1;
+  overflow: hidden;   /* không scroll toàn bộ section */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.tp-modal-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;      /* cố định, không bị đẩy */
+  background: var(--card-bg);
+}
+
+.tp-modal-list-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tp-modal-list-avg {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.tp-modal-list-avg strong {
+  color: var(--text);
+}
+
+/* Student rows */
+.tp-slist {
+  padding: 12px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;    /* chỉ phần này scroll */
+  flex: 1;
+  min-height: 0;
+}
+
+.tp-slist-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px solid var(--border);
+  transition: background 0.1s;
+}
+
+.tp-slist-row:hover {
+  background: #fef2f2;
+}
+
+.tp-slist-idx {
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 20px;
+  flex-shrink: 0;
+}
+
+.tp-slist-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  min-width: 0;
+}
+
+.tp-slist-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tp-slist-right .tp-pill {
+  font-size: 14px;
+  padding: 2px 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tp-modal-banner {
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px 20px 18px;
+  }
+
+  .tp-modal-cards {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tp-modal-card {
+    flex: 1;
+  }
+
+  .tp-modal-list-head,
+  .tp-slist {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ── TP Page banner ── */
+.tp-page-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #5c1a1a 0%, #991b1b 100%);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.tp-page-banner-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.tp-page-banner-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+
+.tp-page-badge {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.25);
+  white-space: nowrap;
+}
+
+/* ── TP chart — match banner style ── */
+.tp-chart-wrapper {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.tp-chart-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+@media (max-width: 768px) {
+  .tp-page-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 20px;
+  }
+  .tp-page-banner-title { font-size: 22px; }
+}
+
+/* ═══════════════════════════════════════
+   PAGE BANNER (shared across all pages)
+═══════════════════════════════════════ */
+
+.page-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #5c1a1a 0%, #991b1b 100%);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.page-banner-title {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+}
+
+.page-banner-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+
+.page-banner-badge {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.25);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* CR page banner — has extra HCM4 box on right */
+.cr-page-banner {
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.cr-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* HCM4 box — white on dark banner */
+.cr-page-banner .hcm4-summary {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 10px;
+  padding: 10px 18px;
+  text-align: center;
+  min-width: 130px;
+}
+
+.cr-page-banner .hcm4-label {
+  color: rgba(255,255,255,0.65);
+  font-size: 11px;
+}
+
+.cr-page-banner .hcm4-sub {
+  color: rgba(255,255,255,0.55);
+  font-size: 11px;
+}
+
+.cr-page-banner .hcm4-rate {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 2px;
+}
+
+@media (max-width: 768px) {
+  .page-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 18px 20px;
+  }
+  .page-banner-title { font-size: 22px; }
+  .cr-banner-left { flex-direction: column; align-items: flex-start; }
+}
+
+/* ═══════════════════════════════════════
+   MULTISELECT — match <select> style
+═══════════════════════════════════════ */
+
+.filter-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: white;
+  color: var(--text);
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: 38px;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.filter-select-trigger:hover {
+  border-color: #d1d5db;
+}
+
+.filter-select-trigger.active {
+  border-color: var(--accent-red);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  outline: none;
+}
+
+.filter-select-trigger.has-value {
+  border-color: var(--accent-red);
+}
+
+.filter-select-value {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.filter-select-placeholder {
+  color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.filter-select-icon {
+  flex-shrink: 0;
+  margin-left: 6px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-select-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.filter-select-clear:hover { color: var(--accent-red); }
+
+.filter-select-arrow {
+  font-size: 11px;
+  color: #9ca3af;
+  display: inline-block;
+  transition: transform 0.2s;
+}
+
+.filter-select-arrow.open { transform: rotate(180deg); }
+
+/* Dropdown popup */
+.multiselect-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 500;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.multiselect-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  transition: background 0.1s;
+}
+
+.multiselect-item:hover { background: #f9fafb; }
+
+.multiselect-item-selected {
+  background: #fef2f2;
+  color: var(--accent-red);
+  font-weight: 500;
+}
+
+.multiselect-item-selected:hover { background: #fee2e2; }
+
+.multiselect-item-text { flex: 1; }
+
+.multiselect-item-check {
+  font-size: 12px;
+  color: var(--accent-red);
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.multiselect-empty {
+  padding: 10px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* ── Recharts tooltip ── */
+.tp-chart-tooltip {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.tp-chart-tooltip-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 6px;
+}
+
+/* TP modal — no survey state */
+.tp-no-survey {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-style: italic;
+  color: var(--text-muted);
+}

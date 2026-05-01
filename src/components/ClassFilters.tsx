@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { ClassFilters } from '../types'
 import DatePickerInput from './DatePickerInput'
 import MultiSelect from './MultiSelect'
+import SingleSelect from './SingleSelect'
 
 interface Props {
   filters: ClassFilters
@@ -37,13 +38,12 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
   return (
     <div className="filters-container">
       {/* Cơ sở */}
-      <div className="filter-group">
-        <label className="filter-label">Cơ sở</label>
-        <select value={localFilters.centre} onChange={(e) => update('centre', e.target.value)}>
-          <option value="">Tất cả</option>
-          {centres.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
+      <SingleSelect
+        label="Cơ sở"
+        options={centres.map((c) => ({ value: c, label: c }))}
+        value={localFilters.centre}
+        onChange={(v) => update('centre', v)}
+      />
 
       {/* Ngày bắt đầu */}
       <DatePickerInput
@@ -76,13 +76,12 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
       />
 
       {/* Khóa học */}
-      <div className="filter-group">
-        <label className="filter-label">Khóa học</label>
-        <select value={localFilters.course} onChange={(e) => update('course', e.target.value)}>
-          <option value="">Tất cả</option>
-          {courses.map((c) => <option key={c} value={c}>{c}</option>)}
-        </select>
-      </div>
+      <SingleSelect
+        label="Khóa học"
+        options={courses.map((c) => ({ value: c, label: c }))}
+        value={localFilters.course}
+        onChange={(v) => update('course', v)}
+      />
 
       {/* Trạng thái - multi-select */}
       <MultiSelect
@@ -95,23 +94,23 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
       />
 
       {/* Nhận xét */}
-      <div className="filter-group">
-        <label className="filter-label">Nhận xét</label>
-        <select value={localFilters.hasComments} onChange={(e) => update('hasComments', e.target.value)}>
-          <option value="">Tất cả</option>
-          <option value="100">Đã nhận xét</option>
-          <option value="0">Chưa nhận xét</option>
-        </select>
-      </div>
+      <SingleSelect
+        label="Nhận xét"
+        options={[
+          { value: '100', label: 'Đã nhận xét' },
+          { value: '0', label: 'Chưa nhận xét' },
+        ]}
+        value={localFilters.hasComments}
+        onChange={(v) => update('hasComments', v)}
+      />
 
       {/* Mentor */}
-      <div className="filter-group">
-        <label className="filter-label">Mentor</label>
-        <select value={localFilters.mentor} onChange={(e) => update('mentor', e.target.value)}>
-          <option value="">Tất cả</option>
-          {mentors.map((m) => <option key={m} value={m}>{m}</option>)}
-        </select>
-      </div>
+      <SingleSelect
+        label="Mentor"
+        options={mentors.map((m) => ({ value: m, label: m }))}
+        value={localFilters.mentor}
+        onChange={(v) => update('mentor', v)}
+      />
 
       {/* Reset */}
       <div className="filter-group">
