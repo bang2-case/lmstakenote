@@ -75,11 +75,15 @@ export default function ClassDetail({ classItem, onClose }: Props) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
-        
+        <div className="modal-banner">
+          <div>
+            <h2 className="modal-banner-title">{classItem.name}</h2>
+            <p className="modal-banner-sub">Thông tin chi tiết lớp học</p>
+          </div>
+          <span className="modal-banner-badge">{classItem.slots.length} buổi</span>
+        </div>
+
         <div className="modal-header">
-          <h2 className="modal-title">{classItem.name}</h2>
-          
           <div className="detail-grid">
             <div className="detail-item">
               <span className="detail-label">Trạng thái</span>

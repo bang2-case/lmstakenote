@@ -1,8 +1,157 @@
 [
   {
+    "id": "69f5a576b28d84e035a2bc9c",
+    "name": "TL-XART-KAA04",
+    "status": "PREPARING",
+    "course": "Kids Art Advanced",
+    "centre": "HCM - Khu Tên Lửa",
+    "teachers": [],
+    "sessions": 14,
+    "createdAt": "1777706358748",
+    "startDate": "2026-05-09T01:00:00.000Z",
+    "endDate": "2026-08-08T03:00:00.000Z",
+    "level": "HIGHER",
+    "block": "ART",
+    "slots": [
+      {
+        "id": "69f5a5b1593464001276e388",
+        "date": "2026-05-09T07:19:00.000Z",
+        "startTime": "2026-05-09T01:00:00.000Z",
+        "endTime": "2026-05-09T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e389",
+        "date": "2026-05-16T07:19:00.000Z",
+        "startTime": "2026-05-16T01:00:00.000Z",
+        "endTime": "2026-05-16T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e38a",
+        "date": "2026-05-23T07:19:00.000Z",
+        "startTime": "2026-05-23T01:00:00.000Z",
+        "endTime": "2026-05-23T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e38b",
+        "date": "2026-05-30T07:19:00.000Z",
+        "startTime": "2026-05-30T01:00:00.000Z",
+        "endTime": "2026-05-30T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e38c",
+        "date": "2026-06-06T07:19:00.000Z",
+        "startTime": "2026-06-06T01:00:00.000Z",
+        "endTime": "2026-06-06T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e38d",
+        "date": "2026-06-13T07:19:00.000Z",
+        "startTime": "2026-06-13T01:00:00.000Z",
+        "endTime": "2026-06-13T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e38e",
+        "date": "2026-06-20T07:19:00.000Z",
+        "startTime": "2026-06-20T01:00:00.000Z",
+        "endTime": "2026-06-20T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e38f",
+        "date": "2026-06-27T07:19:00.000Z",
+        "startTime": "2026-06-27T01:00:00.000Z",
+        "endTime": "2026-06-27T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e390",
+        "date": "2026-07-04T07:19:00.000Z",
+        "startTime": "2026-07-04T01:00:00.000Z",
+        "endTime": "2026-07-04T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e391",
+        "date": "2026-07-11T07:19:00.000Z",
+        "startTime": "2026-07-11T01:00:00.000Z",
+        "endTime": "2026-07-11T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e392",
+        "date": "2026-07-18T07:19:00.000Z",
+        "startTime": "2026-07-18T01:00:00.000Z",
+        "endTime": "2026-07-18T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e393",
+        "date": "2026-07-25T07:19:00.000Z",
+        "startTime": "2026-07-25T01:00:00.000Z",
+        "endTime": "2026-07-25T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e394",
+        "date": "2026-08-01T07:19:00.000Z",
+        "startTime": "2026-08-01T01:00:00.000Z",
+        "endTime": "2026-08-01T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      },
+      {
+        "id": "69f5a5b1593464001276e395",
+        "date": "2026-08-08T07:19:00.000Z",
+        "startTime": "2026-08-08T01:00:00.000Z",
+        "endTime": "2026-08-08T03:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
+      }
+    ],
+    "studentCount": 5,
+    "attendedCount": 0,
+    "completedCount": 0,
+    "completionRate": 0,
+    "commentPercentage": 0,
+    "totalSlotsWithStudents": 0,
+    "slotsWithFullComments": 0
+  },
+  {
     "id": "69f5659ae3841729c1d83bf4",
     "name": "TL-C4K-GA45",
-    "status": "PRE_OPEN",
+    "status": "PENDING",
     "course": "Game Creator Advanced",
     "centre": "HCM - Khu Tên Lửa",
     "teachers": [],
@@ -151,10 +300,16 @@
   {
     "id": "69f1f45e372e199488caacfb",
     "name": "TT-XART-VAA15-HB",
-    "status": "PREPARING",
+    "status": "OPEN",
     "course": "Visual Art Advance",
     "centre": "HCM - 322 Tây Thạnh",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Trần Thị Tuyết Trinh",
+        "email": "trinh.com1812@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1777464414135",
     "startDate": "2026-05-09T09:00:00.000Z",
@@ -289,7 +444,7 @@
         "studentsWithComment": 0
       }
     ],
-    "studentCount": 6,
+    "studentCount": 7,
     "attendedCount": 0,
     "completedCount": 0,
     "completionRate": 0,
@@ -300,7 +455,7 @@
   {
     "id": "69f1efec372e199488ca605a",
     "name": "TT-C4K-GI38-HB",
-    "status": "PRE_OPEN",
+    "status": "PENDING",
     "course": "Game Creator Intensive",
     "centre": "HCM - 322 Tây Thạnh",
     "teachers": [],
@@ -449,10 +604,16 @@
   {
     "id": "69f083a0b28d84e035924f3f",
     "name": "TL-C4K-PTB27",
-    "status": "PENDING",
+    "status": "OPEN",
     "course": "App Producer Basic",
     "centre": "HCM - Khu Tên Lửa",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Nguyễn Tấn Kiệt",
+        "email": "kietnt3@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1777370016278",
     "startDate": "2026-05-03T03:00:00.000Z",
@@ -747,10 +908,16 @@
   {
     "id": "69ef0f8383a8d7221b87ec05",
     "name": "TL-JSB14",
-    "status": "PENDING",
+    "status": "OPEN",
     "course": "Web Developer Basic",
     "centre": "HCM - Khu Tên Lửa",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Nguyễn Bá Ngọc",
+        "email": "ngocnb@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1777274755751",
     "startDate": "2026-05-03T07:00:00.000Z",
@@ -902,20 +1069,11 @@
     "teachers": [],
     "sessions": 14,
     "createdAt": "1777274185319",
-    "startDate": "2026-05-12T11:00:00.000Z",
-    "endDate": "2026-08-11T13:00:00.000Z",
+    "startDate": "2026-05-19T11:00:00.000Z",
+    "endDate": "2026-08-18T13:00:00.000Z",
     "level": "ENTRANCE",
     "block": "Coding",
     "slots": [
-      {
-        "id": "69ef11a5062dc600126d5585",
-        "date": "2026-05-12T07:34:00.000Z",
-        "startTime": "2026-05-12T11:00:00.000Z",
-        "endTime": "2026-05-12T13:00:00.000Z",
-        "commentStatus": "Chưa nhận xét",
-        "studentsInSlot": 0,
-        "studentsWithComment": 0
-      },
       {
         "id": "69ef11a5062dc600126d5586",
         "date": "2026-05-19T07:34:00.000Z",
@@ -1032,6 +1190,15 @@
         "commentStatus": "Chưa nhận xét",
         "studentsInSlot": 0,
         "studentsWithComment": 0
+      },
+      {
+        "id": "69f59b395934640012765187",
+        "date": "2026-08-18T06:35:00.000Z",
+        "startTime": "2026-08-18T11:00:00.000Z",
+        "endTime": "2026-08-18T13:00:00.000Z",
+        "commentStatus": "Chưa nhận xét",
+        "studentsInSlot": 0,
+        "studentsWithComment": 0
       }
     ],
     "studentCount": 5,
@@ -1045,10 +1212,16 @@
   {
     "id": "69ec80872205927a5b1db096",
     "name": "TL-ROB-PREI15",
-    "status": "PENDING",
+    "status": "OPEN",
     "course": "Pre-Robotics Intensive",
     "centre": "HCM - Khu Tên Lửa",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Trần Duy Nhân",
+        "email": "tranduynhan@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1777107079972",
     "startDate": "2026-05-03T01:00:00.000Z",
@@ -1343,10 +1516,16 @@
   {
     "id": "69e9cc0c372e199488aedd55",
     "name": "TT-XART-GDA12",
-    "status": "PENDING",
+    "status": "OPEN",
     "course": "Graphic Design Advance",
     "centre": "HCM - 322 Tây Thạnh",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Bùi Quang Anh",
+        "email": "anhquangbui216@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1776929804154",
     "startDate": "2026-05-10T07:00:00.000Z",
@@ -1492,10 +1671,16 @@
   {
     "id": "69e8a4112205927a5b05b0ae",
     "name": "LBB-C4K-GA28",
-    "status": "PENDING",
+    "status": "OPEN",
     "course": "Game Creator Advanced",
     "centre": "HCM - 414 Lũy Bán Bích",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Tưởng Tấn Khang",
+        "email": "khangtt@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1776854033698",
     "startDate": "2026-05-03T07:00:00.000Z",
@@ -1685,10 +1870,16 @@
   {
     "id": "69e702c2e3841729c197a604",
     "name": "TL-ROB-SEMII13",
-    "status": "PENDING",
+    "status": "OPEN",
     "course": "Semi Robotics Intensive",
     "centre": "HCM - Khu Tên Lửa",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Nguyễn Thị Minh Nhi",
+        "email": "nguyenthiminhnhi2000@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1776747202447",
     "startDate": "2026-05-03T11:00:00.000Z",
@@ -6039,10 +6230,16 @@
   {
     "id": "69d2562d8707991ac5fae9ef",
     "name": "TL-C4K-PTB26",
-    "status": "PRE_OPEN",
+    "status": "OPEN",
     "course": "App Producer Basic",
     "centre": "HCM - Khu Tên Lửa",
-    "teachers": [],
+    "teachers": [
+      {
+        "name": "Khưu Nhật Tín",
+        "email": "khuunhattin@mindx.net.vn",
+        "role": "Lecturer"
+      }
+    ],
     "sessions": 14,
     "createdAt": "1775392301458",
     "startDate": "2026-05-10T09:00:00.000Z",
@@ -13669,7 +13866,7 @@
   {
     "id": "69b66bea682cb557c09ac765",
     "name": "TL-ROB-SEMIB16",
-    "status": "PREPARING",
+    "status": "PENDING",
     "course": "Semi Robotics Basic",
     "centre": "HCM - Khu Tên Lửa",
     "teachers": [],
@@ -13807,7 +14004,7 @@
         "studentsWithComment": 0
       }
     ],
-    "studentCount": 2,
+    "studentCount": 6,
     "attendedCount": 0,
     "completedCount": 0,
     "completionRate": 0,
@@ -16095,9 +16292,9 @@
         "date": "2026-04-28T02:48:00.000Z",
         "startTime": "2026-04-28T11:00:00.000Z",
         "endTime": "2026-04-28T13:00:00.000Z",
-        "commentStatus": "Chưa nhận xét",
+        "commentStatus": "Đã nhận xét",
         "studentsInSlot": 9,
-        "studentsWithComment": 0
+        "studentsWithComment": 9
       },
       {
         "id": "69ab9234b96a0a001269c50f",
@@ -16158,9 +16355,9 @@
     "attendedCount": 9,
     "completedCount": 0,
     "completionRate": 0,
-    "commentPercentage": 88,
+    "commentPercentage": 100,
     "totalSlotsWithStudents": 8,
-    "slotsWithFullComments": 7
+    "slotsWithFullComments": 8
   },
   {
     "id": "69aa85477de87c656e2d6023",
@@ -22545,19 +22742,19 @@
         "studentsWithComment": 1
       },
       {
-        "id": "69b65cab2b7e570012468b5c",
-        "date": "2026-04-28T11:59:00.000Z",
-        "startTime": "2026-04-28T11:30:00.000Z",
-        "endTime": "2026-04-28T13:30:00.000Z",
+        "id": "69b65cab2b7e570012468b5d",
+        "date": "2026-05-05T11:59:00.000Z",
+        "startTime": "2026-05-05T11:30:00.000Z",
+        "endTime": "2026-05-05T13:30:00.000Z",
         "commentStatus": "Chưa nhận xét",
         "studentsInSlot": 0,
         "studentsWithComment": 0
       },
       {
-        "id": "69b65cab2b7e570012468b5d",
-        "date": "2026-05-05T11:59:00.000Z",
-        "startTime": "2026-05-05T11:30:00.000Z",
-        "endTime": "2026-05-05T13:30:00.000Z",
+        "id": "69f59c8b5934640012765717",
+        "date": "2026-05-07T11:59:00.000Z",
+        "startTime": "2026-05-07T11:30:00.000Z",
+        "endTime": "2026-05-07T13:30:00.000Z",
         "commentStatus": "Chưa nhận xét",
         "studentsInSlot": 0,
         "studentsWithComment": 0
@@ -41834,7 +42031,7 @@
   {
     "id": "695badb8236ac02d0bbff536",
     "name": "01TC-JSI13",
-    "status": "FINISHED",
+    "status": "RUNNING",
     "course": "Web Developer Intensive",
     "centre": "HCM - 01 Trường Chinh",
     "teachers": [
@@ -41847,7 +42044,7 @@
     "sessions": 14,
     "createdAt": "1767615928945",
     "startDate": "2026-01-10T09:30:00.000Z",
-    "endDate": "2026-04-25T11:30:00.000Z",
+    "endDate": "2026-05-09T11:30:00.000Z",
     "level": "HIGHER",
     "block": "Coding",
     "slots": [
@@ -41969,10 +42166,10 @@
         "studentsWithComment": 7
       },
       {
-        "id": "69f06afd18d81d0012090285",
-        "date": "2026-04-25T11:30:00.000Z",
-        "startTime": "2026-04-25T09:30:00.000Z",
-        "endTime": "2026-04-25T11:30:00.000Z",
+        "id": "69f5c605aba9a40011f64970",
+        "date": "2026-05-09T11:30:00.000Z",
+        "startTime": "2026-05-09T09:30:00.000Z",
+        "endTime": "2026-05-09T11:30:00.000Z",
         "commentStatus": "Chưa nhận xét",
         "studentsInSlot": 0,
         "studentsWithComment": 0
@@ -46638,7 +46835,7 @@
   {
     "id": "6948b743823241701900e17c",
     "name": "TT-XART-GDA11(1:1)",
-    "status": "FINISHED",
+    "status": "RUNNING",
     "course": "Graphic Design Advance",
     "centre": "HCM - 322 Tây Thạnh",
     "teachers": [
@@ -47413,7 +47610,7 @@
   {
     "id": "69474d918232417019b65734",
     "name": "01TC-XART-GDI07",
-    "status": "FINISHED",
+    "status": "RUNNING",
     "course": "Graphic Design Intensive",
     "centre": "HCM - 01 Trường Chinh",
     "teachers": [
@@ -47426,7 +47623,7 @@
     "sessions": 14,
     "createdAt": "1766280593971",
     "startDate": "2025-12-27T09:00:00.000Z",
-    "endDate": "2026-04-25T11:00:00.000Z",
+    "endDate": "2026-05-09T11:00:00.000Z",
     "level": "HIGHER",
     "block": "ART",
     "slots": [
@@ -47548,10 +47745,10 @@
         "studentsWithComment": 2
       },
       {
-        "id": "69f06ddcf8406d0012132ccd",
-        "date": "2026-04-25T11:00:00.000Z",
-        "startTime": "2026-04-25T09:00:00.000Z",
-        "endTime": "2026-04-25T11:00:00.000Z",
+        "id": "69f5c76dbd538b001199e43c",
+        "date": "2026-05-09T11:00:00.000Z",
+        "startTime": "2026-05-09T09:00:00.000Z",
+        "endTime": "2026-05-09T11:00:00.000Z",
         "commentStatus": "Chưa nhận xét",
         "studentsInSlot": 0,
         "studentsWithComment": 0
@@ -53389,7 +53586,7 @@
   {
     "id": "692e9d361c1ae2533b58dc63",
     "name": "TL-C4K-GA39",
-    "status": "RUNNING",
+    "status": "ABANDONED",
     "course": "Game Creator Advanced",
     "centre": "HCM - Khu Tên Lửa",
     "teachers": [
@@ -90752,161 +90949,6 @@
     "attendedCount": 1,
     "completedCount": 1,
     "completionRate": 100,
-    "commentPercentage": 100,
-    "totalSlotsWithStudents": 14,
-    "slotsWithFullComments": 14
-  },
-  {
-    "id": "68ba8eaa96833013bd07012f",
-    "name": "TL-C4K-GB41",
-    "status": "FINISHED",
-    "course": "Game Creator Basic",
-    "centre": "HCM - Khu Tên Lửa",
-    "teachers": [
-      {
-        "name": "Huỳnh Hải Bằng",
-        "email": "banghh@mindx.net.vn",
-        "role": "Lecturer"
-      }
-    ],
-    "sessions": 14,
-    "createdAt": "1757056683065",
-    "startDate": "2025-09-09T11:00:00.000Z",
-    "endDate": "2025-12-09T13:00:00.000Z",
-    "level": "HIGHER",
-    "block": "Coding",
-    "slots": [
-      {
-        "id": "68ba8f45ff121a00124c6ed7",
-        "date": "2025-09-09T06:32:00.000Z",
-        "startTime": "2025-09-09T11:00:00.000Z",
-        "endTime": "2025-09-09T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 6,
-        "studentsWithComment": 6
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ed8",
-        "date": "2025-09-16T06:32:00.000Z",
-        "startTime": "2025-09-16T11:00:00.000Z",
-        "endTime": "2025-09-16T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 8,
-        "studentsWithComment": 8
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ed9",
-        "date": "2025-09-23T06:32:00.000Z",
-        "startTime": "2025-09-23T11:00:00.000Z",
-        "endTime": "2025-09-23T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 8,
-        "studentsWithComment": 8
-      },
-      {
-        "id": "68ba8f45ff121a00124c6eda",
-        "date": "2025-09-30T06:32:00.000Z",
-        "startTime": "2025-09-30T11:00:00.000Z",
-        "endTime": "2025-09-30T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 7,
-        "studentsWithComment": 7
-      },
-      {
-        "id": "68ba8f45ff121a00124c6edb",
-        "date": "2025-10-07T06:32:00.000Z",
-        "startTime": "2025-10-07T11:00:00.000Z",
-        "endTime": "2025-10-07T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 8,
-        "studentsWithComment": 8
-      },
-      {
-        "id": "68ba8f45ff121a00124c6edc",
-        "date": "2025-10-14T06:32:00.000Z",
-        "startTime": "2025-10-14T11:00:00.000Z",
-        "endTime": "2025-10-14T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 7,
-        "studentsWithComment": 7
-      },
-      {
-        "id": "68ba8f45ff121a00124c6edd",
-        "date": "2025-10-21T06:32:00.000Z",
-        "startTime": "2025-10-21T11:00:00.000Z",
-        "endTime": "2025-10-21T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 8,
-        "studentsWithComment": 8
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ede",
-        "date": "2025-10-28T06:32:00.000Z",
-        "startTime": "2025-10-28T11:00:00.000Z",
-        "endTime": "2025-10-28T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 7,
-        "studentsWithComment": 7
-      },
-      {
-        "id": "68ba8f45ff121a00124c6edf",
-        "date": "2025-11-04T06:32:00.000Z",
-        "startTime": "2025-11-04T11:00:00.000Z",
-        "endTime": "2025-11-04T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 7,
-        "studentsWithComment": 7
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ee0",
-        "date": "2025-11-11T06:32:00.000Z",
-        "startTime": "2025-11-11T11:00:00.000Z",
-        "endTime": "2025-11-11T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 7,
-        "studentsWithComment": 7
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ee1",
-        "date": "2025-11-18T06:32:00.000Z",
-        "startTime": "2025-11-18T11:00:00.000Z",
-        "endTime": "2025-11-18T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 7,
-        "studentsWithComment": 7
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ee2",
-        "date": "2025-11-25T06:32:00.000Z",
-        "startTime": "2025-11-25T11:00:00.000Z",
-        "endTime": "2025-11-25T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 6,
-        "studentsWithComment": 6
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ee3",
-        "date": "2025-12-02T06:32:00.000Z",
-        "startTime": "2025-12-02T11:00:00.000Z",
-        "endTime": "2025-12-02T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 7,
-        "studentsWithComment": 7
-      },
-      {
-        "id": "68ba8f45ff121a00124c6ee4",
-        "date": "2025-12-09T06:32:00.000Z",
-        "startTime": "2025-12-09T11:00:00.000Z",
-        "endTime": "2025-12-09T13:00:00.000Z",
-        "commentStatus": "Đã nhận xét",
-        "studentsInSlot": 6,
-        "studentsWithComment": 6
-      }
-    ],
-    "studentCount": 8,
-    "attendedCount": 8,
-    "completedCount": 7,
-    "completionRate": 88,
     "commentPercentage": 100,
     "totalSlotsWithStudents": 14,
     "slotsWithFullComments": 14

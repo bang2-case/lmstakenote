@@ -604,6 +604,41 @@
   border-bottom: 1px solid var(--border);
 }
 
+.modal-banner {
+  background: linear-gradient(135deg, #5c1a1a 0%, #991b1b 100%);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 26px 28px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-banner-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+  color: #fff;
+}
+
+.modal-banner-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 4px;
+}
+
+.modal-banner-badge {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.25);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .modal-divider {
   height: 1px;
   background: var(--border);
@@ -681,6 +716,12 @@
 
 .modal-close:hover {
   background: #e5e7eb;
+}
+
+/* When banner is present, modal-header should not have top radius or border-bottom */
+.modal-banner + .modal-header {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
 }
 
 .modal-title {
@@ -1005,6 +1046,21 @@
 
   .modal-header {
     padding: 20px 20px 16px;
+  }
+
+  .modal-banner {
+    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .modal-banner-title {
+    font-size: 22px;
+  }
+
+  .modal-banner-badge {
+    align-self: flex-start;
   }
 
   .modal-title {
