@@ -1240,10 +1240,62 @@
         "role": "Lecturer"
       }
     ],
-    "tp1": null,
-    "tp2": null,
-    "tp1_students": [],
-    "tp2_students": []
+    "tp1": 4.78,
+    "tp2": 4.28,
+    "tp1_students": [
+      {
+        "name": "TRẦN NGỌC QUỲNH HƯƠNG",
+        "score": 5.0,
+        "textAnswers": [
+          {
+            "questionId": "676a887afe6e69ed05003d89",
+            "value": "Không có"
+          }
+        ]
+      },
+      {
+        "name": "Nguyễn Khắc Hoàng Lâm",
+        "score": 4.33,
+        "textAnswers": [
+          {
+            "questionId": "676a887afe6e69ed05003d89",
+            "value": "không"
+          }
+        ]
+      },
+      {
+        "name": "Nguyễn Minh Khôi",
+        "score": 5.0,
+        "textAnswers": [
+          {
+            "questionId": "676a887afe6e69ed05003d89",
+            "value": "Dạ không ạ"
+          }
+        ]
+      }
+    ],
+    "tp2_students": [
+      {
+        "name": "Võ Nguyên Bình",
+        "score": 3.78,
+        "textAnswers": [
+          {
+            "questionId": "676a887afe6e69ed05003d89",
+            "value": "dạ không"
+          }
+        ]
+      },
+      {
+        "name": "TRẦN NGỌC QUỲNH HƯƠNG",
+        "score": 4.78,
+        "textAnswers": [
+          {
+            "questionId": "676a887afe6e69ed05003d89",
+            "value": "Không"
+          }
+        ]
+      }
+    ]
   },
   {
     "classId": "69442b12823241701930d229",

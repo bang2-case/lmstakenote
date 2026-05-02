@@ -72,9 +72,11 @@ export interface ClassFilters {
   slot: string
   slotTo: string
   course: string
+  search: string
   status: string[]    // multi-select
   hasComments: string
   mentor: string
+  tpRound: string
   block: string[]     // multi-select
 }
 

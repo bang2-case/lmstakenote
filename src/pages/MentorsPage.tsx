@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { useTeachers } from '../hooks/useTeachers'
+import { useClasses } from '../hooks/useClasses'
 import MultiSelect from '../components/MultiSelect'
-import type { TeacherItem } from '../types'
+import type { ClassItem, TeacherItem } from '../types'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -56,25 +57,46 @@ function TeacherCard({ teacher, onClick }: { teacher: TeacherItem; onClick: () =
 
 // ── Teacher Detail Modal ──────────────────────────────────────────────────────
 
-function TeacherDetail({ teacher, onClose }: { teacher: TeacherItem; onClose: () => void }) {
+function TeacherDetail({
+  teacher,
+  onClose,
+  classes,
+  loading,
+  error,
+}: {
+  teacher: TeacherItem
+  onClose: () => void
+  classes: ClassItem[]
+  loading: boolean
+  error: string | null
+}) {
+  const runningClasses = classes.filter((cls) =>
+    cls.status === 'RUNNING' &&
+    cls.teachers.some(
+      (t) => t.role === 'Lecturer' && t.name.toLowerCase() === teacher.fullName.toLowerCase()
+    )
+  )
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
 
-        <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-            <h2 className="modal-title" style={{ marginBottom: 0 }}>{teacher.fullName}</h2>
+        <div className="teacher-detail-banner">
+          <div>
+            <h2 className="teacher-detail-banner-title" style={{ paddingBottom: 4 }}>{teacher.fullName}</h2>
+            <p className="teacher-detail-banner-sub" style={{ paddingBottom: 8 }}>@{teacher.username} · {teacher.code}</p>
             {teacher.blocks.length > 0 && (
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div className="teacher-detail-banner-tags" style={{ paddingBottom: 4 }}>
                 {teacher.blocks.map((b) => (
-                  <span key={b} className="teacher-block" style={blockLabelStyle(b)}>{b}</span>
+                  <span key={b} className="teacher-detail-banner-tag">{b}</span>
                 ))}
               </div>
             )}
           </div>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>@{teacher.username} · {teacher.code}</p>
-          <div className="modal-divider" />
+        </div>
+
+        <div className="modal-body">
           <div className="detail-grid">
             <div className="detail-item">
               <span className="detail-label">Email</span>
@@ -114,6 +136,29 @@ function TeacherDetail({ teacher, onClose }: { teacher: TeacherItem; onClose: ()
               </div>
             </div>
           )}
+
+          <div className="detail-section">
+            <h3>Các lớp hiện tại</h3>
+
+            {loading ? (
+              <p>Đang tải danh sách lớp...</p>
+            ) : error ? (
+              <p className="state-msg error">Không tải được dữ liệu lớp.</p>
+            ) : runningClasses.length === 0 ? (
+              <p>Không có lớp...</p>
+            ) : (
+              <div className="teacher-list-scroll">
+                <div className="teacher-list">
+                  {runningClasses.map((cls) => (
+                    <div key={cls.id} className="teacher-item">
+                      <span className="teacher-name">{cls.name}</span>
+                      <span className="teacher-email">{cls.centre || '—'} · {cls.course || '—'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -141,7 +186,7 @@ function SummaryModal({ teachers, onClose }: { teachers: TeacherItem[]; onClose:
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="summary-banner">
+        <div className="summary-banner" style={{ paddingTop: '35px', paddingBottom: '35px' }}>
           <div>
             <h2 className="summary-banner-title">Tổng hợp</h2>
             <p className="summary-banner-sub">Danh sách giáo viên</p>
@@ -185,6 +230,7 @@ function SummaryModal({ teachers, onClose }: { teachers: TeacherItem[]; onClose:
 
 export default function MentorsPage() {
   const { teachers, loading, error } = useTeachers()
+  const { classes, loading: classesLoading, error: classesError } = useClasses()
   const [filters, setFilters] = useState<TeacherFilters>({ search: '', centres: [], blocks: [], birthMonth: '' })
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherItem | null>(null)
   const [showSummary, setShowSummary] = useState(false)
@@ -317,7 +363,13 @@ export default function MentorsPage() {
       )}
 
       {selectedTeacher && (
-        <TeacherDetail teacher={selectedTeacher} onClose={() => setSelectedTeacher(null)} />
+        <TeacherDetail
+          teacher={selectedTeacher}
+          onClose={() => setSelectedTeacher(null)}
+          classes={classes}
+          loading={classesLoading}
+          error={classesError}
+        />
       )}
 
       {showSummary && (

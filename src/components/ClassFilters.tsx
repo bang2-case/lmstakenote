@@ -38,6 +38,16 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
   return (
     <div className="filters-container">
       {/* Cơ sở */}
+      <div className="filter-group">
+        <label className="filter-label">Tìm lớp</label>
+        <input
+          type="text"
+          placeholder="Nhập tên lớp..."
+          value={localFilters.search}
+          onChange={(e) => update('search', e.target.value)}
+        />
+      </div>
+
       <SingleSelect
         label="Cơ sở"
         options={centres.map((c) => ({ value: c, label: c }))}
@@ -112,13 +122,24 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
         onChange={(v) => update('mentor', v)}
       />
 
+      {/* Khảo sát */}
+      <SingleSelect
+        label="Khảo sát"
+        options={[
+          { value: 'tp1', label: 'TP 1' },
+          { value: 'tp2', label: 'TP 2' },
+        ]}
+        value={localFilters.tpRound}
+        onChange={(v) => update('tpRound', v)}
+      />
+
       {/* Reset */}
       <div className="filter-group">
         <label className="filter-label">&nbsp;</label>
         <button className="btn-reset" onClick={() => {
           const resetFilters: ClassFilters = {
             centre: '', startDate: '', startDateTo: '', endDate: '', endDateTo: '',
-            slot: '', slotTo: '', course: '', status: [], hasComments: '', mentor: '', block: []
+            slot: '', slotTo: '', course: '', search: '', status: [], hasComments: '', mentor: '', tpRound: '', block: []
           }
           setLocalFilters(resetFilters)
           onChange(resetFilters)

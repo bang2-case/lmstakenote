@@ -28,6 +28,8 @@ export default function ClassDetail({ classItem, onClose }: Props) {
     })
   }
 
+  const sortedSlots = [...classItem.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
   const getSlotClass = (slot: any) => {
     const now = new Date()
     const slotDate = new Date(slot.date)
@@ -145,9 +147,9 @@ export default function ClassDetail({ classItem, onClose }: Props) {
             <>
               <h3 className="schedule-title-fixed">Lịch học ({classItem.slots.length} buổi)</h3>
               <div className="slot-list-container">
-                {classItem.slots.map((s) => (
+                {sortedSlots.map((s, index) => (
                   <div key={s.id} className={`slot-item-detail ${getSlotClass(s)}`}>
-                    <div className="slot-date">{formatDate(s.date)}</div>
+                    <div className="slot-date">Buổi {index + 1} - {formatDate(s.date)}</div>
                     <div className="slot-status">
                       {getSlotStatus(s)}
                     </div>

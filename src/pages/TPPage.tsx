@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { useTP } from '../hooks/useTP'
+import { useClasses } from '../hooks/useClasses'
 import SingleSelect from '../components/SingleSelect'
 import type { TPRecord, TPStudentDetail } from '../types'
 
@@ -216,6 +217,7 @@ function TPModal({ record, onClose }: { record: TPRecord; onClose: () => void })
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function TPPage() {
   const { tpData, loading, error } = useTP()
+  const { classes } = useClasses()
   const [filters, setFilters] = useState<TPFilters>({
     search: '', centre: '', mentor: '', tpRound: '', scoreRange: ''
   })
@@ -227,18 +229,40 @@ export default function TPPage() {
   const resetFilters = () =>
     setFilters({ search: '', centre: '', mentor: '', tpRound: '', scoreRange: '' })
 
+  // Normalize TP data based on session timing
+  const normalizedTPData = useMemo(() => {
+    return tpData.map(record => {
+      const classItem = classes.find(c => c.id === record.classId)
+      if (!classItem) return record
+
+      // If only tp2_students exist and tp1_students is empty, swap them
+      // This fixes the issue where TP 2 is incorrectly labeled as TP 1
+      if (record.tp2_students.length > 0 && record.tp1_students.length === 0) {
+        return {
+          ...record,
+          tp1: record.tp2,
+          tp2: record.tp1,
+          tp1_students: record.tp2_students,
+          tp2_students: record.tp1_students
+        }
+      }
+
+      return record
+    })
+  }, [tpData, classes])
+
   const { centres, mentors } = useMemo(() => {
     const cs = new Set<string>()
     const ms = new Set<string>()
-    tpData.forEach((r) => {
+    normalizedTPData.forEach((r) => {
       if (r.centre) cs.add(r.centre)
       r.teachers.forEach((t) => ms.add(t.name))
     })
     return { centres: Array.from(cs).sort(), mentors: Array.from(ms).sort() }
-  }, [tpData])
+  }, [normalizedTPData])
 
   const filtered = useMemo(() => {
-    return tpData.filter((r) => {
+    return normalizedTPData.filter((r) => {
       if (filters.search && !r.className.toLowerCase().includes(filters.search.toLowerCase())) return false
       if (filters.centre && r.centre !== filters.centre) return false
       if (filters.mentor && !r.teachers.some((t) => t.name === filters.mentor)) return false
@@ -263,7 +287,7 @@ export default function TPPage() {
 
       return true
     })
-  }, [tpData, filters])
+  }, [normalizedTPData, filters])
 
   if (loading) return <div className="state-msg">Đang tải dữ liệu...</div>
   if (error) return (
@@ -286,7 +310,7 @@ export default function TPPage() {
           <h1 className="tp-page-banner-title">Quản lý TP</h1>
           <p className="tp-page-banner-sub">Teacher Point — Khối Coding · Lớp chính quy</p>
         </div>
-        <span className="tp-page-badge">{filtered.length} / {tpData.length} lớp</span>
+        <span className="tp-page-badge">{filtered.length} / {normalizedTPData.length} lớp</span>
       </div>
 
       {/* ── Chart ── */}

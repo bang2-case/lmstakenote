@@ -308,7 +308,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   background: white;
   color: var(--text);
   width: 100%;
@@ -331,7 +331,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   width: 100%;
 }
 
@@ -352,7 +352,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   white-space: nowrap;
   width: 100%;
 }
@@ -610,11 +610,55 @@
   margin: 20px 0;
 }
 
+.teacher-detail-banner {
+  background: linear-gradient(135deg, #5c1a1a 0%, #991b1b 100%);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 26px 28px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.teacher-detail-banner-title {
+  font-size: 28px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.teacher-detail-banner-sub {
+  font-size: 13px;
+  color: rgba(255,255,255,0.75);
+  margin: 0;
+}
+
+.teacher-detail-banner-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.teacher-detail-banner-tag {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.teacher-detail-banner-meta {
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .modal-body {
   display: flex;
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  padding: 24px 28px 28px;
+  overflow: hidden;
 }
 
 .modal-close {
@@ -688,6 +732,26 @@
   font-weight: 600;
   margin-bottom: 12px;
   color: var(--text);
+}
+
+.teacher-list-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.teacher-list-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.teacher-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 999px;
+}
+
+.teacher-list-scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .teacher-list {
@@ -1219,7 +1283,7 @@
 .date-picker-popup .rdp-root {
   --rdp-accent-color: #dc2626;
   --rdp-accent-background-color: #fef2f2;
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   font-size: 14px;
 }
 
@@ -1338,7 +1402,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   background: white;
   color: var(--text);
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -1501,7 +1565,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
 }
 
 .tp-modal-tab.active {
@@ -1708,7 +1772,7 @@
   cursor: pointer;
   transition: all 0.15s;
   min-width: 80px;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
 }
 
 .tp-modal-card:hover {
@@ -2037,7 +2101,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   background: white;
   color: var(--text);
   width: 100%;
@@ -2248,7 +2312,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   white-space: nowrap;
 }
 
@@ -2329,7 +2393,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Montserrat', system-ui, sans-serif;
   text-align: center;
 }
 

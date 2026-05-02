@@ -70,7 +70,7 @@ function SummaryModal({ classes, onClose }: { classes: ClassItem[]; onClose: () 
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
 
-        <div className="summary-banner">
+        <div className="summary-banner" style={{ paddingTop: '35px', paddingBottom: '35px' }}>
           <div>
             <h2 className="summary-banner-title">Tổng hợp</h2>
             <p className="summary-banner-sub">Danh sách lớp học</p>
@@ -153,9 +153,11 @@ export default function ClassesPage() {
     slot: '',
     slotTo: '',
     course: '',
+    search: '',
     status: [],
     hasComments: '',
     mentor: '',
+    tpRound: '',
     block: [],
   })
 
@@ -194,11 +196,27 @@ export default function ClassesPage() {
   // Apply filters
   const filteredClasses = useMemo(() => {
     return classes.filter((c) => {
+      if (filters.search && !c.name.toLowerCase().includes(filters.search.toLowerCase())) return false
       if (filters.centre && c.centre !== filters.centre) return false
       if (filters.course && c.course !== filters.course) return false
       if (filters.status.length > 0 && !filters.status.includes(c.status)) return false
       if (filters.mentor && !c.teachers.some((t) => t.name === filters.mentor)) return false
       if (filters.block.length > 0 && !filters.block.includes(c.block)) return false
+
+      // Lọc TP Round
+      if (filters.tpRound) {
+        const now = new Date()
+        const sortedSlots = [...c.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        const nextSlotIndex = sortedSlots.findIndex(s => new Date(s.date) > now)
+        if (nextSlotIndex === -1) return false // Không có buổi tiếp theo
+        if (filters.tpRound === 'tp1') {
+          // Buổi học tiếp theo là buổi 4 (index 3)
+          if (nextSlotIndex !== 3) return false
+        } else if (filters.tpRound === 'tp2') {
+          // Buổi học tiếp theo là buổi 8 (index 7)
+          if (nextSlotIndex !== 7) return false
+        }
+      }
       
       // Lọc ngày bắt đầu (startDate trong data)
       if (filters.startDate && c.startDate) {
