@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { ClassItem } from '../types'
 
 export function useClasses() {
@@ -6,16 +6,17 @@ export function useClasses() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Thử API server trước, fallback về JSON nếu server chưa chạy
+  const load = useCallback(() => {
     fetch('/api/classes')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
       })
-      .then((data: ClassItem[]) => setClasses(data))
+      .then((data: ClassItem[]) => {
+        setClasses(data)
+        setError(null)
+      })
       .catch(() => {
-        // Fallback: đọc từ JSON tĩnh
         fetch('/classes.json')
           .then((res) => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -26,6 +27,13 @@ export function useClasses() {
       })
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    load()
+    // Reload when server pushes data-updated event
+    window.addEventListener('lms-data-updated', load)
+    return () => window.removeEventListener('lms-data-updated', load)
+  }, [load])
 
   return { classes, loading, error }
 }

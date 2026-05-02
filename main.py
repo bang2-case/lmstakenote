@@ -7,6 +7,12 @@ import base64
 import sys
 from datetime import datetime, timezone
 
+# Fix encoding cho Windows terminal
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 # ─────────────────────────────────────────────────────────────────────────────
 # TOKEN — đọc từ .env (không hardcode trong code)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -88,17 +94,17 @@ TOKEN = load_token()
 
 # Kiểm tra token ngay khi khởi động
 if not check_token_expiry(TOKEN):
-    print("\n👉 Hãy lấy token mới từ LMS và chạy lệnh sau:")
-    print('   python main.py --update-token "TOKEN_MỚI_CỦA_BẠN"')
-    print("\n   Hoặc cập nhật trực tiếp trong file .env")
-    # Cho phép update token qua CLI
+    print("\n👉 Hãy lấy token mới từ LMS và cập nhật trong file .env")
+    print('   Hoặc chạy: python main.py --update-token "TOKEN_MỚI"')
     if len(sys.argv) == 3 and sys.argv[1] == "--update-token":
         new_token = sys.argv[2]
         update_env_token(new_token)
         TOKEN = new_token
         print("✅ Token đã được cập nhật, tiếp tục chạy...")
-    else:
+    elif "--no-exit" not in sys.argv:
         sys.exit(1)
+    # Nếu có --no-exit (gọi từ server.py), tiếp tục chạy dù token hết hạn
+    # API sẽ tự báo lỗi authentication
 
 # Cho phép update token qua CLI ngay cả khi token còn hạn
 if len(sys.argv) == 3 and sys.argv[1] == "--update-token":
@@ -255,16 +261,18 @@ def fetch_all():
                 if not any(x in centre_name for x in HCM4_CENTRES):
                     continue
 
-            # Lấy danh sách giáo viên
+            # Lấy danh sách giáo viên — chỉ lấy role "Lecturer"
             teachers = []
             if c.get("teachers"):
                 for t in c["teachers"]:
                     teacher_info = t.get("teacher", {})
-                    if teacher_info.get("fullName"):
+                    role_name = (t.get("role") or {}).get("name", "")
+                    # Chỉ lấy Lecturer, bỏ qua TA, Supply teacher, Judge, v.v.
+                    if teacher_info.get("fullName") and "Lecturer" in role_name:
                         teachers.append({
                             "name": teacher_info.get("fullName"),
                             "email": teacher_info.get("email"),
-                            "role": t.get("role", {}).get("name")
+                            "role": role_name
                         })
 
             # Lấy slots và tính comments của giáo viên
@@ -1066,15 +1074,31 @@ def fetch_tp(classes_data: list) -> list:
     Fetch TP với parallel requests + cache thông minh.
     - Lớp FINISHED Coding chính quy đã có đủ TP1+TP2 trong cache → giữ nguyên
     - Lớp mới hoặc chưa đủ data → fetch async song song
+    - Bỏ qua lớp kết thúc trước 01/03/2026 (quá cũ, không cần TP)
     """
+    from datetime import datetime, timezone
+    CUTOFF_DATE = datetime(2026, 3, 1, tzinfo=timezone.utc)
+
+    def is_after_cutoff(c: dict) -> bool:
+        end_date_str = c.get("endDate")
+        if not end_date_str:
+            return True  # không có endDate → giữ lại
+        try:
+            # endDate dạng ISO: "2026-05-01T00:00:00.000Z"
+            end_date = datetime.fromisoformat(end_date_str.replace("Z", "+00:00"))
+            return end_date >= CUTOFF_DATE
+        except Exception:
+            return True  # parse lỗi → giữ lại
+
     # Lọc lớp cần xử lý
     candidates = [
         c for c in classes_data
         if c.get("status") == "FINISHED"
         and c.get("block") == "Coding"
         and is_regular_class(c.get("name", ""))
+        and is_after_cutoff(c)
     ]
-    print(f"\n📊 TP candidates: {len(candidates)} lớp FINISHED Coding chính quy")
+    print(f"\n📊 TP candidates: {len(candidates)} lớp FINISHED Coding chính quy (từ 01/03/2026)")
 
     # Load cache
     cache = load_tp_cache()

@@ -18,40 +18,32 @@ function genderLabel(g: string | null): string {
   return '—'
 }
 
+function blockLabelStyle(block: string) {
+  if (block === 'Robotics') return { background: '#facc15', color: '#111' }
+  if (block === 'Coding') return { background: '#bfdbfe', color: '#1d4ed8' }
+  if (block === 'Art') return { background: '#fecaca', color: '#991b1b' }
+  return { background: '#e5e7eb', color: '#374151' }
+}
+
 // ── Teacher Card ─────────────────────────────────────────────────────────────
 
 function TeacherCard({ teacher, onClick }: { teacher: TeacherItem; onClick: () => void }) {
-  const pointColor =
-    teacher.teacherPoint >= 8 ? '#16a34a' :
-    teacher.teacherPoint >= 5 ? '#d97706' : '#dc2626'
-
   return (
     <div className="card" onClick={onClick}>
       <div className="card-header">
         <div>
-          <h3 className="card-title">{teacher.fullName}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <h3 className="card-title" style={{ margin: 0 }}>{teacher.fullName}</h3>
+            {teacher.blocks.map((b) => (
+              <span key={b} className="teacher-block" style={blockLabelStyle(b)}>{b}</span>
+            ))}
+          </div>
           <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>@{teacher.username}</p>
-        </div>
-        <div style={{
-          minWidth: 40, height: 40, borderRadius: '50%',
-          background: pointColor, color: '#fff',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 700, fontSize: 14, flexShrink: 0
-        }}>
-          {teacher.teacherPoint}
         </div>
       </div>
 
       {teacher.email && <p className="card-meta">✉️ {teacher.email}</p>}
       {teacher.phoneNumber && <p className="card-meta">📞 {teacher.phoneNumber}</p>}
-
-      {teacher.blocks.length > 0 && (
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
-          {teacher.blocks.map((b) => (
-            <span key={b} className="summary-count" style={{ marginLeft: 0, fontSize: 11 }}>{b}</span>
-          ))}
-        </div>
-      )}
 
       {teacher.centres.length > 0 && (
         <p className="card-meta" style={{ marginTop: 6 }}>
@@ -65,39 +57,28 @@ function TeacherCard({ teacher, onClick }: { teacher: TeacherItem; onClick: () =
 // ── Teacher Detail Modal ──────────────────────────────────────────────────────
 
 function TeacherDetail({ teacher, onClose }: { teacher: TeacherItem; onClose: () => void }) {
-  const pointColor =
-    teacher.teacherPoint >= 8 ? '#16a34a' :
-    teacher.teacherPoint >= 5 ? '#d97706' : '#dc2626'
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>✕</button>
 
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: '50%',
-              background: pointColor, color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, fontSize: 20, flexShrink: 0
-            }}>
-              {teacher.teacherPoint}
-            </div>
-            <div>
-              <h2 className="modal-title" style={{ marginBottom: 4 }}>{teacher.fullName}</h2>
-              <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>@{teacher.username} · {teacher.code}</p>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+            <h2 className="modal-title" style={{ marginBottom: 0 }}>{teacher.fullName}</h2>
+            {teacher.blocks.length > 0 && (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {teacher.blocks.map((b) => (
+                  <span key={b} className="teacher-block" style={blockLabelStyle(b)}>{b}</span>
+                ))}
+              </div>
+            )}
           </div>
-
+          <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>@{teacher.username} · {teacher.code}</p>
+          <div className="modal-divider" />
           <div className="detail-grid">
             <div className="detail-item">
               <span className="detail-label">Email</span>
               <span className="detail-value">{teacher.email || '—'}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Email cá nhân</span>
-              <span className="detail-value">{teacher.personalEmail || '—'}</span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Số điện thoại</span>
@@ -118,24 +99,6 @@ function TeacherDetail({ teacher, onClose }: { teacher: TeacherItem; onClose: ()
             <div className="detail-item">
               <span className="detail-label">Ngày vào làm</span>
               <span className="detail-value">{formatDate(teacher.joinedDate)}</span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Điểm giáo viên</span>
-              <span className="detail-value" style={{ color: pointColor, fontWeight: 700 }}>
-                {teacher.teacherPoint} điểm
-              </span>
-            </div>
-            <div className="detail-item">
-              <span className="detail-label">Khối</span>
-              <span className="detail-value">
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {teacher.blocks.length > 0
-                    ? teacher.blocks.map((b, i) => (
-                        <span key={i} className="summary-count" style={{ marginLeft: 0 }}>{b}</span>
-                      ))
-                    : '—'}
-                </div>
-              </span>
             </div>
           </div>
 
@@ -163,7 +126,6 @@ interface TeacherFilters {
   search: string
   centres: string[]
   blocks: string[]
-  pointFilter: string
   birthMonth: string  // '1' - '12' hoặc ''
 }
 
@@ -179,47 +141,40 @@ function SummaryModal({ teachers, onClose }: { teachers: TeacherItem[]; onClose:
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
-        <div className="modal-header">
-          <h2 className="modal-title">
-            Tổng hợp
-            <span className="summary-count">{teachers.length} giáo viên</span>
-          </h2>
+        <div className="summary-banner">
+          <div>
+            <h2 className="summary-banner-title">Tổng hợp</h2>
+            <p className="summary-banner-sub">Danh sách giáo viên</p>
+          </div>
+          <span className="summary-banner-badge">{teachers.length} giáo viên</span>
         </div>
         <div className="summary-table-wrapper">
-          <table className="summary-table">
+          <table className="summary-table teacher-summary-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Họ tên</th>
+                <th className="summary-fixed-col">#</th>
+                <th className="summary-fixed-col">Họ tên</th>
                 <th>Email</th>
-                <th>Số điện thoại</th>
-                <th>Ngày sinh</th>
+                <th>SĐT</th>
                 <th>Khối</th>
                 <th>Cơ sở</th>
-                <th>Điểm</th>
               </tr>
             </thead>
             <tbody>
-              {teachers.map((t, i) => {
-                const pointColor =
-                  t.teacherPoint >= 8 ? '#16a34a' :
-                  t.teacherPoint >= 5 ? '#d97706' : '#dc2626'
-                return (
+              {teachers.map((t, i) => (
                   <tr key={t.id}>
                     <td>{i + 1}</td>
-                    <td><span className="summary-name">{t.fullName}</span></td>
+                    <td><span className="summary-name summary-nowrap">{t.fullName}</span></td>
                     <td>{t.email || '—'}</td>
                     <td>{t.phoneNumber || '—'}</td>
-                    <td>{formatDate(t.dob)}</td>
                     <td>{t.blocks.join(', ') || '—'}</td>
-                    <td>{t.centres.join(', ') || '—'}</td>
-                    <td style={{ textAlign: 'center', fontWeight: 700, color: pointColor }}>
-                      {t.teacherPoint}
+                    <td className="summary-centres">
+                      {t.centres.length > 0 ? t.centres.map((centre, idx) => (
+                        <div key={idx}>{centre}</div>
+                      )) : '—'}
                     </td>
                   </tr>
-                )
-              })}
+              ))}
             </tbody>
           </table>
         </div>
@@ -230,7 +185,7 @@ function SummaryModal({ teachers, onClose }: { teachers: TeacherItem[]; onClose:
 
 export default function MentorsPage() {
   const { teachers, loading, error } = useTeachers()
-  const [filters, setFilters] = useState<TeacherFilters>({ search: '', centres: [], blocks: [], pointFilter: '', birthMonth: '' })
+  const [filters, setFilters] = useState<TeacherFilters>({ search: '', centres: [], blocks: [], birthMonth: '' })
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherItem | null>(null)
   const [showSummary, setShowSummary] = useState(false)
 
@@ -256,8 +211,6 @@ export default function MentorsPage() {
       }
       if (filters.centres.length > 0 && !filters.centres.some((c) => t.centres.includes(c))) return false
       if (filters.blocks.length > 0 && !filters.blocks.some((b) => t.blocks.includes(b))) return false
-      if (filters.pointFilter === 'high' && t.teacherPoint < 8) return false
-      if (filters.pointFilter === 'low' && t.teacherPoint >= 8) return false
       if (filters.birthMonth) {
         if (!t.dob) return false
         const month = new Date(t.dob).getMonth() + 1  // getMonth() trả về 0-11
@@ -328,15 +281,6 @@ export default function MentorsPage() {
         />
 
         <div className="filter-group">
-          <label className="filter-label">Điểm giáo viên</label>
-          <select value={filters.pointFilter} onChange={(e) => update('pointFilter', e.target.value)}>
-            <option value="">Tất cả</option>
-            <option value="high">Từ 8 điểm trở lên</option>
-            <option value="low">Dưới 8 điểm</option>
-          </select>
-        </div>
-
-        <div className="filter-group">
           <label className="filter-label">Tháng sinh</label>
           <select value={filters.birthMonth} onChange={(e) => update('birthMonth', e.target.value)}>
             <option value="">Tất cả</option>
@@ -348,7 +292,7 @@ export default function MentorsPage() {
 
         <div className="filter-group">
           <label className="filter-label">&nbsp;</label>
-          <button className="btn-reset" onClick={() => setFilters({ search: '', centres: [], blocks: [], pointFilter: '', birthMonth: '' })}>
+          <button className="btn-reset" onClick={() => setFilters({ search: '', centres: [], blocks: [], birthMonth: '' })}>
             Xóa bộ lọc
           </button>
         </div>

@@ -1,16 +1,83 @@
 """
-LMS TakeNote — Local API Server (Python stdlib, không cần cài thêm gì)
-Chạy: python server.py
-Port: 8000
+LMS TakeNote — FastAPI Server
+- REST API: /api/classes, /api/teachers, /api/tp
+- WebSocket: /ws  (push thông báo khi data cập nhật)
+- Background scheduler: tự fetch mỗi 3 giờ
+- Manual trigger: POST /api/refresh
+- Token status: GET /api/token-status
 """
 import sqlite3
 import json
 import os
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
+import asyncio
+import threading
+import base64
+import subprocess
+import sys
+from datetime import datetime, timezone
+from typing import Set
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "classroom_data.db")
-PORT = 8000
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+# UTF-8 JSON response to fix Vietnamese encoding
+class UTF8JSONResponse(JSONResponse):
+    def render(self, content) -> bytes:
+        return json.dumps(content, ensure_ascii=False).encode("utf-8")
+
+app = FastAPI(title="LMS TakeNote API", default_response_class=UTF8JSONResponse)
+
+# ─────────────────────────────────────────────────────────────────────────────
+DB_PATH   = os.path.join(os.path.dirname(__file__), "classroom_data.db")
+ENV_PATH  = os.path.join(os.path.dirname(__file__), ".env")
+FETCH_INTERVAL_HOURS = 3
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WebSocket connection manager
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ConnectionManager:
+    def __init__(self):
+        self.active: Set[WebSocket] = set()
+
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        self.active.add(ws)
+
+    def disconnect(self, ws: WebSocket):
+        self.active.discard(ws)
+
+    async def broadcast(self, message: dict):
+        dead = set()
+        for ws in self.active:
+            try:
+                await ws.send_json(message)
+            except Exception:
+                dead.add(ws)
+        self.active -= dead
+
+manager = ConnectionManager()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Fetch state
+# ─────────────────────────────────────────────────────────────────────────────
+
+fetch_state = {
+    "is_fetching": False,
+    "last_fetch": None,
+    "last_status": "idle",
+    "last_message": "",
+    "next_fetch": None,
+    "last_log": "",      # full stdout+stderr from last run
+}
 
 
 def get_db():
@@ -28,40 +95,203 @@ def query(sql: str, params: tuple = ()) -> list[dict]:
         conn.close()
 
 
-# ── Route handlers ────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# Token helpers
+# ─────────────────────────────────────────────────────────────────────────────
 
-def handle_classes(qs: dict) -> list:
-    """GET /api/classes — trả về danh sách lớp với teachers và slots."""
-    # Build WHERE clause từ query params
-    conditions = []
-    params = []
+def read_token() -> str | None:
+    if not os.path.exists(ENV_PATH):
+        return None
+    with open(ENV_PATH, encoding="utf-8-sig") as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("LMS_TOKEN="):
+                return line[len("LMS_TOKEN="):].strip().strip('"').strip("'") or None
+    return None
 
-    if qs.get("centre"):
-        conditions.append("c.centre = ?")
-        params.append(qs["centre"][0])
-    if qs.get("status"):
-        conditions.append("c.status = ?")
-        params.append(qs["status"][0])
-    if qs.get("block"):
-        conditions.append("c.block = ?")
-        params.append(qs["block"][0])
 
-    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+def check_token(token: str) -> dict:
+    """Returns {valid, expires_at, remaining_minutes}"""
+    try:
+        parts = token.split(".")
+        if len(parts) != 3:
+            return {"valid": False, "expires_at": None, "remaining_minutes": 0}
+        payload_b64 = parts[1] + "=" * (4 - len(parts[1]) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+        exp = payload.get("exp", 0)
+        now = datetime.now(timezone.utc).timestamp()
+        remaining = exp - now
+        expires_at = datetime.fromtimestamp(exp, tz=timezone.utc).isoformat()
+        return {
+            "valid": remaining > 0,
+            "expires_at": expires_at,
+            "remaining_minutes": max(0, int(remaining // 60)),
+        }
+    except Exception:
+        return {"valid": False, "expires_at": None, "remaining_minutes": 0}
 
-    classes = query(f"""
-        SELECT c.id, c.name, c.status, c.course, c.centre, c.block, c.level,
-               c.sessions, c.studentCount, c.attendedCount, c.completedCount,
-               c.completionRate, c.commentPercentage, c.totalSlotsWithStudents,
-               c.slotsWithFullComments, c.startDate, c.endDate, c.createdAt
-        FROM classes c
-        {where}
-        ORDER BY c.createdAt DESC
-    """, tuple(params))
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Background fetch
+# ─────────────────────────────────────────────────────────────────────────────
+
+async def run_fetch(loop: asyncio.AbstractEventLoop):
+    """Run main.py in subprocess and broadcast result via WebSocket."""
+    if fetch_state["is_fetching"]:
+        return
+
+    fetch_state["is_fetching"] = True
+    fetch_state["last_status"] = "running"
+    fetch_state["last_message"] = "Đang fetch dữ liệu..."
+
+    await manager.broadcast({
+        "type": "fetch_start",
+        "message": "Đang cập nhật dữ liệu từ LMS...",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
+    try:
+        result = await asyncio.get_event_loop().run_in_executor(
+            None,
+            lambda: subprocess.run(
+                [sys.executable, "main.py", "--no-exit"],
+                capture_output=True, text=True, encoding="utf-8",
+                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                cwd=os.path.dirname(__file__),
+                timeout=1800  # 30 phút max
+            )
+        )
+
+        if result.returncode == 0:
+            fetch_state["last_status"] = "success"
+            fetch_state["last_message"] = "Cập nhật thành công"
+            fetch_state["last_fetch"] = datetime.now(timezone.utc).isoformat()
+            fetch_state["last_log"] = result.stdout or ""
+            await manager.broadcast({
+                "type": "fetch_done",
+                "status": "success",
+                "message": "Dữ liệu đã được cập nhật!",
+                "timestamp": fetch_state["last_fetch"],
+            })
+        else:
+            full_log = (result.stdout or "") + "\n" + (result.stderr or "")
+            fetch_state["last_log"] = full_log.strip()
+            err_lines = [l for l in full_log.splitlines() if l.strip() and not l.startswith("  ")]
+            err = err_lines[-1][:300] if err_lines else full_log[:300]
+            fetch_state["last_status"] = "error"
+            fetch_state["last_message"] = err
+            await manager.broadcast({
+                "type": "fetch_done",
+                "status": "error",
+                "message": f"Lỗi: {err}",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+    except Exception as e:
+        fetch_state["last_status"] = "error"
+        fetch_state["last_message"] = str(e)
+        await manager.broadcast({
+            "type": "fetch_done",
+            "status": "error",
+            "message": f"Lỗi: {e}",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+    finally:
+        fetch_state["is_fetching"] = False
+        # Schedule next fetch
+        next_dt = datetime.now(timezone.utc).timestamp() + FETCH_INTERVAL_HOURS * 3600
+        fetch_state["next_fetch"] = datetime.fromtimestamp(next_dt, tz=timezone.utc).isoformat()
+
+
+async def scheduler():
+    """Background task: fetch every FETCH_INTERVAL_HOURS hours."""
+    # Wait 10s after startup before first fetch
+    await asyncio.sleep(10)
+    while True:
+        loop = asyncio.get_event_loop()
+        await run_fetch(loop)
+        await asyncio.sleep(FETCH_INTERVAL_HOURS * 3600)
+
+
+@app.on_event("startup")
+async def startup():
+    # Set initial next_fetch time
+    next_dt = datetime.now(timezone.utc).timestamp() + 10
+    fetch_state["next_fetch"] = datetime.fromtimestamp(next_dt, tz=timezone.utc).isoformat()
+    asyncio.create_task(scheduler())
+    print(f"🚀 LMS TakeNote API running")
+    print(f"   Auto-fetch every {FETCH_INTERVAL_HOURS}h")
+    print(f"   WebSocket: ws://localhost:8000/ws")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# WebSocket endpoint
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.websocket("/ws")
+async def websocket_endpoint(ws: WebSocket):
+    await manager.connect(ws)
+    # Send current state on connect
+    await ws.send_json({
+        "type": "state",
+        "fetch_state": fetch_state,
+        "token": check_token(read_token() or ""),
+    })
+    try:
+        while True:
+            await ws.receive_text()  # keep alive
+    except WebSocketDisconnect:
+        manager.disconnect(ws)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# REST endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/token-status")
+def token_status():
+    token = read_token()
+    if not token:
+        return {"valid": False, "message": "Không tìm thấy token trong .env"}
+    info = check_token(token)
+    return {**info, "message": f"Còn {info['remaining_minutes']} phút" if info["valid"] else "Token đã hết hạn"}
+
+
+@app.post("/api/refresh")
+async def manual_refresh(background_tasks: BackgroundTasks):
+    """Trigger manual fetch."""
+    if fetch_state["is_fetching"]:
+        return JSONResponse({"ok": False, "message": "Đang fetch, vui lòng chờ..."})
+    loop = asyncio.get_event_loop()
+    asyncio.create_task(run_fetch(loop))
+    return {"ok": True, "message": "Đã bắt đầu fetch dữ liệu..."}
+
+
+@app.get("/api/fetch-status")
+def fetch_status():
+    return fetch_state
+
+
+@app.get("/api/fetch-log")
+def fetch_log():
+    """Return full log from last fetch run for debugging."""
+    return {"log": fetch_state.get("last_log", ""), "status": fetch_state["last_status"]}
+
+
+@app.get("/api/classes")
+def get_classes():
+    if not os.path.exists(DB_PATH):
+        return JSONResponse({"error": "DB not found. Run python main.py first."}, status_code=503)
+
+    classes = query("""
+        SELECT id, name, status, course, centre, block, level, sessions,
+               studentCount, attendedCount, completedCount, completionRate,
+               commentPercentage, totalSlotsWithStudents, slotsWithFullComments,
+               startDate, endDate, createdAt
+        FROM classes ORDER BY createdAt DESC
+    """)
     if not classes:
         return []
 
-    # Batch load teachers and slots
     ids = [c["id"] for c in classes]
     placeholders = ",".join("?" * len(ids))
 
@@ -80,7 +310,6 @@ def handle_classes(qs: dict) -> list:
         tuple(ids)
     )
 
-    # Group by classId
     teachers_map: dict[str, list] = {}
     for t in teachers_rows:
         teachers_map.setdefault(t["classId"], []).append(
@@ -101,7 +330,6 @@ def handle_classes(qs: dict) -> list:
     for r in incomplete_rows:
         incomplete_map.setdefault(r["classId"], []).append(r["name"])
 
-    # Assemble
     for c in classes:
         cid = c["id"]
         c["teachers"] = teachers_map.get(cid, [])
@@ -111,10 +339,15 @@ def handle_classes(qs: dict) -> list:
     return classes
 
 
-def handle_teachers(qs: dict) -> list:
+@app.get("/api/teachers")
+def get_teachers():
+    if not os.path.exists(DB_PATH):
+        return JSONResponse({"error": "DB not found."}, status_code=503)
+
     teachers = query("SELECT * FROM teachers ORDER BY fullName")
     if not teachers:
         return []
+
     ids = [t["id"] for t in teachers]
     placeholders = ",".join("?" * len(ids))
 
@@ -152,10 +385,15 @@ def handle_teachers(qs: dict) -> list:
     return teachers
 
 
-def handle_tp(qs: dict) -> list:
+@app.get("/api/tp")
+def get_tp():
+    if not os.path.exists(DB_PATH):
+        return JSONResponse({"error": "DB not found."}, status_code=503)
+
     records = query("SELECT * FROM tp_records ORDER BY className")
     if not records:
         return []
+
     ids = [r["classId"] for r in records]
     placeholders = ",".join("?" * len(ids))
 
@@ -199,57 +437,7 @@ def handle_tp(qs: dict) -> list:
     return records
 
 
-ROUTES = {
-    "/api/classes":  handle_classes,
-    "/api/teachers": handle_teachers,
-    "/api/tp":       handle_tp,
-}
-
-
-# ── HTTP Handler ──────────────────────────────────────────────────────────────
-
-class Handler(BaseHTTPRequestHandler):
-    def log_message(self, fmt, *args):
-        print(f"  {self.address_string()} {fmt % args}")
-
-    def send_json(self, data, status=200):
-        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Content-Length", str(len(body)))
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        self.wfile.write(body)
-
-    def do_OPTIONS(self):
-        self.send_response(204)
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-        self.end_headers()
-
-    def do_GET(self):
-        parsed = urlparse(self.path)
-        path = parsed.path
-        qs = parse_qs(parsed.query)
-
-        if path not in ROUTES:
-            self.send_json({"error": "Not found"}, 404)
-            return
-
-        if not os.path.exists(DB_PATH):
-            self.send_json({"error": "Database not found. Run python main.py first."}, 503)
-            return
-
-        try:
-            data = ROUTES[path](qs)
-            self.send_json(data)
-        except Exception as e:
-            self.send_json({"error": str(e)}, 500)
-
-
+# ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    print(f"🚀 API Server running at http://localhost:{PORT}")
-    print(f"   Endpoints: /api/classes  /api/teachers  /api/tp")
-    print(f"   DB: {DB_PATH}")
-    httpd = HTTPServer(("localhost", PORT), Handler)
-    httpd.serve_forever()
+    import uvicorn
+    uvicorn.run("server:app", host="localhost", port=8000, reload=False)

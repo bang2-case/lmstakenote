@@ -117,14 +117,14 @@ export default function CRPage() {
       <div className="page-banner cr-page-banner">
         <div className="cr-banner-left">
           <div>
-            <h1 className="page-banner-title">Quản lý CR</h1>
-            <p className="page-banner-sub">Completion Rate · Lớp chính quy · FINISHED</p>
+            <h1 className="page-banner-title">Quản lý CPR</h1>
+            <p className="page-banner-sub">Completion Rate · FINISHED</p>
           </div>
           <span className="page-banner-badge">{filtered.length} / {finishedClasses.length} lớp</span>
         </div>
         {/* HCM4 tổng CR — góc phải */}
         <div className="hcm4-summary">
-          <div className="hcm4-label">Tổng CR HCM4</div>
+          <div className="hcm4-label">Tổng CPR HCM4</div>
           <div className="hcm4-rate" style={{
             color: hcm4Stats.rate >= 80 ? '#16a34a' : hcm4Stats.rate >= 50 ? '#d97706' : '#dc2626'
           }}>

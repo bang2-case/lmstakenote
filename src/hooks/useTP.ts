@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { TPRecord } from '../types'
 
 export function useTP() {
@@ -6,15 +6,17 @@ export function useTP() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetch('/api/tp')
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
       })
-      .then((data: TPRecord[]) => setTpData(data))
+      .then((data: TPRecord[]) => {
+        setTpData(data)
+        setError(null)
+      })
       .catch(() => {
-        // Fallback: đọc từ JSON tĩnh
         fetch('/tp.json')
           .then((res) => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -25,6 +27,12 @@ export function useTP() {
       })
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    load()
+    window.addEventListener('lms-data-updated', load)
+    return () => window.removeEventListener('lms-data-updated', load)
+  }, [load])
 
   return { tpData, loading, error }
 }

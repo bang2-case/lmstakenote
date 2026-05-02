@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useClasses } from '../hooks/useClasses'
 import ClassFiltersComponent from '../components/ClassFilters'
 import ClassDetail from '../components/ClassDetail'
-import type { ClassItem, ClassFilters } from '../types'
+import type { ClassItem, ClassFilters, Slot } from '../types'
 
 const STATUS_MAP: Record<string, string> = {
   PENDING: 'Pending',
@@ -28,54 +28,87 @@ const STATUS_COLOR: Record<string, string> = {
   REJECT: 'status-abandoned',
 }
 
+function getNextSessionLabel(slots: Slot[]) {
+  const now = new Date()
+  const sorted = [...slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const nextIndex = sorted.findIndex((slot) => new Date(slot.date).getTime() >= now.getTime())
+  return nextIndex >= 0 ? `Buổi ${nextIndex + 1}` : '—'
+}
+
+function getUncommentedSessionLabel(slots: Slot[]) {
+  const now = new Date()
+  const sorted = [...slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const firstUncommented = sorted.findIndex((slot) => {
+    const slotDate = new Date(slot.date)
+    return slotDate < now && slot.commentStatus !== 'Đã nhận xét' && slot.commentStatus !== 'Chưa bắt đầu'
+  })
+  return firstUncommented >= 0 ? `Buổi ${firstUncommented + 1}` : '—'
+}
+
+async function copyText(text: string) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text)
+      return
+    }
+  } catch (err) {
+    // fallback to old-school copy
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+  document.execCommand('copy')
+  document.body.removeChild(textarea)
+}
+
 function SummaryModal({ classes, onClose }: { classes: ClassItem[]; onClose: () => void }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>✕</button>
 
-        <div className="modal-header">
-          <h2 className="modal-title">
-            Tổng hợp
-            <span className="summary-count">{classes.length} lớp</span>
-          </h2>
+        <div className="summary-banner">
+          <div>
+            <h2 className="summary-banner-title">Tổng hợp</h2>
+            <p className="summary-banner-sub">Danh sách lớp học</p>
+          </div>
+          <span className="summary-banner-badge">{classes.length} lớp</span>
         </div>
 
         <div className="summary-table-wrapper">
           <table className="summary-table">
             <thead>
               <tr>
-                <th>#</th>
-                <th>Tên lớp</th>
-                <th>Cơ sở</th>
-                <th>Khóa học</th>
+                <th className="summary-fixed-col">#</th>
+                <th className="summary-fixed-col">Tên lớp</th>
                 <th>Giáo viên</th>
-                <th>Trạng thái</th>
                 <th>Số buổi</th>
                 <th>Học viên</th>
-                <th>Nhận xét</th>
+                <th>Buổi kế tiếp</th>
+                <th>Buổi chưa NX</th>
               </tr>
             </thead>
             <tbody>
               {classes.map((c, i) => (
                 <tr key={c.id}>
                   <td>{i + 1}</td>
-                  <td><span className="summary-name">{c.name}</span></td>
-                  <td>{c.centre || '—'}</td>
-                  <td>{c.course || '—'}</td>
-                  <td>{c.teachers[0]?.name || '—'}</td>
                   <td>
-                    <span className={`status-badge ${STATUS_COLOR[c.status] ?? ''}`}>
-                      {STATUS_MAP[c.status] ?? c.status}
+                    <span
+                      className="summary-name summary-nowrap summary-copyable"
+                      onClick={() => copyText(c.name)}
+                      title="Bấm để copy tên lớp"
+                    >
+                      {c.name}
                     </span>
                   </td>
+                  <td>{c.teachers[0]?.name || '—'}</td>
                   <td style={{ textAlign: 'center' }}>{c.sessions ?? '—'}</td>
                   <td style={{ textAlign: 'center' }}>{c.studentCount}</td>
-                  <td style={{ textAlign: 'center' }}>
-                    {c.totalSlotsWithStudents > 0
-                      ? `${c.commentPercentage}% (${c.slotsWithFullComments}/${c.totalSlotsWithStudents})`
-                      : '—'}
-                  </td>
+                  <td style={{ textAlign: 'center' }}>{getNextSessionLabel(c.slots)}</td>
+                  <td style={{ textAlign: 'center' }}>{getUncommentedSessionLabel(c.slots)}</td>
                 </tr>
               ))}
             </tbody>
