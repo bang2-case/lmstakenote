@@ -308,7 +308,7 @@ export default function TPPage() {
       <div className="tp-page-banner">
         <div>
           <h1 className="tp-page-banner-title">Quản lý TP</h1>
-          <p className="tp-page-banner-sub">Teacher Point — Khối Coding · Lớp chính quy</p>
+          <p className="tp-page-banner-sub">Teacher Point — Khối Coding</p>
         </div>
         <span className="tp-page-badge">{filtered.length} / {normalizedTPData.length} lớp</span>
       </div>

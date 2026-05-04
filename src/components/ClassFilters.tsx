@@ -114,9 +114,9 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
         onChange={(v) => update('hasComments', v)}
       />
 
-      {/* Mentor */}
+      {/* Giáo viên */}
       <SingleSelect
-        label="Mentor"
+        label="Giáo viên"
         options={mentors.map((m) => ({ value: m, label: m }))}
         value={localFilters.mentor}
         onChange={(v) => update('mentor', v)}
@@ -126,11 +126,25 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
       <SingleSelect
         label="Khảo sát"
         options={[
+          { value: 'all', label: 'Tất cả' },
           { value: 'tp1', label: 'TP 1' },
           { value: 'tp2', label: 'TP 2' },
+          { value: 'pending', label: 'Chưa thao tác' },
         ]}
         value={localFilters.tpRound}
         onChange={(v) => update('tpRound', v)}
+      />
+
+      {/* Checkpoint */}
+      <SingleSelect
+        label="Checkpoint"
+        options={[
+          { value: 'all', label: 'Tất cả' },
+          { value: 'cp1', label: 'Checkpoint 1' },
+          { value: 'cp2', label: 'Checkpoint 2' },
+        ]}
+        value={localFilters.cpRound}
+        onChange={(v) => update('cpRound', v)}
       />
 
       {/* Reset */}
@@ -139,7 +153,7 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
         <button className="btn-reset" onClick={() => {
           const resetFilters: ClassFilters = {
             centre: '', startDate: '', startDateTo: '', endDate: '', endDateTo: '',
-            slot: '', slotTo: '', course: '', search: '', status: [], hasComments: '', mentor: '', tpRound: '', block: []
+            slot: '', slotTo: '', course: '', search: '', status: [], hasComments: '', mentor: '', tpRound: '', cpRound: '', block: []
           }
           setLocalFilters(resetFilters)
           onChange(resetFilters)

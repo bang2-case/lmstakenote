@@ -77,6 +77,7 @@ export interface ClassFilters {
   hasComments: string
   mentor: string
   tpRound: string
+  cpRound: string
   block: string[]     // multi-select
 }
 
@@ -96,4 +97,52 @@ export interface TPRecord {
   tp2: number | null
   tp1_students: TPStudentDetail[]
   tp2_students: TPStudentDetail[]
+}
+
+export interface CPStudentDetail {
+  name: string
+  theoryScore: number | null
+  practicalScore: number | null
+}
+
+export interface CPRecord {
+  classId: string
+  className: string
+  centre: string | null
+  block: string
+  teachers: Teacher[]
+  cp1Theory: number | null
+  cp1Practical: number | null
+  cp2Theory: number | null
+  cp2Practical: number | null
+  cp1_students: CPStudentDetail[]
+  cp2_students: CPStudentDetail[]
+}
+
+// ── Office Hours ──────────────────────────────────────────────────────────
+
+export interface OHAppointment {
+  id: string
+  title: string
+  candidate: { id: string; fullName: string } | null
+  courses: { id: string; name: string; shortName: string }[]
+  status: 'WAITING' | 'CANCLED' | 'FAIL' | 'PASSED' | string
+  note: string | null
+}
+
+export interface OHRecord {
+  id: string
+  courses: { id: string; name: string; shortName: string }[]
+  courseLines: { id: string; name: string }[]
+  startTime: string   // ISO string
+  endTime: string     // ISO string
+  status: string      // OH-level status (APPROVED, etc.)
+  centre: { id: string; name: string; shortName: string } | null
+  teacher: { id: string; fullName: string; username: string; email: string } | null
+  note: string | null         // note của tư vấn book
+  managerNote: string | null
+  type: string
+  studentCount: number
+  createdBy: { username: string } | null
+  appointments: OHAppointment[]
 }

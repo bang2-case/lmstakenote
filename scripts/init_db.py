@@ -148,12 +148,118 @@ def init_db():
     )
     """)
 
+    # ── CP (Checkpoint) ──────────────────────────────────────────────────────
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS cp_records (
+        classId         TEXT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
+        className       TEXT,
+        centre          TEXT,
+        block           TEXT,
+        cp1Theory       REAL,
+        cp1Practical    REAL,
+        cp2Theory       REAL,
+        cp2Practical    REAL,
+        updatedAt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS cp_students (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        classId         TEXT NOT NULL REFERENCES cp_records(classId) ON DELETE CASCADE,
+        round           INTEGER NOT NULL,   -- 1 = CP1, 2 = CP2
+        name            TEXT,
+        theoryScore     REAL,
+        practicalScore  REAL
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS cp_teachers (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        classId     TEXT NOT NULL REFERENCES cp_records(classId) ON DELETE CASCADE,
+        name        TEXT,
+        email       TEXT,
+        role        TEXT
+    )
+    """)
+
+    # ── OH (Office Hours) ────────────────────────────────────────────────────
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS oh_records (
+        id              TEXT PRIMARY KEY,
+        startTime       TEXT,
+        endTime         TEXT,
+        status          TEXT,
+        centreId        TEXT,
+        centreName      TEXT,
+        centreShortName TEXT,
+        teacherId       TEXT,
+        teacherFullName TEXT,
+        teacherUsername TEXT,
+        teacherEmail    TEXT,
+        note            TEXT,
+        managerNote     TEXT,
+        type            TEXT,
+        studentCount    INTEGER DEFAULT 0,
+        createdByUsername TEXT,
+        createdAt       TEXT,
+        updatedAt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS oh_courses (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        ohId        TEXT NOT NULL REFERENCES oh_records(id) ON DELETE CASCADE,
+        courseId    TEXT,
+        courseName  TEXT,
+        shortName   TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS oh_course_lines (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        ohId            TEXT NOT NULL REFERENCES oh_records(id) ON DELETE CASCADE,
+        courseLineId    TEXT,
+        courseLineName  TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS oh_appointments (
+        id              TEXT PRIMARY KEY,
+        ohId            TEXT NOT NULL REFERENCES oh_records(id) ON DELETE CASCADE,
+        title           TEXT,
+        candidateId     TEXT,
+        candidateName   TEXT,
+        status          TEXT,
+        note            TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS oh_appointment_courses (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointmentId   TEXT NOT NULL REFERENCES oh_appointments(id) ON DELETE CASCADE,
+        courseId        TEXT,
+        courseName      TEXT,
+        shortName       TEXT
+    )
+    """)
+
+    c.execute("CREATE INDEX IF NOT EXISTS idx_oh_centre    ON oh_records(centreId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_oh_startTime ON oh_records(startTime)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_oh_appt_ohId ON oh_appointments(ohId)")
+
     # ── Indexes ──────────────────────────────────────────────────────────────
     c.execute("CREATE INDEX IF NOT EXISTS idx_classes_status  ON classes(status)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_classes_centre  ON classes(centre)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_classes_block   ON classes(block)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_slots_classId   ON slots(classId)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_tp_centre       ON tp_records(centre)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_cp_centre       ON cp_records(centre)")
 
     conn.commit()
     conn.close()

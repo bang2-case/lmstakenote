@@ -118,7 +118,7 @@ export default function CRPage() {
         <div className="cr-banner-left">
           <div>
             <h1 className="page-banner-title">Quản lý CPR</h1>
-            <p className="page-banner-sub">Completion Rate · FINISHED</p>
+            <p className="page-banner-sub">Completion Rate</p>
           </div>
           <span className="page-banner-badge">{filtered.length} / {finishedClasses.length} lớp</span>
         </div>
@@ -157,7 +157,7 @@ export default function CRPage() {
           onChange={(v) => update('mentor', v)}
         />
         <SingleSelect
-          label="Tỉ lệ CR"
+          label="Tỉ lệ CPR"
           options={[
             { value: 'high', label: 'Từ 80% trở lên' },
             { value: 'low', label: 'Dưới 80%' },

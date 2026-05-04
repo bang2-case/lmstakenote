@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useClasses } from '../hooks/useClasses'
+import { useTP } from '../hooks/useTP'
 import ClassFiltersComponent from '../components/ClassFilters'
 import ClassDetail from '../components/ClassDetail'
 import type { ClassItem, ClassFilters, Slot } from '../types'
@@ -119,11 +120,20 @@ function SummaryModal({ classes, onClose }: { classes: ClassItem[]; onClose: () 
   )
 }
 
-function ClassCard({ item, onClick, hasUncommentedSlots }: { item: ClassItem; onClick: () => void; hasUncommentedSlots: boolean }) {
+function ClassCard({ item, onClick, hasUncommentedSlots, hasPendingSurvey, pendingSurveyInfo }: { 
+  item: ClassItem; 
+  onClick: () => void; 
+  hasUncommentedSlots: boolean;
+  hasPendingSurvey: boolean;
+  pendingSurveyInfo?: { round: string; missingStudents: string[] };
+}) {
   const mainTeacher = item.teachers[0]?.name || '—'
 
+  // Ưu tiên hiển thị viền đỏ cho survey pending, sau đó mới đến uncommented
+  const cardClass = hasPendingSurvey ? 'card-pending-survey' : (hasUncommentedSlots ? 'card-uncommented' : '')
+
   return (
-    <div className={`card ${hasUncommentedSlots ? 'card-uncommented' : ''}`} onClick={onClick}>
+    <div className={`card ${cardClass}`} onClick={onClick}>
       <div className="card-header">
         <h3 className="card-title">{item.name}</h3>
         <span className={`status-badge ${STATUS_COLOR[item.status] ?? ''}`}>
@@ -138,12 +148,18 @@ function ClassCard({ item, onClick, hasUncommentedSlots }: { item: ClassItem; on
       {item.totalSlotsWithStudents > 0 && (
         <p className="card-meta">💬 Nhận xét: {item.commentPercentage}% ({item.slotsWithFullComments}/{item.totalSlotsWithStudents} buổi)</p>
       )}
+      {hasPendingSurvey && pendingSurveyInfo && (
+        <p className="card-meta" style={{ color: '#dc2626', fontWeight: 600, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+          📊 {pendingSurveyInfo.round}: {pendingSurveyInfo.missingStudents[0]}
+        </p>
+      )}
     </div>
   )
 }
 
 export default function ClassesPage() {
   const { classes, loading, error } = useClasses()
+  const { tpData } = useTP()
   const [filters, setFilters] = useState<ClassFilters>({
     centre: '',
     startDate: '',
@@ -158,6 +174,7 @@ export default function ClassesPage() {
     hasComments: '',
     mentor: '',
     tpRound: '',
+    cpRound: '',
     block: [],
   })
 
@@ -208,13 +225,62 @@ export default function ClassesPage() {
         const now = new Date()
         const sortedSlots = [...c.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
         const nextSlotIndex = sortedSlots.findIndex(s => new Date(s.date) > now)
-        if (nextSlotIndex === -1) return false // Không có buổi tiếp theo
-        if (filters.tpRound === 'tp1') {
-          // Buổi học tiếp theo là buổi 4 (index 3)
-          if (nextSlotIndex !== 3) return false
-        } else if (filters.tpRound === 'tp2') {
-          // Buổi học tiếp theo là buổi 8 (index 7)
-          if (nextSlotIndex !== 7) return false
+
+        if (filters.tpRound === 'pending') {
+          // "Chưa thao tác": chỉ lớp RUNNING, buổi TP đã qua, có học viên, chưa đủ học viên có điểm
+          if (c.status !== 'RUNNING') return false
+
+          const tpRecord = tpData.find(t => t.classId === c.id)
+          
+          // Nếu không có TP record → chưa fetch được, không thể kết luận → bỏ qua lớp này
+          if (!tpRecord) return false
+
+          const tp1Slot = sortedSlots[3]  // buổi 4 (index 3)
+          const tp2Slot = sortedSlots[7]  // buổi 8 (index 7)
+          const tp1Past = tp1Slot && new Date(tp1Slot.date) < now && tp1Slot.studentsInSlot > 0
+          const tp2Past = tp2Slot && new Date(tp2Slot.date) < now && tp2Slot.studentsInSlot > 0
+          
+          // Kiểm tra TP1: đếm số học viên CÓ ĐIỂM
+          const tp1Missing = tp1Past && (() => {
+            const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
+            return studentsWithScore.length < tp1Slot.studentsInSlot
+          })()
+          
+          // Kiểm tra TP2: đếm số học viên CÓ ĐIỂM
+          const tp2Missing = tp2Past && (() => {
+            const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
+            return studentsWithScore.length < tp2Slot.studentsInSlot
+          })()
+          
+          if (!tp1Missing && !tp2Missing) return false
+        } else {
+          if (nextSlotIndex === -1) return false
+          if (filters.tpRound === 'tp1') {
+            if (nextSlotIndex !== 3) return false   // buổi 4 (index 3)
+          } else if (filters.tpRound === 'tp2') {
+            if (nextSlotIndex !== 7) return false   // buổi 8 (index 7)
+          } else if (filters.tpRound === 'all') {
+            if (nextSlotIndex !== 3 && nextSlotIndex !== 7) return false
+          }
+        }
+      }
+
+      // Lọc Checkpoint
+      if (filters.cpRound) {
+        const now = new Date()
+        const sortedSlots = [...c.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        const nextSlotIndex = sortedSlots.findIndex(s => new Date(s.date) > now)
+        if (nextSlotIndex === -1) return false
+        // CP slot theo khối: Robotics → 4 & 8 (index 3 & 7), Coding → 5 & 9 (index 4 & 8)
+        const isRobotics = c.block === 'Robotics'
+        const cp1Index = isRobotics ? 3 : 4   // buổi 4 hoặc 5
+        const cp2Index = isRobotics ? 7 : 8   // buổi 8 hoặc 9
+        if (filters.cpRound === 'cp1') {
+          if (nextSlotIndex !== cp1Index) return false
+        } else if (filters.cpRound === 'cp2') {
+          if (nextSlotIndex !== cp2Index) return false
+        } else if (filters.cpRound === 'all') {
+          if (nextSlotIndex !== cp1Index && nextSlotIndex !== cp2Index) return false
         }
       }
       
@@ -328,7 +394,7 @@ export default function ClassesPage() {
 
       return true
     })
-  }, [classes, filters])
+  }, [classes, filters, tpData])
 
   // Check if class has uncommented slots (for card styling)
   const getHasUncommentedSlots = (classItem: ClassItem) => {
@@ -337,6 +403,58 @@ export default function ClassesPage() {
       const slotDate = new Date(slot.date)
       return slotDate < now && slot.commentStatus !== 'Đã nhận xét'
     })
+  }
+
+  // Check if class has pending survey (for card styling)
+  const getPendingSurveyInfo = (classItem: ClassItem) => {
+    const now = new Date()
+    const sortedSlots = [...classItem.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    
+    const tpRecord = tpData.find(t => t.classId === classItem.id)
+    
+    // Nếu không có TP record trong data → chưa fetch được, không thể kết luận
+    if (!tpRecord) return null
+
+    const tp1Slot = sortedSlots[3]  // buổi 4 (index 3)
+    const tp2Slot = sortedSlots[7]  // buổi 8 (index 7)
+    
+    // Kiểm tra TP1
+    const tp1Past = tp1Slot && new Date(tp1Slot.date) < now && tp1Slot.studentsInSlot > 0
+    if (tp1Past) {
+      const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
+      const expectedCount = tp1Slot.studentsInSlot
+      const actualCount = studentsWithScore.length
+      
+      if (actualCount < expectedCount) {
+        const completedNames = studentsWithScore.map(s => s.name)
+        return { 
+          round: 'TP1', 
+          missingStudents: completedNames.length > 0 
+            ? [`Đã có: ${completedNames.join(', ')} (Thiếu ${expectedCount - actualCount})`]
+            : [`Thiếu ${expectedCount - actualCount} học viên`]
+        }
+      }
+    }
+    
+    // Kiểm tra TP2
+    const tp2Past = tp2Slot && new Date(tp2Slot.date) < now && tp2Slot.studentsInSlot > 0
+    if (tp2Past) {
+      const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
+      const expectedCount = tp2Slot.studentsInSlot
+      const actualCount = studentsWithScore.length
+      
+      if (actualCount < expectedCount) {
+        const completedNames = studentsWithScore.map(s => s.name)
+        return { 
+          round: 'TP2', 
+          missingStudents: completedNames.length > 0 
+            ? [`Đã có: ${completedNames.join(', ')} (Thiếu ${expectedCount - actualCount})`]
+            : [`Thiếu ${expectedCount - actualCount} học viên`]
+        }
+      }
+    }
+    
+    return null
   }
 
   if (loading) return <div className="state-msg">Đang tải dữ liệu...</div>
@@ -376,14 +494,20 @@ export default function ClassesPage() {
       />
 
       <div className="card-grid">
-        {filteredClasses.map((c) => (
-          <ClassCard 
-            key={c.id} 
-            item={c} 
-            onClick={() => setSelectedClass(c)}
-            hasUncommentedSlots={getHasUncommentedSlots(c)}
-          />
-        ))}
+        {filteredClasses.map((c) => {
+          // Chỉ hiển thị pending survey info khi bộ lọc "Khảo sát" = "Chưa thao tác"
+          const pendingSurveyInfo = filters.tpRound === 'pending' ? getPendingSurveyInfo(c) : null
+          return (
+            <ClassCard 
+              key={c.id} 
+              item={c} 
+              onClick={() => setSelectedClass(c)}
+              hasUncommentedSlots={getHasUncommentedSlots(c)}
+              hasPendingSurvey={!!pendingSurveyInfo}
+              pendingSurveyInfo={pendingSurveyInfo || undefined}
+            />
+          )
+        })}
       </div>
 
       {selectedClass && (

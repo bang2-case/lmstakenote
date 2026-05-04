@@ -437,6 +437,144 @@ def get_tp():
     return records
 
 
+@app.get("/api/cp")
+def get_cp():
+    if not os.path.exists(DB_PATH):
+        return JSONResponse({"error": "DB not found."}, status_code=503)
+
+    records = query("SELECT * FROM cp_records ORDER BY className")
+    if not records:
+        return []
+
+    ids = [r["classId"] for r in records]
+    placeholders = ",".join("?" * len(ids))
+
+    students_rows = query(
+        f"""SELECT classId, round, name, theoryScore, practicalScore
+            FROM cp_students WHERE classId IN ({placeholders}) ORDER BY classId, round""",
+        tuple(ids)
+    )
+    teachers_rows = query(
+        f"SELECT classId, name, email, role FROM cp_teachers WHERE classId IN ({placeholders})",
+        tuple(ids)
+    )
+
+    students_map: dict[str, dict] = {}
+    for s in students_rows:
+        cid = s["classId"]
+        if cid not in students_map:
+            students_map[cid] = {"cp1_students": [], "cp2_students": []}
+        entry = {"name": s["name"], "theoryScore": s["theoryScore"], "practicalScore": s["practicalScore"]}
+        if s["round"] == 1:
+            students_map[cid]["cp1_students"].append(entry)
+        else:
+            students_map[cid]["cp2_students"].append(entry)
+
+    teachers_map: dict[str, list] = {}
+    for t in teachers_rows:
+        teachers_map.setdefault(t["classId"], []).append(
+            {"name": t["name"], "email": t["email"], "role": t["role"]}
+        )
+
+    for r in records:
+        cid = r["classId"]
+        r["teachers"] = teachers_map.get(cid, [])
+        r["cp1_students"] = students_map.get(cid, {}).get("cp1_students", [])
+        r["cp2_students"] = students_map.get(cid, {}).get("cp2_students", [])
+
+    return records
+
+
+@app.get("/api/oh")
+def get_oh():
+    if not os.path.exists(DB_PATH):
+        return JSONResponse({"error": "DB not found."}, status_code=503)
+
+    records = query("""
+        SELECT id, startTime, endTime, status,
+               centreId, centreName, centreShortName,
+               teacherId, teacherFullName, teacherUsername, teacherEmail,
+               note, managerNote, type, studentCount, createdByUsername, createdAt
+        FROM oh_records
+        ORDER BY startTime DESC
+    """)
+    if not records:
+        return []
+
+    ids = [r["id"] for r in records]
+    placeholders = ",".join("?" * len(ids))
+
+    courses_rows = query(
+        f"SELECT ohId, courseId, courseName, shortName FROM oh_courses WHERE ohId IN ({placeholders})",
+        tuple(ids)
+    )
+    cl_rows = query(
+        f"SELECT ohId, courseLineId, courseLineName FROM oh_course_lines WHERE ohId IN ({placeholders})",
+        tuple(ids)
+    )
+    appt_rows = query(
+        f"""SELECT id, ohId, title, candidateId, candidateName, status, note
+            FROM oh_appointments WHERE ohId IN ({placeholders}) ORDER BY ohId""",
+        tuple(ids)
+    )
+
+    # Appointment courses
+    appt_ids = [a["id"] for a in appt_rows]
+    appt_course_rows: list[dict] = []
+    if appt_ids:
+        ap = ",".join("?" * len(appt_ids))
+        appt_course_rows = query(
+            f"SELECT appointmentId, courseId, courseName, shortName FROM oh_appointment_courses WHERE appointmentId IN ({ap})",
+            tuple(appt_ids)
+        )
+
+    # Build maps
+    courses_map: dict[str, list] = {}
+    for c in courses_rows:
+        courses_map.setdefault(c["ohId"], []).append(
+            {"id": c["courseId"], "name": c["courseName"], "shortName": c["shortName"]}
+        )
+
+    cl_map: dict[str, list] = {}
+    for cl in cl_rows:
+        cl_map.setdefault(cl["ohId"], []).append(
+            {"id": cl["courseLineId"], "name": cl["courseLineName"]}
+        )
+
+    appt_course_map: dict[str, list] = {}
+    for ac in appt_course_rows:
+        appt_course_map.setdefault(ac["appointmentId"], []).append(
+            {"id": ac["courseId"], "name": ac["courseName"], "shortName": ac["shortName"]}
+        )
+
+    appts_map: dict[str, list] = {}
+    for a in appt_rows:
+        appts_map.setdefault(a["ohId"], []).append({
+            "id": a["id"],
+            "title": a["title"],
+            "candidate": {"id": a["candidateId"], "fullName": a["candidateName"]} if a["candidateId"] else None,
+            "courses": appt_course_map.get(a["id"], []),
+            "status": a["status"],
+            "note": a["note"],
+        })
+
+    for r in records:
+        oid = r["id"]
+        r["centre"] = {
+            "id": r.pop("centreId"), "name": r.pop("centreName"), "shortName": r.pop("centreShortName")
+        } if r.get("centreId") else None
+        r["teacher"] = {
+            "id": r.pop("teacherId"), "fullName": r.pop("teacherFullName"),
+            "username": r.pop("teacherUsername"), "email": r.pop("teacherEmail"),
+        } if r.get("teacherId") else None
+        r["createdBy"] = {"username": r.pop("createdByUsername")} if r.get("createdByUsername") else None
+        r["courses"]     = courses_map.get(oid, [])
+        r["courseLines"] = cl_map.get(oid, [])
+        r["appointments"] = appts_map.get(oid, [])
+
+    return records
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
