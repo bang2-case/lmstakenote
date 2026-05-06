@@ -1,7 +1,8 @@
-import type { ClassItem } from '../types'
+import type { ClassItem, TPRecord } from '../types'
 
 interface Props {
   classItem: ClassItem
+  tpRecord?: TPRecord | null
   onClose: () => void
 }
 
@@ -17,7 +18,7 @@ const STATUS_LABEL: Record<string, string> = {
   REJECT: 'Reject',
 }
 
-export default function ClassDetail({ classItem, onClose }: Props) {
+export default function ClassDetail({ classItem, tpRecord, onClose }: Props) {
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '—'
     const date = new Date(dateStr)
@@ -29,6 +30,32 @@ export default function ClassDetail({ classItem, onClose }: Props) {
   }
 
   const sortedSlots = [...classItem.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  // Tính tên học viên thiếu khảo sát cho từng buổi TP
+  const getMissingTpStudents = (slotIndex: number, round: 'tp1' | 'tp2'): string[] => {
+    if (!tpRecord) return []
+    const slot = sortedSlots[slotIndex]
+    if (!slot) return []
+    const now = new Date()
+    if (new Date(slot.date) >= now) return []
+    if (slot.studentsInSlot === 0) return []
+
+    const students = round === 'tp1' ? (tpRecord.tp1_students || []) : (tpRecord.tp2_students || [])
+    const roundScore = round === 'tp1' ? tpRecord.tp1 : tpRecord.tp2
+
+    // Chưa fetch được survey data → không hiển thị
+    const hasSurveyData = roundScore !== null || students.length > 0
+    if (!hasSurveyData) return []
+
+    const studentsWithScore = students.filter(s => s.score !== null && s.score !== undefined)
+    const missing = slot.studentsInSlot - studentsWithScore.length
+    if (missing <= 0) return []
+
+    const doneNames = studentsWithScore.map(s => s.name)
+    return doneNames.length > 0
+      ? [`Đã có: ${doneNames.join(', ')} — Còn thiếu ${missing} học viên`]
+      : [`Còn thiếu ${missing} học viên`]
+  }
 
   const getSlotClass = (slot: any) => {
     const now = new Date()
@@ -151,14 +178,53 @@ export default function ClassDetail({ classItem, onClose }: Props) {
             <>
               <h3 className="schedule-title-fixed">Lịch học ({classItem.slots.length} buổi)</h3>
               <div className="slot-list-container">
-                {sortedSlots.map((s, index) => (
-                  <div key={s.id} className={`slot-item-detail ${getSlotClass(s)}`}>
-                    <div className="slot-date">Buổi {index + 1} - {formatDate(s.date)}</div>
-                    <div className="slot-status">
-                      {getSlotStatus(s)}
+                {sortedSlots.map((s, index) => {
+                  // Kiểm tra đây có phải buổi TP không (buổi 4 = index 3, buổi 8 = index 7)
+                  const isTP1Slot = index === 3
+                  const isTP2Slot = index === 7
+                  const missingTp = isTP1Slot
+                    ? getMissingTpStudents(3, 'tp1')
+                    : isTP2Slot
+                    ? getMissingTpStudents(7, 'tp2')
+                    : []
+
+                  return (
+                    <div key={s.id} className={`slot-item-detail ${getSlotClass(s)}`}>
+                      <div className="slot-date">
+                        Buổi {index + 1} - {formatDate(s.date)}
+                        {(isTP1Slot || isTP2Slot) && (
+                          <span style={{
+                            marginLeft: 8,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: '#dbeafe',
+                            color: '#1d4ed8',
+                            padding: '1px 6px',
+                            borderRadius: 4,
+                          }}>
+                            {isTP1Slot ? 'TP 1' : 'TP 2'}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                        <div className="slot-status">{getSlotStatus(s)}</div>
+                        {missingTp.length > 0 && (
+                          <div style={{
+                            fontSize: 11,
+                            color: '#dc2626',
+                            fontWeight: 600,
+                            textAlign: 'right',
+                            maxWidth: 220,
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                          }}>
+                            📊 {missingTp[0]}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </>
           )}

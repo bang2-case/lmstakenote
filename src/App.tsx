@@ -6,6 +6,7 @@ import CRPage from './pages/CRPage'
 import TPPage from './pages/TPPage'
 import CPPage from './pages/CPPage'
 import OHPage from './pages/OHPage'
+import DEMOPage from './pages/DEMOPage'
 import './App.css'
 
 export default function App() {
@@ -41,6 +42,7 @@ export default function App() {
         {activePage === 'tp'      && <TPPage />}
         {activePage === 'cp'      && <CPPage />}
         {activePage === 'oh'      && <OHPage />}
+        {activePage === 'demo'    && <DEMOPage />}
       </main>
     </div>
   )

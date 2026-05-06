@@ -7,17 +7,17 @@ import type { OHRecord, OHAppointment } from '../types'
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 const APPT_STATUS_MAP: Record<string, string> = {
-  WAITING: 'WAITING',
-  CANCLED: 'CANCLED',
-  FAIL:    'FAIL',
-  PASSED:  'PASSED',
+  WAITING:  'WAITING',
+  CANCELED: 'CANCELED',
+  FAIL:     'FAIL',
+  PASSED:   'PASSED',
 }
 
 const APPT_STATUS_COLOR: Record<string, string> = {
-  WAITING: 'oh-badge-waiting',
-  CANCLED: 'oh-badge-cancled',
-  FAIL:    'oh-badge-fail',
-  PASSED:  'oh-badge-passed',
+  WAITING:  'oh-badge-waiting',
+  CANCELED: 'oh-badge-cancled',
+  FAIL:     'oh-badge-fail',
+  PASSED:   'oh-badge-passed',
 }
 
 function fmtTime(iso: string): string {
@@ -48,13 +48,13 @@ function getCourse(record: OHRecord): string {
 }
 
 // Tổng hợp trạng thái appointments của 1 OH
-function getOHStatusSummary(record: OHRecord): { passed: number; fail: number; waiting: number; cancled: number } {
-  const summary = { passed: 0, fail: 0, waiting: 0, cancled: 0 }
+function getOHStatusSummary(record: OHRecord): { passed: number; fail: number; waiting: number; canceled: number } {
+  const summary = { passed: 0, fail: 0, waiting: 0, canceled: 0 }
   for (const a of record.appointments) {
     if (a.status === 'PASSED') summary.passed++
     else if (a.status === 'FAIL') summary.fail++
     else if (a.status === 'WAITING') summary.waiting++
-    else if (a.status === 'CANCLED') summary.cancled++
+    else if (a.status === 'CANCELED') summary.canceled++
   }
   return summary
 }
@@ -178,12 +178,12 @@ function AppointmentRow({ appt, index }: { appt: OHAppointment; index: number })
 
 function OHSummaryModal({ records, onClose }: { records: OHRecord[]; onClose: () => void }) {
   const totalAppts = records.reduce((s, r) => s + r.appointments.length, 0)
-  let passed = 0, fail = 0, waiting = 0, cancled = 0
+  let passed = 0, fail = 0, waiting = 0, canceled = 0
   records.forEach(r => r.appointments.forEach(a => {
     if (a.status === 'PASSED') passed++
     else if (a.status === 'FAIL') fail++
     else if (a.status === 'WAITING') waiting++
-    else if (a.status === 'CANCLED') cancled++
+    else if (a.status === 'CANCELED') canceled++
   }))
 
   return (
@@ -208,7 +208,7 @@ function OHSummaryModal({ records, onClose }: { records: OHRecord[]; onClose: ()
                 <th style={{ textAlign: 'center' }}>PASSED</th>
                 <th style={{ textAlign: 'center' }}>FAIL</th>
                 <th style={{ textAlign: 'center' }}>WAITING</th>
-                <th style={{ textAlign: 'center' }}>CANCLED</th>
+                <th style={{ textAlign: 'center' }}>CANCELED</th>
               </tr>
             </thead>
             <tbody>
@@ -227,7 +227,7 @@ function OHSummaryModal({ records, onClose }: { records: OHRecord[]; onClose: ()
                     <td style={{ textAlign: 'center', color: s.passed > 0 ? '#16a34a' : undefined, fontWeight: s.passed > 0 ? 700 : undefined }}>{s.passed || '—'}</td>
                     <td style={{ textAlign: 'center', color: s.fail > 0 ? '#dc2626' : undefined, fontWeight: s.fail > 0 ? 700 : undefined }}>{s.fail || '—'}</td>
                     <td style={{ textAlign: 'center', color: s.waiting > 0 ? '#d97706' : undefined }}>{s.waiting || '—'}</td>
-                    <td style={{ textAlign: 'center', color: s.cancled > 0 ? '#6b7280' : undefined }}>{s.cancled || '—'}</td>
+                    <td style={{ textAlign: 'center', color: s.canceled > 0 ? '#6b7280' : undefined }}>{s.canceled || '—'}</td>
                   </tr>
                 )
               })}
@@ -239,7 +239,7 @@ function OHSummaryModal({ records, onClose }: { records: OHRecord[]; onClose: ()
                 <td style={{ textAlign: 'center', color: '#16a34a' }}>{passed}</td>
                 <td style={{ textAlign: 'center', color: '#dc2626' }}>{fail}</td>
                 <td style={{ textAlign: 'center', color: '#d97706' }}>{waiting}</td>
-                <td style={{ textAlign: 'center', color: '#6b7280' }}>{cancled}</td>
+                <td style={{ textAlign: 'center', color: '#6b7280' }}>{canceled}</td>
               </tr>
             </tfoot>
           </table>
@@ -294,16 +294,16 @@ export default function OHPage() {
 
   // Stats
   const stats = useMemo(() => {
-    let passed = 0, fail = 0, waiting = 0, cancled = 0
+    let passed = 0, fail = 0, waiting = 0, canceled = 0
     ohData.forEach(r => {
       r.appointments.forEach(a => {
         if (a.status === 'PASSED') passed++
         else if (a.status === 'FAIL') fail++
         else if (a.status === 'WAITING') waiting++
-        else if (a.status === 'CANCLED') cancled++
+        else if (a.status === 'CANCELED') canceled++
       })
     })
-    return { passed, fail, waiting, cancled, total: passed + fail + waiting + cancled }
+    return { passed, fail, waiting, canceled, total: passed + fail + waiting + canceled }
   }, [ohData])
 
   // Apply filters
@@ -377,8 +377,8 @@ export default function OHPage() {
             <span className="oh-stat-label">WAITING</span>
           </div>
           <div className="oh-stat">
-            <span className="oh-stat-num oh-stat-cancled">{stats.cancled}</span>
-            <span className="oh-stat-label">CANCLED</span>
+            <span className="oh-stat-num oh-stat-cancled">{stats.canceled}</span>
+            <span className="oh-stat-label">CANCELED</span>
           </div>
         </div>
         <span className="oh-page-badge">{filtered.length} / {ohData.length} OH</span>
@@ -412,10 +412,10 @@ export default function OHPage() {
         <SingleSelect
           label="Trạng thái"
           options={[
-            { value: 'WAITING', label: 'WAITING' },
-            { value: 'PASSED',  label: 'PASSED' },
-            { value: 'FAIL',    label: 'FAIL' },
-            { value: 'CANCLED', label: 'CANCLED' },
+            { value: 'WAITING',  label: 'WAITING' },
+            { value: 'PASSED',   label: 'PASSED' },
+            { value: 'FAIL',     label: 'FAIL' },
+            { value: 'CANCELED', label: 'CANCELED' },
           ]}
           value={filters.apptStatus}
           onChange={v => update('apptStatus', v)}
@@ -468,7 +468,7 @@ export default function OHPage() {
                         {summary.passed  > 0 && <span className="oh-badge oh-badge-passed">{summary.passed} PASSED</span>}
                         {summary.fail    > 0 && <span className="oh-badge oh-badge-fail">{summary.fail} FAIL</span>}
                         {summary.waiting > 0 && <span className="oh-badge oh-badge-waiting">{summary.waiting} WAITING</span>}
-                        {summary.cancled > 0 && <span className="oh-badge oh-badge-cancled">{summary.cancled} CANCLED</span>}
+                        {summary.canceled > 0 && <span className="oh-badge oh-badge-cancled">{summary.canceled} CANCELED</span>}
                         {r.appointments.length === 0 && <span className="oh-badge oh-badge-waiting">—</span>}
                       </div>
                     </td>

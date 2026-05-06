@@ -6,7 +6,7 @@ function formatTime(iso: string | null): string {
 }
 
 export default function StatusBar() {
-  const { connected, fetchState, tokenInfo, triggerRefresh } = useServerStatus()
+  const { connected, fetchState, tokenInfo, triggerRefresh, cancelFetch } = useServerStatus()
 
   const tokenExpiring = tokenInfo && tokenInfo.valid && tokenInfo.remaining_minutes <= 15
   const tokenExpired  = tokenInfo && !tokenInfo.valid
@@ -47,6 +47,17 @@ export default function StatusBar() {
         >
           {fetchState.is_fetching ? '⏳' : '↻'} Cập nhật
         </button>
+
+        {/* Cancel button — chỉ hiện khi đang fetch */}
+        {fetchState.is_fetching && (
+          <button
+            className="status-refresh-btn status-cancel-btn"
+            onClick={cancelFetch}
+            title="Dừng quá trình cập nhật"
+          >
+            ✕ Hủy
+          </button>
+        )}
       </div>
     </div>
   )

@@ -17,7 +17,7 @@ import sys
 from datetime import datetime, timezone
 from typing import Set
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, BackgroundTasks, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -79,6 +79,9 @@ fetch_state = {
     "last_log": "",      # full stdout+stderr from last run
 }
 
+# Lưu subprocess hiện tại để có thể cancel
+_fetch_process: subprocess.Popen | None = None
+
 
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -137,6 +140,8 @@ def check_token(token: str) -> dict:
 
 async def run_fetch(loop: asyncio.AbstractEventLoop):
     """Run main.py in subprocess and broadcast result via WebSocket."""
+    global _fetch_process
+
     if fetch_state["is_fetching"]:
         return
 
@@ -151,22 +156,93 @@ async def run_fetch(loop: asyncio.AbstractEventLoop):
     })
 
     try:
-        result = await asyncio.get_event_loop().run_in_executor(
-            None,
-            lambda: subprocess.run(
-                [sys.executable, "main.py", "--no-exit"],
-                capture_output=True, text=True, encoding="utf-8",
-                env={**os.environ, "PYTHONIOENCODING": "utf-8"},
-                cwd=os.path.dirname(__file__),
-                timeout=1800  # 30 phút max
-            )
-        )
+        # Kiểm tra token trước khi chạy
+        token = read_token()
+        if token:
+            token_info = check_token(token)
+            if not token_info["valid"]:
+                fetch_state["last_status"] = "error"
+                fetch_state["last_message"] = "Token đã hết hạn — vui lòng cập nhật token mới"
+                await manager.broadcast({
+                    "type": "fetch_done",
+                    "status": "token_expired",
+                    "message": "Token đã hết hạn. Vui lòng lấy token mới từ LMS và cập nhật vào .env",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+                return
 
-        if result.returncode == 0:
+        def run_subprocess():
+            global _fetch_process
+            import tempfile
+
+            # Dùng file tạm thay vì PIPE để tránh deadlock trên Windows với threading
+            with tempfile.NamedTemporaryFile(
+                mode='w', suffix='.log', delete=False,
+                encoding='utf-8', prefix='lms_fetch_'
+            ) as f:
+                log_path = f.name
+
+            try:
+                with open(log_path, 'w', encoding='utf-8') as log_file:
+                    _fetch_process = subprocess.Popen(
+                        [sys.executable, "main.py", "--no-exit"],
+                        stdout=log_file, stderr=log_file,
+                        text=True, encoding="utf-8",
+                        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                        cwd=os.path.dirname(__file__),
+                    )
+                try:
+                    _fetch_process.wait(timeout=1800)
+                    returncode = _fetch_process.returncode
+                except subprocess.TimeoutExpired:
+                    _fetch_process.kill()
+                    _fetch_process.wait()
+                    returncode = -1
+            finally:
+                _fetch_process = None
+
+            # Đọc log từ file
+            try:
+                with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+                    output = f.read()
+            except Exception:
+                output = ""
+            try:
+                os.unlink(log_path)
+            except Exception:
+                pass
+
+            return returncode, output, ""
+
+        returncode, stdout, stderr = await asyncio.get_event_loop().run_in_executor(None, run_subprocess)
+
+        full_log = (stdout or "") + "\n" + (stderr or "")
+        fetch_state["last_log"] = full_log.strip()
+
+        if returncode == -999:
+            # Bị cancel bởi người dùng
+            fetch_state["last_status"] = "idle"
+            fetch_state["last_message"] = "Đã hủy cập nhật"
+            await manager.broadcast({
+                "type": "fetch_done",
+                "status": "canceled",
+                "message": "Đã hủy quá trình cập nhật.",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+        elif returncode == 2:
+            # Token hết hạn (exit code 2)
+            fetch_state["last_status"] = "error"
+            fetch_state["last_message"] = "Token đã hết hạn — vui lòng cập nhật token mới"
+            await manager.broadcast({
+                "type": "fetch_done",
+                "status": "token_expired",
+                "message": "Token đã hết hạn. Vui lòng lấy token mới từ LMS và cập nhật vào .env",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+        elif returncode == 0:
             fetch_state["last_status"] = "success"
             fetch_state["last_message"] = "Cập nhật thành công"
             fetch_state["last_fetch"] = datetime.now(timezone.utc).isoformat()
-            fetch_state["last_log"] = result.stdout or ""
             await manager.broadcast({
                 "type": "fetch_done",
                 "status": "success",
@@ -174,8 +250,6 @@ async def run_fetch(loop: asyncio.AbstractEventLoop):
                 "timestamp": fetch_state["last_fetch"],
             })
         else:
-            full_log = (result.stdout or "") + "\n" + (result.stderr or "")
-            fetch_state["last_log"] = full_log.strip()
             err_lines = [l for l in full_log.splitlines() if l.strip() and not l.startswith("  ")]
             err = err_lines[-1][:300] if err_lines else full_log[:300]
             fetch_state["last_status"] = "error"
@@ -197,6 +271,7 @@ async def run_fetch(loop: asyncio.AbstractEventLoop):
         })
     finally:
         fetch_state["is_fetching"] = False
+        _fetch_process = None
         # Schedule next fetch
         next_dt = datetime.now(timezone.utc).timestamp() + FETCH_INTERVAL_HOURS * 3600
         fetch_state["next_fetch"] = datetime.fromtimestamp(next_dt, tz=timezone.utc).isoformat()
@@ -266,6 +341,42 @@ async def manual_refresh(background_tasks: BackgroundTasks):
     return {"ok": True, "message": "Đã bắt đầu fetch dữ liệu..."}
 
 
+@app.post("/api/cancel")
+async def cancel_fetch():
+    """Cancel đang fetch."""
+    global _fetch_process
+    if not fetch_state["is_fetching"]:
+        return JSONResponse({"ok": False, "message": "Không có quá trình fetch nào đang chạy."})
+    proc = _fetch_process
+    if proc and proc.poll() is None:
+        try:
+            proc.kill()
+            proc.wait()  # đợi process thực sự dừng
+            fetch_state["is_fetching"] = False
+            fetch_state["last_status"] = "idle"
+            fetch_state["last_message"] = "Đã hủy cập nhật"
+            await manager.broadcast({
+                "type": "fetch_done",
+                "status": "canceled",
+                "message": "Đã hủy quá trình cập nhật.",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+            return {"ok": True, "message": "Đã hủy."}
+        except Exception as e:
+            return JSONResponse({"ok": False, "message": str(e)})
+    # Subprocess chưa start kịp, đánh dấu để run_fetch tự dừng
+    fetch_state["is_fetching"] = False
+    fetch_state["last_status"] = "idle"
+    fetch_state["last_message"] = "Đã hủy cập nhật"
+    await manager.broadcast({
+        "type": "fetch_done",
+        "status": "canceled",
+        "message": "Đã hủy quá trình cập nhật.",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    return {"ok": True, "message": "Đã hủy."}
+
+
 @app.get("/api/fetch-status")
 def fetch_status():
     return fetch_state
@@ -275,6 +386,40 @@ def fetch_status():
 def fetch_log():
     """Return full log from last fetch run for debugging."""
     return {"log": fetch_state.get("last_log", ""), "status": fetch_state["last_status"]}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEMO endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/demo/classes")
+async def get_demo_classes(date: str, date_to: str = ""):
+    """Lấy danh sách lớp có buổi 14 trong khoảng ngày chỉ định (YYYY-MM-DD)."""
+    try:
+        from fetch_demo import fetch_demo_classes
+        loop = asyncio.get_event_loop()
+        classes = await loop.run_in_executor(None, lambda: fetch_demo_classes(date, date_to))
+        return classes
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
+
+
+@app.post("/api/demo/export")
+async def export_demo_to_sheet(request: Request):
+    """Xuất danh sách lớp ra Google Sheet, tạo tab mới."""
+    body = await request.json()
+    date = body.get("date", "")
+    date_to = body.get("date_to", "")
+    if not date:
+        return JSONResponse({"error": "Thiếu tham số date"}, status_code=400)
+    try:
+        from fetch_demo import fetch_demo_classes, export_to_sheet
+        loop = asyncio.get_event_loop()
+        classes = await loop.run_in_executor(None, lambda: fetch_demo_classes(date, date_to))
+        result = await loop.run_in_executor(None, lambda: export_to_sheet(classes, date, date_to))
+        return result
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
 
 
 @app.get("/api/classes")

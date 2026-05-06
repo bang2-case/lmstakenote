@@ -101,10 +101,9 @@ if not check_token_expiry(TOKEN):
         update_env_token(new_token)
         TOKEN = new_token
         print("✅ Token đã được cập nhật, tiếp tục chạy...")
-    elif "--no-exit" not in sys.argv:
-        sys.exit(1)
-    # Nếu có --no-exit (gọi từ server.py), tiếp tục chạy dù token hết hạn
-    # API sẽ tự báo lỗi authentication
+    else:
+        # Token hết hạn và không có token mới → dừng hẳn, không xóa data
+        sys.exit(2)  # exit code 2 = token expired
 
 # Cho phép update token qua CLI ngay cả khi token còn hạn
 if len(sys.argv) == 3 and sys.argv[1] == "--update-token":
@@ -750,7 +749,7 @@ def save_tp_to_sqlite(data: list):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def get_survey_id_for_class(class_id):
-    """Lấy surveyId của lớp qua findOneClassSurvey."""
+    """Lấy surveyId và classSurveyId của lớp qua findOneClassSurvey."""
     payload = {
         "operationName": "FindOneClassSurvey",
         "variables": {"classId": class_id},
@@ -768,18 +767,74 @@ def get_survey_id_for_class(class_id):
         data = res.json()
         result = data.get("data", {}).get("findOneClassSurvey")
         if result:
-            return result.get("surveyId")
+            return result.get("surveyId"), result.get("id")  # (surveyId, classSurveyId)
     except Exception as e:
         print(f"    ⚠ get_survey_id error for {class_id}: {e}")
-    return None
+    return None, None
 
 
-def get_survey_responses(survey_id, class_id):
-    """Lấy tất cả responses của một surveyId, filter theo classId trong metadata."""
+def get_survey_responses(survey_id, class_id, class_survey_id=None):
+    """
+    Lấy tất cả responses của một surveyId.
+    - Nếu có class_survey_id: filter trực tiếp qua API (chính xác, nhanh)
+    - Fallback: scan pages và filter theo classId trong metadata
+    """
     all_responses = []
     page = 0
-    # API trả về total=0 dù có data — dùng limit lớn và dừng khi không còn items
-    while True:
+
+    # Thử filter theo classSurveyId trước (chính xác hơn, không bị giới hạn page)
+    if class_survey_id:
+        MAX_PAGES = 5  # classSurveyId filter rất chính xác, ít pages
+        while page < MAX_PAGES:
+            payload = {
+                "operationName": "FindSurveyResponses",
+                "variables": {
+                    "surveyId": survey_id,
+                    "classSurveyId": class_survey_id,
+                    "page": page,
+                    "limit": 100
+                },
+                "query": """
+                query FindSurveyResponses($surveyId: String, $classSurveyId: String, $page: Int, $limit: Int) {
+                  findSurveyResponses(payload: {
+                    filter: { surveyId: $surveyId, classSurveyId: $classSurveyId }
+                    pagination: { page: $page, limit: $limit }
+                  }) {
+                    data {
+                      id submittedAt metadata
+                      answers { questionId value }
+                    }
+                    pagination { total }
+                  }
+                }
+                """
+            }
+            try:
+                res = requests.post(GRAPHQL_URL, headers=HEADERS, json=payload, timeout=15)
+                data = res.json()
+                # Nếu API không hỗ trợ classSurveyId filter → fallback
+                if "errors" in data:
+                    break
+                result = data.get("data", {}).get("findSurveyResponses", {})
+                items = result.get("data", [])
+                if not items:
+                    break
+                all_responses.extend(items)
+                if len(items) < 100:
+                    break
+                page += 1
+            except Exception as e:
+                print(f"    warning get_survey_responses (classSurveyId): {e}")
+                break
+
+        if all_responses:
+            return all_responses
+        # Nếu classSurveyId filter không trả về gì → fallback sang scan
+
+    # Fallback: scan pages và filter theo classId trong metadata
+    page = 0
+    MAX_PAGES = 20
+    while page < MAX_PAGES:
         payload = {
             "operationName": "FindSurveyResponses",
             "variables": {"surveyId": survey_id, "page": page, "limit": 100},
@@ -790,9 +845,7 @@ def get_survey_responses(survey_id, class_id):
                 pagination: { page: $page, limit: $limit }
               }) {
                 data {
-                  id
-                  submittedAt
-                  metadata
+                  id submittedAt metadata
                   answers { questionId value }
                 }
                 pagination { total }
@@ -807,7 +860,6 @@ def get_survey_responses(survey_id, class_id):
             items = result.get("data", [])
             if not items:
                 break
-            # Filter theo classId trong metadata
             for r in items:
                 try:
                     meta = json.loads(r.get("metadata", "{}"))
@@ -815,7 +867,6 @@ def get_survey_responses(survey_id, class_id):
                     meta = {}
                 if meta.get("classId") == class_id:
                     all_responses.append(r)
-            # Nếu trả về ít hơn limit thì đã hết
             if len(items) < 100:
                 break
             page += 1
@@ -937,7 +988,7 @@ import asyncio
 import aiohttp
 
 TP_CACHE_FILE = "public/tp.json"
-CONCURRENCY   = 10   # số lớp fetch song song
+CONCURRENCY   = 20   # số lớp fetch song song
 
 
 def load_tp_cache() -> dict:
@@ -976,7 +1027,8 @@ async def async_post(session: aiohttp.ClientSession, payload: dict) -> dict:
     return {}
 
 
-async def async_get_survey_id(session: aiohttp.ClientSession, class_id: str) -> str | None:
+async def async_get_survey_id(session: aiohttp.ClientSession, class_id: str) -> tuple[str | None, str | None]:
+    """Trả về (surveyId, classSurveyId)."""
     payload = {
         "operationName": "FindOneClassSurvey",
         "variables": {"classId": class_id},
@@ -990,14 +1042,58 @@ async def async_get_survey_id(session: aiohttp.ClientSession, class_id: str) -> 
     }
     data = await async_post(session, payload)
     result = (data.get("data") or {}).get("findOneClassSurvey")
-    return result.get("surveyId") if result else None
+    if result:
+        return result.get("surveyId"), result.get("id")
+    return None, None
 
 
-async def async_get_responses(session: aiohttp.ClientSession, survey_id: str, class_id: str) -> list:
-    """Fetch tất cả pages của survey, filter theo classId."""
+async def async_get_responses(session: aiohttp.ClientSession, survey_id: str, class_id: str, class_survey_id: str | None = None) -> list:
+    """Fetch tất cả pages của survey, ưu tiên filter theo classSurveyId."""
     all_responses = []
     page = 0
-    while True:
+
+    # Thử filter theo classSurveyId trước
+    if class_survey_id:
+        MAX_PAGES = 5
+        while page < MAX_PAGES:
+            payload = {
+                "operationName": "FindSurveyResponses",
+                "variables": {
+                    "surveyId": survey_id,
+                    "classSurveyId": class_survey_id,
+                    "page": page, "limit": 100
+                },
+                "query": """
+                query FindSurveyResponses($surveyId: String, $classSurveyId: String, $page: Int, $limit: Int) {
+                  findSurveyResponses(payload: {
+                    filter: { surveyId: $surveyId, classSurveyId: $classSurveyId }
+                    pagination: { page: $page, limit: $limit }
+                  }) {
+                    data { id submittedAt metadata answers { questionId value } }
+                    pagination { total }
+                  }
+                }
+                """
+            }
+            data = await async_post(session, payload)
+            if "errors" in data:
+                break
+            result = (data.get("data") or {}).get("findSurveyResponses") or {}
+            items = result.get("data") or []
+            if not items:
+                break
+            all_responses.extend(items)
+            if len(items) < 100:
+                break
+            page += 1
+
+        if all_responses:
+            return all_responses
+
+    # Fallback: scan pages và filter theo classId trong metadata
+    page = 0
+    MAX_PAGES = 20
+    while page < MAX_PAGES:
         payload = {
             "operationName": "FindSurveyResponses",
             "variables": {"surveyId": survey_id, "page": page, "limit": 100},
@@ -1041,7 +1137,7 @@ async def fetch_tp_for_class(
     class_name = c.get("name", "")
 
     async with semaphore:
-        survey_id = await async_get_survey_id(session, class_id)
+        survey_id, class_survey_id = await async_get_survey_id(session, class_id)
         if not survey_id:
             return {
                 "classId": class_id, "className": class_name,
@@ -1051,7 +1147,7 @@ async def fetch_tp_for_class(
                 "tp1_students": [], "tp2_students": []
             }
 
-        responses = await async_get_responses(session, survey_id, class_id)
+        responses = await async_get_responses(session, survey_id, class_id, class_survey_id)
         tp = calc_tp_from_responses(responses)
 
         return {
@@ -1151,8 +1247,14 @@ def fetch_tp(classes_data: list) -> list:
         print("   Tất cả đã có cache!")
         return cached
 
-    # Fetch async
-    new_results = asyncio.run(_fetch_tp_async(to_fetch))
+    # Fetch async — dùng new event loop trong thread để tránh conflict
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        new_results = loop.run_until_complete(_fetch_tp_async(to_fetch))
+    finally:
+        loop.close()
+        asyncio.set_event_loop(None)
 
     # Gộp cache + kết quả mới, giữ thứ tự theo candidates
     result_map = {r["classId"]: r for r in new_results}
@@ -1378,7 +1480,7 @@ def save_cp(data):
 # OFFICE HOURS (OH) FETCH
 # ─────────────────────────────────────────────────────────────────────────────
 
-OH_CUTOFF_ISO = "2026-04-20T00:00:00.000Z"  # 20/04/2026 00:00:00 UTC
+OH_CUTOFF_ISO = "2026-04-01T00:00:00.000Z"  # 01/04/2026 00:00:00 UTC
 
 OH_QUERY = """query GetOfficeHours($payload: OfficeHourQuery) {
   officeHours(payload: $payload) {
@@ -1623,36 +1725,112 @@ def save_oh(data: list):
 
 
 if __name__ == "__main__":
+    import threading
+    import time as _time
+
+    t_start = _time.time()
+
     print("=" * 50)
-    print("📚 Fetching classes...")
+    print("🚀 Bắt đầu fetch song song: classes + teachers + OH")
     print("=" * 50)
-    data = fetch_all()
+
+    classes_result: dict = {}
+    teachers_result: dict = {}
+    oh_result: dict = {}
+    tp_result: dict = {}
+    cp_result: dict = {}
+    errors: list = []
+
+    # ── Phase 1: fetch_all + fetch_teachers + fetch_oh song song ──────────
+    def run_fetch_all():
+        try:
+            classes_result["data"] = fetch_all()
+            print(f"\n✅ [classes] Xong: {len(classes_result['data'])} lớp")
+        except Exception as e:
+            errors.append(f"fetch_all: {e}")
+            classes_result["data"] = []
+
+    def run_fetch_teachers():
+        try:
+            teachers_result["data"] = fetch_teachers()
+            print(f"\n✅ [teachers] Xong: {len(teachers_result['data'])} giáo viên")
+        except Exception as e:
+            errors.append(f"fetch_teachers: {e}")
+            teachers_result["data"] = []
+
+    def run_fetch_oh():
+        try:
+            oh_result["data"] = fetch_oh()
+            print(f"\n✅ [OH] Xong: {len(oh_result['data'])} OH")
+        except Exception as e:
+            errors.append(f"fetch_oh: {e}")
+            oh_result["data"] = []
+
+    phase1_threads = [
+        threading.Thread(target=run_fetch_all,      name="fetch-classes"),
+        threading.Thread(target=run_fetch_teachers, name="fetch-teachers"),
+        threading.Thread(target=run_fetch_oh,       name="fetch-oh"),
+    ]
+    for t in phase1_threads:
+        t.start()
+    for t in phase1_threads:
+        t.join()
+
+    elapsed1 = _time.time() - t_start
+    print(f"\n⏱ Phase 1 xong sau {elapsed1:.0f}s")
+
+    if errors:
+        print(f"⚠ Lỗi phase 1: {errors}")
+
+    # Lưu ngay sau phase 1
+    data = classes_result["data"]
     save(data)
+    save_teachers(teachers_result["data"])
+    save_oh(oh_result["data"])
 
+    # ── Phase 2: fetch_tp + fetch_cp song song (cả 2 cần data từ fetch_all) ──
     print()
     print("=" * 50)
-    print("👨‍🏫 Fetching teachers...")
+    print("🚀 Phase 2: TP + CP song song")
     print("=" * 50)
-    teachers = fetch_teachers()
-    save_teachers(teachers)
 
+    def run_fetch_tp():
+        try:
+            tp_result["data"] = fetch_tp(data)
+            print(f"\n✅ [TP] Xong: {len(tp_result['data'])} lớp")
+        except Exception as e:
+            errors.append(f"fetch_tp: {e}")
+            tp_result["data"] = []
+
+    def run_fetch_cp():
+        try:
+            cp_result["data"] = fetch_cp(data)
+            print(f"\n✅ [CP] Xong: {len(cp_result['data'])} lớp")
+        except Exception as e:
+            errors.append(f"fetch_cp: {e}")
+            cp_result["data"] = []
+
+    phase2_threads = [
+        threading.Thread(target=run_fetch_tp, name="fetch-tp"),
+        threading.Thread(target=run_fetch_cp, name="fetch-cp"),
+    ]
+    for t in phase2_threads:
+        t.start()
+    for t in phase2_threads:
+        t.join()
+
+    elapsed2 = _time.time() - t_start
+    print(f"\n⏱ Phase 2 xong sau {elapsed2:.0f}s")
+
+    if errors:
+        print(f"⚠ Lỗi phase 2: {errors}")
+
+    save_tp(tp_result["data"])
+    save_cp(cp_result["data"])
+
+    elapsed_total = _time.time() - t_start
     print()
     print("=" * 50)
-    print("📊 Fetching Teacher Points (TP)...")
+    print(f"✅ Hoàn tất tất cả! Tổng thời gian: {elapsed_total:.0f}s")
     print("=" * 50)
-    tp_data = fetch_tp(data)
-    save_tp(tp_data)
-
-    print()
-    print("=" * 50)
-    print("📌 Fetching Checkpoint data (CP)...")
-    print("=" * 50)
-    cp_data = fetch_cp(data)
-    save_cp(cp_data)
-
-    print()
-    print("=" * 50)
-    print("🏢 Fetching Office Hours (OH)...")
-    print("=" * 50)
-    oh_data = fetch_oh()
-    save_oh(oh_data)
+    sys.exit(0)

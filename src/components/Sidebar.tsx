@@ -2,7 +2,7 @@ import { useState } from 'react'
 import SidebarStatus from './SidebarStatus'
 
 // Pages
-export type Page = 'classes' | 'mentors' | 'cr' | 'tp' | 'cp' | 'oh'
+export type Page = 'classes' | 'mentors' | 'cr' | 'tp' | 'cp' | 'oh' | 'demo'
 
 interface SidebarProps {
   activePage: Page
@@ -60,6 +60,14 @@ function IconSeedling() {
   )
 }
 
+function IconDemo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 576 512" fill="currentColor" aria-hidden="true">
+      <path d="M0 80C0 53.5 21.5 32 48 32h96c26.5 0 48 21.5 48 48V96H384V80c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H432c-26.5 0-48-21.5-48-48v-16H192v16c0 26.5-21.5 48-48 48H48C21.5 224 0 202.5 0 176V80zM192 352v-16H48c-26.5 0-48-21.5-48-48V192h64v80h128v-16c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v16h128V192h64v96c0 26.5-21.5 48-48 48H384v16c0 26.5-21.5 48-48 48H240c-26.5 0-48-21.5-48-48z"/>
+    </svg>
+  )
+}
+
 function IconChevron({ open }: { open: boolean }) {
   return (
     <svg
@@ -103,6 +111,12 @@ const navStructure: NavItem[] = [
     key: 'oh',
     label: 'Quản lý OH',
     icon: <IconSeedling />,
+  },
+  {
+    type: 'item',
+    key: 'demo',
+    label: 'Quản lý DEMO',
+    icon: <IconDemo />,
   },
 ]
 

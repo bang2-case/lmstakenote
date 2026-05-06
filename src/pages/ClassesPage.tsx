@@ -125,11 +125,9 @@ function ClassCard({ item, onClick, hasUncommentedSlots, hasPendingSurvey, pendi
   onClick: () => void; 
   hasUncommentedSlots: boolean;
   hasPendingSurvey: boolean;
-  pendingSurveyInfo?: { round: string; missingStudents: string[] };
+  pendingSurveyInfo?: { round: string; missing: number }[];
 }) {
   const mainTeacher = item.teachers[0]?.name || '—'
-
-  // Ưu tiên hiển thị viền đỏ cho survey pending, sau đó mới đến uncommented
   const cardClass = hasPendingSurvey ? 'card-pending-survey' : (hasUncommentedSlots ? 'card-uncommented' : '')
 
   return (
@@ -148,11 +146,11 @@ function ClassCard({ item, onClick, hasUncommentedSlots, hasPendingSurvey, pendi
       {item.totalSlotsWithStudents > 0 && (
         <p className="card-meta">💬 Nhận xét: {item.commentPercentage}% ({item.slotsWithFullComments}/{item.totalSlotsWithStudents} buổi)</p>
       )}
-      {hasPendingSurvey && pendingSurveyInfo && (
-        <p className="card-meta" style={{ color: '#dc2626', fontWeight: 600, whiteSpace: 'normal', wordBreak: 'break-word' }}>
-          📊 {pendingSurveyInfo.round}: {pendingSurveyInfo.missingStudents[0]}
+      {hasPendingSurvey && pendingSurveyInfo && pendingSurveyInfo.map(info => (
+        <p key={info.round} className="card-meta" style={{ color: '#dc2626', fontWeight: 600 }}>
+          📊 {info.round}: Còn thiếu {info.missing} học viên
         </p>
-      )}
+      ))}
     </div>
   )
 }
@@ -240,14 +238,18 @@ export default function ClassesPage() {
           const tp1Past = tp1Slot && new Date(tp1Slot.date) < now && tp1Slot.studentsInSlot > 0
           const tp2Past = tp2Slot && new Date(tp2Slot.date) < now && tp2Slot.studentsInSlot > 0
           
-          // Kiểm tra TP1: đếm số học viên CÓ ĐIỂM
+          // Kiểm tra TP1: chỉ tính khi đã có survey data
           const tp1Missing = tp1Past && (() => {
+            const hasSurveyData = tpRecord.tp1 !== null || (tpRecord.tp1_students || []).length > 0
+            if (!hasSurveyData) return false  // chưa fetch được survey → không tính là "thiếu"
             const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
             return studentsWithScore.length < tp1Slot.studentsInSlot
           })()
           
-          // Kiểm tra TP2: đếm số học viên CÓ ĐIỂM
+          // Kiểm tra TP2: chỉ tính khi đã có survey data
           const tp2Missing = tp2Past && (() => {
+            const hasSurveyData = tpRecord.tp2 !== null || (tpRecord.tp2_students || []).length > 0
+            if (!hasSurveyData) return false
             const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
             return studentsWithScore.length < tp2Slot.studentsInSlot
           })()
@@ -406,55 +408,40 @@ export default function ClassesPage() {
   }
 
   // Check if class has pending survey (for card styling)
+  // Trả về array để hiển thị cả TP1 và TP2 nếu cả hai đều thiếu
   const getPendingSurveyInfo = (classItem: ClassItem) => {
     const now = new Date()
     const sortedSlots = [...classItem.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     
     const tpRecord = tpData.find(t => t.classId === classItem.id)
-    
-    // Nếu không có TP record trong data → chưa fetch được, không thể kết luận
     if (!tpRecord) return null
 
     const tp1Slot = sortedSlots[3]  // buổi 4 (index 3)
     const tp2Slot = sortedSlots[7]  // buổi 8 (index 7)
-    
+    const results: { round: string; missing: number }[] = []
+
     // Kiểm tra TP1
-    const tp1Past = tp1Slot && new Date(tp1Slot.date) < now && tp1Slot.studentsInSlot > 0
-    if (tp1Past) {
-      const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
-      const expectedCount = tp1Slot.studentsInSlot
-      const actualCount = studentsWithScore.length
-      
-      if (actualCount < expectedCount) {
-        const completedNames = studentsWithScore.map(s => s.name)
-        return { 
-          round: 'TP1', 
-          missingStudents: completedNames.length > 0 
-            ? [`Đã có: ${completedNames.join(', ')} (Thiếu ${expectedCount - actualCount})`]
-            : [`Thiếu ${expectedCount - actualCount} học viên`]
-        }
+    // Chỉ tính khi: buổi đã qua, có HV, VÀ đã fetch được survey (tp1 !== null HOẶC có ít nhất 1 student)
+    if (tp1Slot && new Date(tp1Slot.date) < now && tp1Slot.studentsInSlot > 0) {
+      const hasSurveyData = tpRecord.tp1 !== null || (tpRecord.tp1_students || []).length > 0
+      if (hasSurveyData) {
+        const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
+        const missing = tp1Slot.studentsInSlot - studentsWithScore.length
+        if (missing > 0) results.push({ round: 'TP 1', missing })
       }
     }
-    
+
     // Kiểm tra TP2
-    const tp2Past = tp2Slot && new Date(tp2Slot.date) < now && tp2Slot.studentsInSlot > 0
-    if (tp2Past) {
-      const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
-      const expectedCount = tp2Slot.studentsInSlot
-      const actualCount = studentsWithScore.length
-      
-      if (actualCount < expectedCount) {
-        const completedNames = studentsWithScore.map(s => s.name)
-        return { 
-          round: 'TP2', 
-          missingStudents: completedNames.length > 0 
-            ? [`Đã có: ${completedNames.join(', ')} (Thiếu ${expectedCount - actualCount})`]
-            : [`Thiếu ${expectedCount - actualCount} học viên`]
-        }
+    if (tp2Slot && new Date(tp2Slot.date) < now && tp2Slot.studentsInSlot > 0) {
+      const hasSurveyData = tpRecord.tp2 !== null || (tpRecord.tp2_students || []).length > 0
+      if (hasSurveyData) {
+        const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
+        const missing = tp2Slot.studentsInSlot - studentsWithScore.length
+        if (missing > 0) results.push({ round: 'TP 2', missing })
       }
     }
-    
-    return null
+
+    return results.length > 0 ? results : null
   }
 
   if (loading) return <div className="state-msg">Đang tải dữ liệu...</div>
@@ -495,7 +482,6 @@ export default function ClassesPage() {
 
       <div className="card-grid">
         {filteredClasses.map((c) => {
-          // Chỉ hiển thị pending survey info khi bộ lọc "Khảo sát" = "Chưa thao tác"
           const pendingSurveyInfo = filters.tpRound === 'pending' ? getPendingSurveyInfo(c) : null
           return (
             <ClassCard 
@@ -504,14 +490,18 @@ export default function ClassesPage() {
               onClick={() => setSelectedClass(c)}
               hasUncommentedSlots={getHasUncommentedSlots(c)}
               hasPendingSurvey={!!pendingSurveyInfo}
-              pendingSurveyInfo={pendingSurveyInfo || undefined}
+              pendingSurveyInfo={pendingSurveyInfo ?? undefined}
             />
           )
         })}
       </div>
 
       {selectedClass && (
-        <ClassDetail classItem={selectedClass} onClose={() => setSelectedClass(null)} />
+        <ClassDetail 
+          classItem={selectedClass} 
+          tpRecord={tpData.find(t => t.classId === selectedClass.id) ?? null}
+          onClose={() => setSelectedClass(null)} 
+        />
       )}
 
       {showSummary && (

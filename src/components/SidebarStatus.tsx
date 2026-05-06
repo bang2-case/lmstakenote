@@ -7,7 +7,7 @@ function formatTime(iso: string | null): string {
 }
 
 export default function SidebarStatus() {
-  const { connected, fetchState, tokenInfo, triggerRefresh } = useServerStatus()
+  const { connected, fetchState, tokenInfo, triggerRefresh, cancelFetch } = useServerStatus()
   const [showLog, setShowLog] = useState(false)
   const [log, setLog] = useState('')
 
@@ -71,6 +71,17 @@ export default function SidebarStatus() {
       >
         {fetchState.is_fetching ? '⏳ Đang tải...' : '↻ Cập nhật'}
       </button>
+
+      {/* Cancel button — chỉ hiện khi đang fetch */}
+      {fetchState.is_fetching && (
+        <button
+          className="sidebar-status-btn sidebar-status-btn-cancel"
+          onClick={cancelFetch}
+          title="Dừng quá trình cập nhật"
+        >
+          ✕ Hủy
+        </button>
+      )}
 
       {/* Log modal */}
       {showLog && (

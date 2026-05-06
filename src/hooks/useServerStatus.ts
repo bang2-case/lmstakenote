@@ -19,6 +19,7 @@ export interface ServerStatus {
   fetchState: FetchState
   tokenInfo: TokenInfo | null
   triggerRefresh: () => Promise<void>
+  cancelFetch: () => Promise<void>
 }
 
 const DEFAULT_FETCH_STATE: FetchState = {
@@ -58,7 +59,7 @@ export function useServerStatus(): ServerStatus {
               setFetchState((s) => ({
                 ...s,
                 is_fetching: false,
-                last_status: msg.status,
+                last_status: msg.status === 'canceled' ? 'idle' : msg.status,
                 last_message: msg.message,
                 last_fetch: msg.status === 'success' ? msg.timestamp : s.last_fetch,
               }))
@@ -94,5 +95,11 @@ export function useServerStatus(): ServerStatus {
     } catch { /* ignore */ }
   }, [])
 
-  return { connected, fetchState, tokenInfo, triggerRefresh }
+  const cancelFetch = useCallback(async () => {
+    try {
+      await fetch('/api/cancel', { method: 'POST' })
+    } catch { /* ignore */ }
+  }, [])
+
+  return { connected, fetchState, tokenInfo, triggerRefresh, cancelFetch }
 }
