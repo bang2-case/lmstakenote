@@ -776,28 +776,29 @@ def get_survey_id_for_class(class_id):
 def get_survey_responses(survey_id, class_id, class_survey_id=None):
     """
     Lấy tất cả responses của một surveyId.
-    - Nếu có class_survey_id: filter trực tiếp qua API (chính xác, nhanh)
-    - Fallback: scan pages và filter theo classId trong metadata
+    - Nếu có class_survey_id: filter qua metadata JSON (chính xác, nhanh)
+    - Fallback: filter qua metadata classId
     """
+    import json as _json
     all_responses = []
     page = 0
 
-    # Thử filter theo classSurveyId trước (chính xác hơn, không bị giới hạn page)
+    # Filter theo classSurveyId trong metadata (đúng cách API hỗ trợ)
     if class_survey_id:
-        MAX_PAGES = 5  # classSurveyId filter rất chính xác, ít pages
+        MAX_PAGES = 5
         while page < MAX_PAGES:
             payload = {
                 "operationName": "FindSurveyResponses",
                 "variables": {
                     "surveyId": survey_id,
-                    "classSurveyId": class_survey_id,
+                    "metadata": _json.dumps({"classSurveyId": class_survey_id}),
                     "page": page,
                     "limit": 100
                 },
                 "query": """
-                query FindSurveyResponses($surveyId: String, $classSurveyId: String, $page: Int, $limit: Int) {
+                query FindSurveyResponses($surveyId: String, $metadata: String, $page: Int, $limit: Int) {
                   findSurveyResponses(payload: {
-                    filter: { surveyId: $surveyId, classSurveyId: $classSurveyId }
+                    filter: { surveyId: $surveyId, metadata: $metadata }
                     pagination: { page: $page, limit: $limit }
                   }) {
                     data {
@@ -812,7 +813,6 @@ def get_survey_responses(survey_id, class_id, class_survey_id=None):
             try:
                 res = requests.post(GRAPHQL_URL, headers=HEADERS, json=payload, timeout=15)
                 data = res.json()
-                # Nếu API không hỗ trợ classSurveyId filter → fallback
                 if "errors" in data:
                     break
                 result = data.get("data", {}).get("findSurveyResponses", {})
@@ -829,19 +829,23 @@ def get_survey_responses(survey_id, class_id, class_survey_id=None):
 
         if all_responses:
             return all_responses
-        # Nếu classSurveyId filter không trả về gì → fallback sang scan
 
-    # Fallback: scan pages và filter theo classId trong metadata
+    # Fallback: filter theo classId trong metadata
     page = 0
-    MAX_PAGES = 20
+    MAX_PAGES = 5
     while page < MAX_PAGES:
         payload = {
             "operationName": "FindSurveyResponses",
-            "variables": {"surveyId": survey_id, "page": page, "limit": 100},
+            "variables": {
+                "surveyId": survey_id,
+                "metadata": _json.dumps({"classId": class_id}),
+                "page": page,
+                "limit": 100
+            },
             "query": """
-            query FindSurveyResponses($surveyId: String, $page: Int, $limit: Int) {
+            query FindSurveyResponses($surveyId: String, $metadata: String, $page: Int, $limit: Int) {
               findSurveyResponses(payload: {
-                filter: { surveyId: $surveyId }
+                filter: { surveyId: $surveyId, metadata: $metadata }
                 pagination: { page: $page, limit: $limit }
               }) {
                 data {
@@ -856,22 +860,18 @@ def get_survey_responses(survey_id, class_id, class_survey_id=None):
         try:
             res = requests.post(GRAPHQL_URL, headers=HEADERS, json=payload, timeout=15)
             data = res.json()
+            if "errors" in data:
+                break
             result = data.get("data", {}).get("findSurveyResponses", {})
             items = result.get("data", [])
             if not items:
                 break
-            for r in items:
-                try:
-                    meta = json.loads(r.get("metadata", "{}"))
-                except Exception:
-                    meta = {}
-                if meta.get("classId") == class_id:
-                    all_responses.append(r)
+            all_responses.extend(items)
             if len(items) < 100:
                 break
             page += 1
         except Exception as e:
-            print(f"    warning get_survey_responses: {e}")
+            print(f"    warning get_survey_responses (classId): {e}")
             break
     return all_responses
 
@@ -1048,11 +1048,23 @@ async def async_get_survey_id(session: aiohttp.ClientSession, class_id: str) -> 
 
 
 async def async_get_responses(session: aiohttp.ClientSession, survey_id: str, class_id: str, class_survey_id: str | None = None) -> list:
-    """Fetch tất cả pages của survey, ưu tiên filter theo classSurveyId."""
+    """Fetch tất cả pages của survey, filter qua metadata JSON."""
     all_responses = []
     page = 0
 
-    # Thử filter theo classSurveyId trước
+    SURVEY_QUERY = """
+    query FindSurveyResponses($surveyId: String, $metadata: String, $page: Int, $limit: Int) {
+      findSurveyResponses(payload: {
+        filter: { surveyId: $surveyId, metadata: $metadata }
+        pagination: { page: $page, limit: $limit }
+      }) {
+        data { id submittedAt metadata answers { questionId value } }
+        pagination { total }
+      }
+    }
+    """
+
+    # Filter theo classSurveyId trong metadata (chính xác nhất)
     if class_survey_id:
         MAX_PAGES = 5
         while page < MAX_PAGES:
@@ -1060,20 +1072,10 @@ async def async_get_responses(session: aiohttp.ClientSession, survey_id: str, cl
                 "operationName": "FindSurveyResponses",
                 "variables": {
                     "surveyId": survey_id,
-                    "classSurveyId": class_survey_id,
+                    "metadata": json.dumps({"classSurveyId": class_survey_id}),
                     "page": page, "limit": 100
                 },
-                "query": """
-                query FindSurveyResponses($surveyId: String, $classSurveyId: String, $page: Int, $limit: Int) {
-                  findSurveyResponses(payload: {
-                    filter: { surveyId: $surveyId, classSurveyId: $classSurveyId }
-                    pagination: { page: $page, limit: $limit }
-                  }) {
-                    data { id submittedAt metadata answers { questionId value } }
-                    pagination { total }
-                  }
-                }
-                """
+                "query": SURVEY_QUERY
             }
             data = await async_post(session, payload)
             if "errors" in data:
@@ -1090,37 +1092,27 @@ async def async_get_responses(session: aiohttp.ClientSession, survey_id: str, cl
         if all_responses:
             return all_responses
 
-    # Fallback: scan pages và filter theo classId trong metadata
+    # Fallback: filter theo classId trong metadata
     page = 0
-    MAX_PAGES = 20
+    MAX_PAGES = 5
     while page < MAX_PAGES:
         payload = {
             "operationName": "FindSurveyResponses",
-            "variables": {"surveyId": survey_id, "page": page, "limit": 100},
-            "query": """
-            query FindSurveyResponses($surveyId: String, $page: Int, $limit: Int) {
-              findSurveyResponses(payload: {
-                filter: { surveyId: $surveyId }
-                pagination: { page: $page, limit: $limit }
-              }) {
-                data { id submittedAt metadata answers { questionId value } }
-                pagination { total }
-              }
-            }
-            """
+            "variables": {
+                "surveyId": survey_id,
+                "metadata": json.dumps({"classId": class_id}),
+                "page": page, "limit": 100
+            },
+            "query": SURVEY_QUERY
         }
         data = await async_post(session, payload)
+        if "errors" in data:
+            break
         result = (data.get("data") or {}).get("findSurveyResponses") or {}
         items = result.get("data") or []
         if not items:
             break
-        for r in items:
-            try:
-                meta = json.loads(r.get("metadata", "{}"))
-            except Exception:
-                meta = {}
-            if meta.get("classId") == class_id:
-                all_responses.append(r)
+        all_responses.extend(items)
         if len(items) < 100:
             break
         page += 1

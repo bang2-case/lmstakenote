@@ -31,30 +31,56 @@ export default function ClassDetail({ classItem, tpRecord, onClose }: Props) {
 
   const sortedSlots = [...classItem.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-  // Tính tên học viên thiếu khảo sát cho từng buổi TP
-  const getMissingTpStudents = (slotIndex: number, round: 'tp1' | 'tp2'): string[] => {
-    if (!tpRecord) return []
+  // Tính thông tin TP survey cho buổi TP
+  const getTpSurveyInfo = (slotIndex: number, round: 'tp1' | 'tp2'): {
+    text: string
+    type: 'none' | 'no_survey' | 'missing' | 'complete'
+  } => {
     const slot = sortedSlots[slotIndex]
-    if (!slot) return []
+    if (!slot) return { text: '', type: 'none' }
     const now = new Date()
-    if (new Date(slot.date) >= now) return []
-    if (slot.studentsInSlot === 0) return []
+    if (new Date(slot.date) >= now) return { text: '', type: 'none' }
+
+    // Tổng HV lớp (tính cả absent)
+    const totalStudents = classItem.studentCount
+
+    if (!tpRecord) {
+      // Không có TP record → chưa có ai làm
+      return {
+        text: 'Chưa có học viên nào thực hiện khảo sát',
+        type: 'no_survey',
+      }
+    }
 
     const students = round === 'tp1' ? (tpRecord.tp1_students || []) : (tpRecord.tp2_students || [])
     const roundScore = round === 'tp1' ? tpRecord.tp1 : tpRecord.tp2
-
-    // Chưa fetch được survey data → không hiển thị
     const hasSurveyData = roundScore !== null || students.length > 0
-    if (!hasSurveyData) return []
+
+    if (!hasSurveyData) {
+      return {
+        text: 'Chưa có học viên nào thực hiện khảo sát',
+        type: 'no_survey',
+      }
+    }
 
     const studentsWithScore = students.filter(s => s.score !== null && s.score !== undefined)
-    const missing = slot.studentsInSlot - studentsWithScore.length
-    if (missing <= 0) return []
+    const doneCount = studentsWithScore.length
+    const missing = totalStudents - doneCount
+
+    if (missing <= 0) {
+      return {
+        text: `Đã có: ${studentsWithScore.map(s => s.name).join(', ')} (${doneCount}/${totalStudents} HV)`,
+        type: 'complete',
+      }
+    }
 
     const doneNames = studentsWithScore.map(s => s.name)
-    return doneNames.length > 0
-      ? [`Đã có: ${doneNames.join(', ')} — Còn thiếu ${missing} học viên`]
-      : [`Còn thiếu ${missing} học viên`]
+    return {
+      text: doneNames.length > 0
+        ? `Đã có: ${doneNames.join(', ')} — Còn thiếu ${missing}/${totalStudents} học viên`
+        : `Còn thiếu ${missing}/${totalStudents} học viên`,
+      type: 'missing',
+    }
   }
 
   const getSlotClass = (slot: any) => {
@@ -182,11 +208,11 @@ export default function ClassDetail({ classItem, tpRecord, onClose }: Props) {
                   // Kiểm tra đây có phải buổi TP không (buổi 4 = index 3, buổi 8 = index 7)
                   const isTP1Slot = index === 3
                   const isTP2Slot = index === 7
-                  const missingTp = isTP1Slot
-                    ? getMissingTpStudents(3, 'tp1')
+                  const tpInfo = isTP1Slot
+                    ? getTpSurveyInfo(3, 'tp1')
                     : isTP2Slot
-                    ? getMissingTpStudents(7, 'tp2')
-                    : []
+                    ? getTpSurveyInfo(7, 'tp2')
+                    : { text: '', type: 'none' as const }
 
                   return (
                     <div key={s.id} className={`slot-item-detail ${getSlotClass(s)}`}>
@@ -208,17 +234,19 @@ export default function ClassDetail({ classItem, tpRecord, onClose }: Props) {
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                         <div className="slot-status">{getSlotStatus(s)}</div>
-                        {missingTp.length > 0 && (
+                        {tpInfo.type !== 'none' && tpInfo.text && (
                           <div style={{
                             fontSize: 11,
-                            color: '#dc2626',
+                            color: tpInfo.type === 'no_survey' ? '#6b7280'
+                                 : tpInfo.type === 'missing'   ? '#dc2626'
+                                 : '#16a34a',
                             fontWeight: 600,
                             textAlign: 'right',
-                            maxWidth: 220,
+                            maxWidth: 260,
                             whiteSpace: 'normal',
                             wordBreak: 'break-word',
                           }}>
-                            📊 {missingTp[0]}
+                            📊 {tpInfo.text}
                           </div>
                         )}
                       </div>

@@ -225,36 +225,40 @@ export default function ClassesPage() {
         const nextSlotIndex = sortedSlots.findIndex(s => new Date(s.date) > now)
 
         if (filters.tpRound === 'pending') {
-          // "Chưa thao tác": chỉ lớp RUNNING, buổi TP đã qua, có học viên, chưa đủ học viên có điểm
+          // "Chưa thao tác": lớp RUNNING, buổi TP đã qua, có học viên,
+          // nhưng chưa có survey data (tp=null VÀ không có students nào có điểm)
           if (c.status !== 'RUNNING') return false
 
           const tpRecord = tpData.find(t => t.classId === c.id)
-          
-          // Nếu không có TP record → chưa fetch được, không thể kết luận → bỏ qua lớp này
-          if (!tpRecord) return false
 
           const tp1Slot = sortedSlots[3]  // buổi 4 (index 3)
           const tp2Slot = sortedSlots[7]  // buổi 8 (index 7)
           const tp1Past = tp1Slot && new Date(tp1Slot.date) < now && tp1Slot.studentsInSlot > 0
           const tp2Past = tp2Slot && new Date(tp2Slot.date) < now && tp2Slot.studentsInSlot > 0
-          
-          // Kiểm tra TP1: chỉ tính khi đã có survey data
-          const tp1Missing = tp1Past && (() => {
+
+          // Nếu không có buổi TP nào đã qua → không phải pending
+          if (!tp1Past && !tp2Past) return false
+
+          // Kiểm tra TP1: buổi đã qua + có HV + chưa có survey data
+          const tp1Pending = tp1Past && (() => {
+            if (!tpRecord) return true  // không có record → chưa thao tác
             const hasSurveyData = tpRecord.tp1 !== null || (tpRecord.tp1_students || []).length > 0
-            if (!hasSurveyData) return false  // chưa fetch được survey → không tính là "thiếu"
+            if (!hasSurveyData) return true  // chưa có data → chưa thao tác
+            // Có data nhưng thiếu học viên (tính trên tổng HV lớp) → cũng là pending
             const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
-            return studentsWithScore.length < tp1Slot.studentsInSlot
+            return studentsWithScore.length < c.studentCount
           })()
-          
-          // Kiểm tra TP2: chỉ tính khi đã có survey data
-          const tp2Missing = tp2Past && (() => {
+
+          // Kiểm tra TP2: buổi đã qua + có HV + chưa có survey data
+          const tp2Pending = tp2Past && (() => {
+            if (!tpRecord) return true
             const hasSurveyData = tpRecord.tp2 !== null || (tpRecord.tp2_students || []).length > 0
-            if (!hasSurveyData) return false
+            if (!hasSurveyData) return true
             const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
-            return studentsWithScore.length < tp2Slot.studentsInSlot
+            return studentsWithScore.length < c.studentCount
           })()
-          
-          if (!tp1Missing && !tp2Missing) return false
+
+          if (!tp1Pending && !tp2Pending) return false
         } else {
           if (nextSlotIndex === -1) return false
           if (filters.tpRound === 'tp1') {
@@ -414,30 +418,40 @@ export default function ClassesPage() {
     const sortedSlots = [...classItem.slots].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
     
     const tpRecord = tpData.find(t => t.classId === classItem.id)
-    if (!tpRecord) return null
 
-    const tp1Slot = sortedSlots[3]  // buổi 4 (index 3)
-    const tp2Slot = sortedSlots[7]  // buổi 8 (index 7)
+    const tp1Slot = sortedSlots[3]
+    const tp2Slot = sortedSlots[7]
     const results: { round: string; missing: number }[] = []
 
-    // Kiểm tra TP1
-    // Chỉ tính khi: buổi đã qua, có HV, VÀ đã fetch được survey (tp1 !== null HOẶC có ít nhất 1 student)
+    // TP1: buổi đã qua + có HV
     if (tp1Slot && new Date(tp1Slot.date) < now && tp1Slot.studentsInSlot > 0) {
-      const hasSurveyData = tpRecord.tp1 !== null || (tpRecord.tp1_students || []).length > 0
-      if (hasSurveyData) {
-        const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
-        const missing = tp1Slot.studentsInSlot - studentsWithScore.length
-        if (missing > 0) results.push({ round: 'TP 1', missing })
+      if (!tpRecord) {
+        results.push({ round: 'TP 1', missing: classItem.studentCount })
+      } else {
+        const hasSurveyData = tpRecord.tp1 !== null || (tpRecord.tp1_students || []).length > 0
+        if (!hasSurveyData) {
+          results.push({ round: 'TP 1', missing: classItem.studentCount })
+        } else {
+          const studentsWithScore = (tpRecord.tp1_students || []).filter(s => s.score !== null && s.score !== undefined)
+          const missing = classItem.studentCount - studentsWithScore.length
+          if (missing > 0) results.push({ round: 'TP 1', missing })
+        }
       }
     }
 
-    // Kiểm tra TP2
+    // TP2: buổi đã qua + có HV
     if (tp2Slot && new Date(tp2Slot.date) < now && tp2Slot.studentsInSlot > 0) {
-      const hasSurveyData = tpRecord.tp2 !== null || (tpRecord.tp2_students || []).length > 0
-      if (hasSurveyData) {
-        const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
-        const missing = tp2Slot.studentsInSlot - studentsWithScore.length
-        if (missing > 0) results.push({ round: 'TP 2', missing })
+      if (!tpRecord) {
+        results.push({ round: 'TP 2', missing: classItem.studentCount })
+      } else {
+        const hasSurveyData = tpRecord.tp2 !== null || (tpRecord.tp2_students || []).length > 0
+        if (!hasSurveyData) {
+          results.push({ round: 'TP 2', missing: classItem.studentCount })
+        } else {
+          const studentsWithScore = (tpRecord.tp2_students || []).filter(s => s.score !== null && s.score !== undefined)
+          const missing = classItem.studentCount - studentsWithScore.length
+          if (missing > 0) results.push({ round: 'TP 2', missing })
+        }
       }
     }
 

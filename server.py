@@ -135,6 +135,91 @@ def check_token(token: str) -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Auto token refresh
+# ─────────────────────────────────────────────────────────────────────────────
+
+TOKEN_REFRESH_INTERVAL = 50 * 60   # refresh mỗi 50 phút
+TOKEN_REFRESH_THRESHOLD = 15       # refresh khi còn dưới 15 phút
+
+IDTOKEN_SCRIPT = os.path.join(os.path.dirname(__file__), "get-idtoken.js")
+
+
+def write_token_to_env(new_token: str):
+    """Cập nhật LMS_TOKEN trong .env, giữ nguyên các dòng khác."""
+    lines = []
+    if os.path.exists(ENV_PATH):
+        with open(ENV_PATH, encoding="utf-8") as f:
+            lines = f.readlines()
+    new_lines = []
+    found = False
+    for line in lines:
+        if line.strip().startswith("LMS_TOKEN="):
+            new_lines.append(f"LMS_TOKEN={new_token}\n")
+            found = True
+        else:
+            new_lines.append(line)
+    if not found:
+        new_lines.append(f"LMS_TOKEN={new_token}\n")
+    with open(ENV_PATH, "w", encoding="utf-8") as f:
+        f.writelines(new_lines)
+
+
+def refresh_token_silent() -> bool:
+    """
+    Gọi `node get-idtoken.js` để lấy token mới, cập nhật .env.
+    Trả về True nếu thành công, False nếu thất bại.
+    Hoàn toàn âm thầm — không broadcast WebSocket.
+    """
+    if not os.path.exists(IDTOKEN_SCRIPT):
+        print("⚠ get-idtoken.js không tìm thấy, bỏ qua auto-refresh token")
+        return False
+    try:
+        result = subprocess.run(
+            ["node", IDTOKEN_SCRIPT],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=os.path.dirname(__file__),
+        )
+        if result.returncode != 0:
+            print(f"⚠ Auto-refresh token thất bại: {result.stderr.strip()[:200]}")
+            return False
+        new_token = result.stdout.strip()
+        if not new_token or len(new_token) < 100:
+            print("⚠ Auto-refresh token: token trả về không hợp lệ")
+            return False
+        write_token_to_env(new_token)
+        info = check_token(new_token)
+        print(f"🔑 Token tự động làm mới — còn {info.get('remaining_minutes', '?')} phút")
+        return True
+    except subprocess.TimeoutExpired:
+        print("⚠ Auto-refresh token: timeout")
+        return False
+    except FileNotFoundError:
+        print("⚠ Auto-refresh token: không tìm thấy lệnh 'node'. Hãy cài Node.js 18+")
+        return False
+    except Exception as e:
+        print(f"⚠ Auto-refresh token lỗi: {e}")
+        return False
+
+
+async def token_refresh_scheduler():
+    """
+    Background task: kiểm tra token mỗi 50 phút.
+    Nếu token còn dưới TOKEN_REFRESH_THRESHOLD phút → tự refresh.
+    """
+    # Đợi 5 giây sau startup rồi kiểm tra lần đầu
+    await asyncio.sleep(5)
+    while True:
+        token = read_token()
+        if token:
+            info = check_token(token)
+            if not info["valid"] or info["remaining_minutes"] <= TOKEN_REFRESH_THRESHOLD:
+                await asyncio.get_event_loop().run_in_executor(None, refresh_token_silent)
+        await asyncio.sleep(TOKEN_REFRESH_INTERVAL)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Background fetch
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -156,20 +241,26 @@ async def run_fetch(loop: asyncio.AbstractEventLoop):
     })
 
     try:
-        # Kiểm tra token trước khi chạy
+        # Kiểm tra token trước khi chạy — tự refresh nếu hết hạn
         token = read_token()
         if token:
             token_info = check_token(token)
-            if not token_info["valid"]:
-                fetch_state["last_status"] = "error"
-                fetch_state["last_message"] = "Token đã hết hạn — vui lòng cập nhật token mới"
-                await manager.broadcast({
-                    "type": "fetch_done",
-                    "status": "token_expired",
-                    "message": "Token đã hết hạn. Vui lòng lấy token mới từ LMS và cập nhật vào .env",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                })
-                return
+            if not token_info["valid"] or token_info["remaining_minutes"] <= TOKEN_REFRESH_THRESHOLD:
+                # Thử tự refresh trước
+                refreshed = await asyncio.get_event_loop().run_in_executor(None, refresh_token_silent)
+                if refreshed:
+                    token = read_token()  # đọc lại token mới
+                    token_info = check_token(token or "")
+                if not token_info["valid"]:
+                    fetch_state["last_status"] = "error"
+                    fetch_state["last_message"] = "Token đã hết hạn và không thể tự làm mới"
+                    await manager.broadcast({
+                        "type": "fetch_done",
+                        "status": "token_expired",
+                        "message": "Token đã hết hạn. Vui lòng lấy token mới từ LMS và cập nhật vào .env",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    })
+                    return
 
         def run_subprocess():
             global _fetch_process
@@ -230,15 +321,40 @@ async def run_fetch(loop: asyncio.AbstractEventLoop):
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
         elif returncode == 2:
-            # Token hết hạn (exit code 2)
-            fetch_state["last_status"] = "error"
-            fetch_state["last_message"] = "Token đã hết hạn — vui lòng cập nhật token mới"
-            await manager.broadcast({
-                "type": "fetch_done",
-                "status": "token_expired",
-                "message": "Token đã hết hạn. Vui lòng lấy token mới từ LMS và cập nhật vào .env",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-            })
+            # Token hết hạn (exit code 2) — thử tự refresh rồi retry 1 lần
+            refreshed = await asyncio.get_event_loop().run_in_executor(None, refresh_token_silent)
+            if refreshed:
+                # Retry fetch với token mới
+                fetch_state["last_message"] = "Token đã được làm mới, đang thử lại..."
+                returncode2, stdout2, stderr2 = await asyncio.get_event_loop().run_in_executor(None, run_subprocess)
+                if returncode2 == 0:
+                    fetch_state["last_status"] = "success"
+                    fetch_state["last_message"] = "Cập nhật thành công"
+                    fetch_state["last_fetch"] = datetime.now(timezone.utc).isoformat()
+                    await manager.broadcast({
+                        "type": "fetch_done",
+                        "status": "success",
+                        "message": "Dữ liệu đã được cập nhật!",
+                        "timestamp": fetch_state["last_fetch"],
+                    })
+                else:
+                    fetch_state["last_status"] = "error"
+                    fetch_state["last_message"] = "Lỗi sau khi làm mới token"
+                    await manager.broadcast({
+                        "type": "fetch_done",
+                        "status": "error",
+                        "message": "Lỗi fetch sau khi làm mới token",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    })
+            else:
+                fetch_state["last_status"] = "error"
+                fetch_state["last_message"] = "Token đã hết hạn và không thể tự làm mới"
+                await manager.broadcast({
+                    "type": "fetch_done",
+                    "status": "token_expired",
+                    "message": "Token đã hết hạn. Vui lòng lấy token mới từ LMS và cập nhật vào .env",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
         elif returncode == 0:
             fetch_state["last_status"] = "success"
             fetch_state["last_message"] = "Cập nhật thành công"
@@ -293,8 +409,10 @@ async def startup():
     next_dt = datetime.now(timezone.utc).timestamp() + 10
     fetch_state["next_fetch"] = datetime.fromtimestamp(next_dt, tz=timezone.utc).isoformat()
     asyncio.create_task(scheduler())
+    asyncio.create_task(token_refresh_scheduler())
     print(f"🚀 LMS TakeNote API running")
     print(f"   Auto-fetch every {FETCH_INTERVAL_HOURS}h")
+    print(f"   Auto token refresh every {TOKEN_REFRESH_INTERVAL // 60}min")
     print(f"   WebSocket: ws://localhost:8000/ws")
 
 
