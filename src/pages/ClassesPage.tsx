@@ -130,6 +130,21 @@ function ClassCard({ item, onClick, hasUncommentedSlots, hasPendingSurvey, pendi
   const mainTeacher = item.teachers[0]?.name || '—'
   const cardClass = hasPendingSurvey ? 'card-pending-survey' : (hasUncommentedSlots ? 'card-uncommented' : '')
 
+  // Tìm các buổi đã qua nhưng chưa nhận xét
+  const now = new Date()
+  const uncommentedSlots = item.slots
+    .map((s, i) => ({ ...s, index: i }))
+    .filter(s => {
+      const d = new Date(s.date)
+      return d < now && s.commentStatus !== 'Đã nhận xét' && s.studentsInSlot > 0
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  const hasPastSlotsWithStudents = item.slots.some(s => {
+    const d = new Date(s.date)
+    return d < now && s.studentsInSlot > 0
+  })
+
   return (
     <div className={`card ${cardClass}`} onClick={onClick}>
       <div className="card-header">
@@ -143,9 +158,20 @@ function ClassCard({ item, onClick, hasUncommentedSlots, hasPendingSurvey, pendi
       <p className="card-meta">👨‍🏫 {mainTeacher}</p>
       {item.sessions != null && <p className="card-meta">📅 {item.sessions} buổi</p>}
       <p className="card-meta">👥 {item.studentCount} học viên</p>
-      {item.totalSlotsWithStudents > 0 && (
-        <p className="card-meta">💬 Nhận xét: {item.commentPercentage}% ({item.slotsWithFullComments}/{item.totalSlotsWithStudents} buổi)</p>
+
+      {/* Trạng thái nhận xét */}
+      {hasPastSlotsWithStudents && (
+        uncommentedSlots.length === 0 ? (
+          <p className="card-meta" style={{ color: '#16a34a', fontWeight: 600 }}>
+            ✅ Đã nhận xét đầy đủ
+          </p>
+        ) : (
+          <p className="card-meta" style={{ color: '#dc2626', fontWeight: 600 }}>
+            💬 Buổi chưa nhận xét: {uncommentedSlots.map(s => `Buổi ${s.index + 1}`).join(', ')}
+          </p>
+        )
       )}
+
       {hasPendingSurvey && pendingSurveyInfo && pendingSurveyInfo.map(info => (
         <p key={info.round} className="card-meta" style={{ color: '#dc2626', fontWeight: 600 }}>
           📊 {info.round}: Còn thiếu {info.missing} học viên

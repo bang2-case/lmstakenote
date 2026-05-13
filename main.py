@@ -968,6 +968,7 @@ def is_regular_class(name: str) -> bool:
     Lớp chính quy:
     - 2 phần: TL-JSB01 → True
     - 3+ phần, phần giữa là ROB/KIND/XART/C4K: TL-ROB-ARMB13 → True
+    - 3 phần, phần cuối là suffix học bù/online (HB, ONL, HB2...): TT-JSB15-HB → True
     - 3+ phần, phần giữa khác: 01TC-THT-D30301 → False
     Bỏ qua phần trong ngoặc như (1:1), (ONL) trước khi xử lý.
     """
@@ -978,7 +979,14 @@ def is_regular_class(name: str) -> bool:
         return False
     if len(parts) == 2:
         return True
-    return parts[1].upper() in {'ROB', 'KIND', 'XART', 'C4K'}
+    # 3 phần: kiểm tra phần giữa là mã khối hợp lệ
+    if parts[1].upper() in {'ROB', 'KIND', 'XART', 'C4K'}:
+        return True
+    # 3 phần: phần cuối là suffix học bù/online → coi như 2 phần
+    SUFFIXES = {'HB', 'ONL', 'HB2', 'HB3', 'ONL2'}
+    if len(parts) == 3 and parts[2].upper() in SUFFIXES:
+        return True
+    return False
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -8,8 +8,10 @@ const HCM4_CENTRES = ['Tên Lửa', 'Tây Thạnh', 'Lũy Bán Bích', 'Trườn
 // Lớp chính quy:
 // - Có 2 phần: TL-JSB01, TL-CSB01 → ✅
 // - Có 3+ phần, phần giữa (index 1) là mã khối hợp lệ: TL-ROB-ARMB13, 01TC-KIND-X01 → ✅
+// - Có 3 phần, phần cuối là suffix học bù/online: TT-JSB15-HB, LBB-CSB07-ONL → ✅
 // - Có 3+ phần, phần giữa khác: 01TC-THT-D30301 → ❌ đặc biệt
 const VALID_BLOCK_CODES = new Set(['ROB', 'KIND', 'XART', 'C4K'])
+const SUFFIX_CODES = new Set(['HB', 'ONL', 'HB2', 'HB3', 'ONL2'])
 
 function isRegularClass(name: string): boolean {
   // Bỏ phần trong ngoặc như (1:1), (ONL) trước khi xử lý
@@ -18,7 +20,10 @@ function isRegularClass(name: string): boolean {
   if (parts.length < 2) return false
   if (parts.length === 2) return true  // TL-JSB01 → chính quy
   // 3+ phần: kiểm tra phần giữa (index 1)
-  return VALID_BLOCK_CODES.has(parts[1].toUpperCase())
+  if (VALID_BLOCK_CODES.has(parts[1].toUpperCase())) return true
+  // 3 phần: phần cuối là suffix học bù/online → chính quy
+  if (parts.length === 3 && SUFFIX_CODES.has(parts[2].toUpperCase())) return true
+  return false
 }
 
 interface CRFilters {

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 const API_KEY = 'AIzaSyAh2Au-mk5ci-hN83RUBqj1fsAmCMdvJx4';
-const EMAIL = 'anhpnh@mindx.com.vn';
-const PASSWORD = 'Hoanganh@123';
+const EMAIL = '';
+const PASSWORD = '';
 
 async function main() {
   if (typeof fetch !== 'function') {
