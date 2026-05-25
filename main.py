@@ -996,7 +996,7 @@ import asyncio
 import aiohttp
 
 TP_CACHE_FILE = "public/tp.json"
-CONCURRENCY   = 20   # số lớp fetch song song
+CONCURRENCY   = 10   # số lớp fetch song song
 
 
 def load_tp_cache() -> dict:

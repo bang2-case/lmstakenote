@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar, { type Page } from './components/Sidebar'
 import ClassesPage from './pages/ClassesPage'
 import MentorsPage from './pages/MentorsPage'
@@ -9,12 +10,28 @@ import OHPage from './pages/OHPage'
 import DEMOPage from './pages/DEMOPage'
 import './App.css'
 
+const pageRoutes: Record<Page, string> = {
+  classes: '/classes',
+  mentors: '/mentors',
+  cr: '/cr',
+  tp: '/tp',
+  cp: '/cp',
+  oh: '/oh',
+  demo: '/demo',
+}
+
+const routePages = Object.fromEntries(
+  Object.entries(pageRoutes).map(([page, path]) => [path, page])
+) as Record<string, Page>
+
 export default function App() {
-  const [activePage, setActivePage] = useState<Page>('classes')
+  const location = useLocation()
+  const navigate = useNavigate()
+  const activePage = routePages[location.pathname] ?? 'classes'
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleNavigate = (page: Page) => {
-    setActivePage(page)
+    navigate(pageRoutes[page])
     setSidebarOpen(false)
   }
 
@@ -36,13 +53,17 @@ export default function App() {
         onClose={() => setSidebarOpen(false)}
       />
       <main className="main-content">
-        {activePage === 'classes' && <ClassesPage />}
-        {activePage === 'mentors' && <MentorsPage />}
-        {activePage === 'cr'      && <CRPage />}
-        {activePage === 'tp'      && <TPPage />}
-        {activePage === 'cp'      && <CPPage />}
-        {activePage === 'oh'      && <OHPage />}
-        {activePage === 'demo'    && <DEMOPage />}
+        <Routes>
+          <Route path="/" element={<Navigate to="/classes" replace />} />
+          <Route path="/classes" element={<ClassesPage />} />
+          <Route path="/mentors" element={<MentorsPage />} />
+          <Route path="/cr" element={<CRPage />} />
+          <Route path="/tp" element={<TPPage />} />
+          <Route path="/cp" element={<CPPage />} />
+          <Route path="/oh" element={<OHPage />} />
+          <Route path="/demo" element={<DEMOPage />} />
+          <Route path="*" element={<Navigate to="/classes" replace />} />
+        </Routes>
       </main>
     </div>
   )

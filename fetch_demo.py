@@ -96,6 +96,21 @@ def fmt_time_utc7(iso: str) -> str:
         return iso[11:16] if len(iso) > 15 else iso
 
 
+def date_utc7(iso: str) -> str:
+    """Return YYYY-MM-DD in Vietnam time for LMS UTC datetime strings."""
+    if not iso:
+        return ""
+    raw = iso[:10]
+    try:
+        dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+        if dt.tzinfo is None:
+            return raw
+        local = dt.astimezone(timezone(timedelta(hours=7)))
+        return local.strftime("%Y-%m-%d")
+    except Exception:
+        return raw
+
+
 def fmt_date_vn(date_str: str) -> str:
     """Format YYYY-MM-DD sang DD/MM/YYYY."""
     if not date_str:
@@ -247,7 +262,7 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
     # Fetch song song tất cả pages (max 5 concurrent để tránh rate-limit)
     import concurrent.futures
     all_raw = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
         futures = {executor.submit(fetch_page, p): p for p in range(num_pages)}
         for future in concurrent.futures.as_completed(futures):
             try:
@@ -262,13 +277,16 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
         centre_name = (c.get("centre") or {}).get("name", "")
         centre_info = DEMO_CENTRES.get(centre_id, {"name": centre_name, "area": "?"})
 
-        slots = sorted(c.get("slots", []), key=lambda s: s.get("date", ""))
+        slots = sorted(c.get("slots", []), key=lambda s: (
+            date_utc7(s.get("date", "") or s.get("startTime", "")),
+            s.get("startTime", "") or s.get("date", "")
+        ))
 
         if len(slots) < 14:
             continue
 
         slot_14 = slots[13]
-        slot_date = slot_14.get("date", "")[:10]
+        slot_date = date_utc7(slot_14.get("date", "") or slot_14.get("startTime", ""))
 
         # Kiểm tra buổi 14 có nằm trong range không
         if slot_date < date_from or slot_date > date_to:

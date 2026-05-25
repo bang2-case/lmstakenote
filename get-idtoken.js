@@ -1,10 +1,37 @@
 #!/usr/bin/env node
 
-const API_KEY = 'AIzaSyAh2Au-mk5ci-hN83RUBqj1fsAmCMdvJx4';
-const EMAIL = '';
-const PASSWORD = '';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+function loadEnv() {
+  const envPath = join(dirname(fileURLToPath(import.meta.url)), '.env');
+  const env = {};
+  const content = readFileSync(envPath, 'utf8');
+
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const index = line.indexOf('=');
+    if (index === -1) continue;
+    const key = line.slice(0, index).trim();
+    const value = line.slice(index + 1).trim().replace(/^['"]|['"]$/g, '');
+    env[key] = value;
+  }
+
+  return env;
+}
+
+const env = loadEnv();
+const API_KEY = env.FIREBASE_API_KEY;
+const EMAIL = env.LMS_LOGIN_EMAIL;
+const PASSWORD = env.LMS_LOGIN_PASSWORD;
 
 async function main() {
+  if (!API_KEY || !EMAIL || !PASSWORD) {
+    throw new Error('Missing FIREBASE_API_KEY, LMS_LOGIN_EMAIL, or LMS_LOGIN_PASSWORD in .env');
+  }
+
   if (typeof fetch !== 'function') {
     throw new Error('Node.js 18+ is required because global fetch is not available.');
   }
