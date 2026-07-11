@@ -28,9 +28,10 @@ function loadEnv() {
 }
 
 const env = loadEnv();
-const API_KEY = env.FIREBASE_API_KEY || env.NEXT_PUBLIC_FIREBASE_API_KEY;
-const EMAIL = env.LMS_LOGIN_EMAIL;
-const PASSWORD = env.LMS_LOGIN_PASSWORD;
+const clean = (value) => String(value || '').trim();
+const API_KEY = clean(env.FIREBASE_API_KEY || env.NEXT_PUBLIC_FIREBASE_API_KEY);
+const EMAIL = clean(env.LMS_LOGIN_EMAIL);
+const PASSWORD = clean(env.LMS_LOGIN_PASSWORD);
 
 async function main() {
   if (!API_KEY || !EMAIL || !PASSWORD) {
@@ -62,6 +63,11 @@ async function main() {
 
   if (!response.ok) {
     const message = data?.error?.message || 'Unable to get idToken';
+    if (message === 'INVALID_LOGIN_CREDENTIALS') {
+      throw new Error(
+        'INVALID_LOGIN_CREDENTIALS: Firebase rejected the LMS login. Check FIREBASE_API_KEY, LMS_LOGIN_EMAIL, and LMS_LOGIN_PASSWORD, or set LMS_TOKEN directly in Vercel.'
+      );
+    }
     throw new Error(message);
   }
 

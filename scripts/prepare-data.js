@@ -54,7 +54,9 @@ function getIdToken() {
 
   if (result.status !== 0) {
     const message = result.stderr || result.stdout || 'Unable to get LMS id token.';
-    throw new Error(message.trim());
+    throw new Error(
+      `${message.trim()}\n[prepare-data] Cannot generate LMS data without a valid login. To unblock deploy, set LMS_TOKEN directly in Vercel Environment Variables.`
+    );
   }
 
   return result.stdout.trim().split(/\r?\n/).at(-1);
@@ -64,11 +66,11 @@ function ensureMainPyEnv() {
   const existing = readEnvFile();
   const values = {
     ...existing,
-    FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || existing.FIREBASE_API_KEY,
-    LMS_LOGIN_EMAIL: process.env.LMS_LOGIN_EMAIL || existing.LMS_LOGIN_EMAIL,
-    LMS_LOGIN_PASSWORD: process.env.LMS_LOGIN_PASSWORD || existing.LMS_LOGIN_PASSWORD,
-    GOOGLE_SHEET_ID: process.env.GOOGLE_SHEET_ID || existing.GOOGLE_SHEET_ID,
-    LMS_TOKEN: process.env.LMS_TOKEN || existing.LMS_TOKEN,
+    FIREBASE_API_KEY: (process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || existing.FIREBASE_API_KEY || '').trim(),
+    LMS_LOGIN_EMAIL: (process.env.LMS_LOGIN_EMAIL || existing.LMS_LOGIN_EMAIL || '').trim(),
+    LMS_LOGIN_PASSWORD: (process.env.LMS_LOGIN_PASSWORD || existing.LMS_LOGIN_PASSWORD || '').trim(),
+    GOOGLE_SHEET_ID: (process.env.GOOGLE_SHEET_ID || existing.GOOGLE_SHEET_ID || '').trim(),
+    LMS_TOKEN: (process.env.LMS_TOKEN || existing.LMS_TOKEN || '').trim(),
   };
 
   if (!values.LMS_TOKEN && values.FIREBASE_API_KEY && values.LMS_LOGIN_EMAIL && values.LMS_LOGIN_PASSWORD) {
