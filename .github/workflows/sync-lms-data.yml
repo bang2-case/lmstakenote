@@ -77,10 +77,10 @@ jobs:
                   f.write("- LMS auth: configured\n")
           PY
 
-      - name: Resolve LMS token from login credentials
-        if: ${{ env.LMS_TOKEN == '' }}
+      - name: Resolve fresh LMS token from login credentials
+        if: ${{ env.FIREBASE_API_KEY != '' && env.LMS_LOGIN_EMAIL != '' && env.LMS_LOGIN_PASSWORD != '' }}
         run: |
-          echo "LMS_TOKEN was not provided. Fetching a fresh token from login credentials..."
+          echo "Fetching a fresh LMS token from login credentials..."
           TOKEN="$(node get-idtoken.js | tail -n 1)"
           if [ -z "$TOKEN" ]; then
             echo "::error title=Token refresh failed::get-idtoken.js returned an empty token"
@@ -88,6 +88,59 @@ jobs:
           fi
           echo "::add-mask::$TOKEN"
           echo "LMS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: Validate LMS token expiry
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          import sys
+          import time
+
+          token = (os.getenv("LMS_TOKEN") or "").strip()
+          summary_path = os.getenv("GITHUB_STEP_SUMMARY")
+
+          def write_summary(lines):
+              if summary_path:
+                  with open(summary_path, "a", encoding="utf-8") as f:
+                      f.write("\n".join(lines) + "\n")
+
+          if not token:
+              print("::error title=Missing LMS_TOKEN::LMS_TOKEN is empty after secret validation/token refresh.")
+              write_summary([
+                  "## LMS token check failed",
+                  "",
+                  "`LMS_TOKEN` is empty after validation. Add `LMS_TOKEN`, or add all login secrets so the workflow can generate one.",
+              ])
+              sys.exit(1)
+
+          try:
+              parts = token.split(".")
+              if len(parts) != 3:
+                  raise ValueError("token is not a JWT")
+              payload = parts[1] + "=" * (-len(parts[1]) % 4)
+              data = json.loads(base64.urlsafe_b64decode(payload.encode("utf-8")))
+              remaining = int(data.get("exp", 0) - time.time())
+          except Exception as exc:
+              print(f"Could not decode LMS_TOKEN expiry, continuing and letting LMS validate it: {exc}")
+              write_summary(["## LMS token check", "", "Could not decode token expiry, continuing."])
+              sys.exit(0)
+
+          if remaining <= 0:
+              print("::error title=Expired LMS_TOKEN::The LMS_TOKEN GitHub secret is expired.")
+              write_summary([
+                  "## LMS token check failed",
+                  "",
+                  "`LMS_TOKEN` is expired.",
+                  "Update the `LMS_TOKEN` repository secret, or add `FIREBASE_API_KEY`, `LMS_LOGIN_EMAIL`, and `LMS_LOGIN_PASSWORD` so the workflow can generate a fresh token.",
+              ])
+              sys.exit(2)
+
+          minutes = remaining // 60
+          print(f"LMS_TOKEN is valid for about {minutes} minutes.")
+          write_summary(["## LMS token check passed", "", f"- Remaining: about `{minutes}` minutes"])
+          PY
 
       - name: Fetch data from LMS
         run: python main.py
