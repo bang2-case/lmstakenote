@@ -385,8 +385,8 @@ def init_db():
 
     conn.commit()
     conn.close()
-    print(f"✅ Database khởi tạo thành công: {os.path.abspath(DB_PATH)}")
-    print("   Mở bằng DB Browser for SQLite để xem cấu trúc.")
+    print(f"Database initialized: {os.path.abspath(DB_PATH)}")
+    print("Open with DB Browser for SQLite to inspect the schema.")
 
 
 if __name__ == "__main__":

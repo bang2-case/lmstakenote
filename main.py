@@ -863,6 +863,9 @@ def get_sqlite_conn():
 
 def save_classes_to_sqlite(data: list):
     """Upsert classes, teachers, slots, incomplete_students vào SQLite."""
+    from scripts.init_db import init_db
+
+    init_db()
     conn = get_sqlite_conn()
     c = conn.cursor()
     try:
