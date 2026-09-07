@@ -7,19 +7,20 @@ interface RefreshButtonProps {
 }
 
 export default function RefreshButton({ module }: RefreshButtonProps) {
-  const { connected, moduleFetchState, triggerModuleRefresh, cancelModuleRefresh } = useServerStatus()
+  const { connected, tokenInfo, moduleFetchState, triggerModuleRefresh, cancelModuleRefresh } = useServerStatus()
   const state = moduleFetchState[module]
   const isFetching = state?.is_fetching ?? false
+  const isSupabaseCache = tokenInfo?.mode === 'supabase_cache'
 
   return (
     <div className="page-banner-refresh-group">
       <button
         className="page-banner-refresh-btn"
         onClick={() => triggerModuleRefresh(module)}
-        disabled={isFetching || !connected}
-        title={connected ? 'Tải dữ liệu trang này' : 'Mất kết nối server'}
+        disabled={isFetching || !connected || isSupabaseCache}
+        title={isSupabaseCache ? 'Cập nhật bằng GitHub Actions: Sync LMS Data' : connected ? 'Tải dữ liệu trang này' : 'Mất kết nối server'}
       >
-        {isFetching ? 'Đang tải...' : 'Tải dữ liệu'}
+        {isSupabaseCache ? 'GitHub Actions' : isFetching ? 'Đang tải...' : 'Tải dữ liệu'}
       </button>
       {isFetching && (
         <button

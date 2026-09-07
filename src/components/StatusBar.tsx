@@ -8,8 +8,9 @@ function formatTime(iso: string | null): string {
 export default function StatusBar() {
   const { connected, fetchState, tokenInfo, triggerRefresh, cancelFetch } = useServerStatus()
 
-  const tokenExpiring = tokenInfo && tokenInfo.valid && tokenInfo.remaining_minutes <= 15
-  const tokenExpired  = tokenInfo && !tokenInfo.valid
+  const isSupabaseCache = tokenInfo?.mode === 'supabase_cache'
+  const tokenExpiring = tokenInfo && tokenInfo.valid && tokenInfo.remaining_minutes <= 15 && !isSupabaseCache
+  const tokenExpired  = tokenInfo && !tokenInfo.valid && !isSupabaseCache
 
   return (
     <div className={`status-bar ${tokenExpired ? 'status-bar-error' : tokenExpiring ? 'status-bar-warn' : ''}`}>
@@ -32,6 +33,8 @@ export default function StatusBar() {
         {/* Fetch status */}
         {fetchState.is_fetching ? (
           <span className="status-text status-text-running">🔄 Đang cập nhật...</span>
+        ) : isSupabaseCache ? (
+          <span className="status-text">Dữ liệu từ Supabase</span>
         ) : fetchState.last_status === 'success' ? (
           <span className="status-text">Cập nhật lúc {formatTime(fetchState.last_fetch)}</span>
         ) : fetchState.last_status === 'error' ? (
@@ -42,10 +45,10 @@ export default function StatusBar() {
         <button
           className="status-refresh-btn"
           onClick={triggerRefresh}
-          disabled={fetchState.is_fetching || !connected}
-          title="Cập nhật dữ liệu ngay"
+          disabled={fetchState.is_fetching || !connected || isSupabaseCache}
+          title={isSupabaseCache ? 'Cập nhật bằng GitHub Actions: Sync LMS Data' : 'Cập nhật dữ liệu ngay'}
         >
-          {fetchState.is_fetching ? '⏳' : '↻'} Cập nhật
+          {isSupabaseCache ? 'GitHub Actions' : `${fetchState.is_fetching ? '⏳' : '↻'} Cập nhật`}
         </button>
 
         {/* Cancel button — chỉ hiện khi đang fetch */}

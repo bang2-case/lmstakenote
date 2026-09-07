@@ -12,6 +12,8 @@ export interface TokenInfo {
   valid: boolean
   expires_at: string | null
   remaining_minutes: number
+  message?: string
+  mode?: 'local' | 'supabase_cache'
 }
 
 export interface ModuleFetchState {

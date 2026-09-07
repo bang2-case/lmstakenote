@@ -1129,6 +1129,16 @@ async def websocket_endpoint(ws: WebSocket):
 
 @app.get("/api/token-status")
 def token_status():
+    if use_supabase_cache():
+        return {
+            "valid": True,
+            "expires_at": None,
+            "remaining_minutes": 999999,
+            "message": "Đang dùng Supabase cache",
+            "mode": "supabase_cache",
+            "auto_refresh": {"configured": False, "missing": []},
+        }
+
     token = read_token()
     auto_refresh = token_refresh_config_status()
     if not token:
@@ -1148,6 +1158,12 @@ def token_status():
 @app.post("/api/refresh")
 async def manual_refresh(background_tasks: BackgroundTasks):
     """Trigger manual fetch."""
+    if use_supabase_cache():
+        return JSONResponse({
+            "ok": False,
+            "message": "Bản deploy đang dùng Supabase cache. Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data.",
+        }, status_code=409)
+
     if fetch_state["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang fetch, vui lòng chờ..."})
     lock = external_fetch_lock()
@@ -1424,6 +1440,8 @@ async def run_module_fetch(module: str):
 
 @app.post("/api/refresh/classes")
 async def refresh_classes():
+    if use_supabase_cache():
+        return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["classes"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải classes..."})
     asyncio.create_task(run_module_fetch("classes"))
@@ -1432,6 +1450,8 @@ async def refresh_classes():
 
 @app.post("/api/refresh/teachers")
 async def refresh_teachers():
+    if use_supabase_cache():
+        return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["teachers"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải teachers..."})
     asyncio.create_task(run_module_fetch("teachers"))
@@ -1440,6 +1460,8 @@ async def refresh_teachers():
 
 @app.post("/api/refresh/tp")
 async def refresh_tp():
+    if use_supabase_cache():
+        return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["tp"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải TP..."})
     asyncio.create_task(run_module_fetch("tp"))
@@ -1448,6 +1470,8 @@ async def refresh_tp():
 
 @app.post("/api/refresh/cp")
 async def refresh_cp():
+    if use_supabase_cache():
+        return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["cp"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải CP..."})
     asyncio.create_task(run_module_fetch("cp"))
@@ -1456,6 +1480,8 @@ async def refresh_cp():
 
 @app.post("/api/refresh/oh")
 async def refresh_oh():
+    if use_supabase_cache():
+        return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["oh"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải OH..."})
     asyncio.create_task(run_module_fetch("oh"))
@@ -1464,6 +1490,8 @@ async def refresh_oh():
 
 @app.post("/api/refresh/assignments")
 async def refresh_assignments():
+    if use_supabase_cache():
+        return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["assignments"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Dang tai assignments..."})
     asyncio.create_task(run_module_fetch("assignments"))

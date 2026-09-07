@@ -45,6 +45,7 @@ jobs:
           has_database = bool(os.getenv("DATABASE_URL"))
           has_token = bool(os.getenv("LMS_TOKEN"))
           has_login = all(os.getenv(name) for name in ("FIREBASE_API_KEY", "LMS_LOGIN_EMAIL", "LMS_LOGIN_PASSWORD"))
+          summary_path = os.getenv("GITHUB_STEP_SUMMARY")
 
           missing = []
           if not has_database:
@@ -53,10 +54,27 @@ jobs:
               missing.append("LMS_TOKEN or FIREBASE_API_KEY + LMS_LOGIN_EMAIL + LMS_LOGIN_PASSWORD")
 
           if missing:
-              print("Missing required GitHub Secrets:")
+              lines = ["## Missing GitHub Actions secrets", ""]
+              print("Missing required GitHub Actions secrets:")
               for item in missing:
                   print(f"- {item}")
+                  print(f"::error title=Missing secret::{item}")
+                  lines.append(f"- `{item}`")
+              lines.extend([
+                  "",
+                  "Add them in `GitHub repo -> Settings -> Secrets and variables -> Actions`.",
+                  "Vercel Environment Variables are separate and are not visible to GitHub Actions.",
+              ])
+              if summary_path:
+                  with open(summary_path, "a", encoding="utf-8") as f:
+                      f.write("\n".join(lines) + "\n")
               sys.exit(1)
+
+          if summary_path:
+              with open(summary_path, "a", encoding="utf-8") as f:
+                  f.write("## Secret check passed\n\n")
+                  f.write("- `DATABASE_URL`: configured\n")
+                  f.write("- LMS auth: configured\n")
           PY
 
       - name: Fetch data from LMS

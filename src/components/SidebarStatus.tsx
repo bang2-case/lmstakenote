@@ -11,8 +11,9 @@ export default function SidebarStatus() {
   const [showLog, setShowLog] = useState(false)
   const [log, setLog] = useState('')
 
-  const tokenExpired  = tokenInfo && !tokenInfo.valid
-  const tokenExpiring = tokenInfo && tokenInfo.valid && tokenInfo.remaining_minutes <= 15
+  const isSupabaseCache = tokenInfo?.mode === 'supabase_cache'
+  const tokenExpired  = tokenInfo && !tokenInfo.valid && !isSupabaseCache
+  const tokenExpiring = tokenInfo && tokenInfo.valid && tokenInfo.remaining_minutes <= 15 && !isSupabaseCache
   const runningModules = Object.entries(moduleFetchState).filter(([, state]) => state.is_fetching)
   const moduleLabels: Record<string, string> = {
     classes: 'Lớp',
@@ -55,6 +56,8 @@ export default function SidebarStatus() {
         <span className="sidebar-status-text">
           {fetchState.is_fetching
             ? 'Đang cập nhật...'
+            : isSupabaseCache
+            ? 'Dữ liệu từ Supabase'
             : fetchState.last_status === 'error'
             ? (
               <span
@@ -75,10 +78,10 @@ export default function SidebarStatus() {
       <button
         className="sidebar-status-btn"
         onClick={triggerRefresh}
-        disabled={fetchState.is_fetching || !connected}
-        title="Cập nhật dữ liệu ngay"
+        disabled={fetchState.is_fetching || !connected || isSupabaseCache}
+        title={isSupabaseCache ? 'Cập nhật bằng GitHub Actions: Sync LMS Data' : 'Cập nhật dữ liệu ngay'}
       >
-        {fetchState.is_fetching ? '⏳ Đang tải...' : '↻ Cập nhật'}
+        {isSupabaseCache ? 'GitHub Actions' : fetchState.is_fetching ? '⏳ Đang tải...' : '↻ Cập nhật'}
       </button>
 
       {/* Cancel button — chỉ hiện khi đang fetch */}

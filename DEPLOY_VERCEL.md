@@ -38,9 +38,12 @@ LMS_LOGIN_PASSWORD=optional_for_token_refresh
 GOOGLE_SHEET_ID=optional
 ```
 
+GitHub Actions secrets are separate from Vercel Environment Variables. Values added only in Vercel are not available to this workflow.
+
 3. Open `Actions` -> `Sync LMS Data` -> `Run workflow`.
 
 The workflow runs `python main.py` and then `python scripts/sync_supabase_cache.py`, so Vercel will read the updated Supabase cache without a new deploy.
+On the deployed website, the in-app refresh buttons are disabled in Supabase cache mode. Use this GitHub Action whenever you want fresh data.
 
 ## Vercel environment variables
 
