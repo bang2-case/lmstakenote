@@ -7,12 +7,21 @@ function formatTime(iso: string | null): string {
 }
 
 export default function SidebarStatus() {
-  const { connected, fetchState, tokenInfo, triggerRefresh, cancelFetch } = useServerStatus()
+  const { connected, fetchState, tokenInfo, moduleFetchState, triggerRefresh, cancelFetch, cancelModuleRefresh } = useServerStatus()
   const [showLog, setShowLog] = useState(false)
   const [log, setLog] = useState('')
 
   const tokenExpired  = tokenInfo && !tokenInfo.valid
   const tokenExpiring = tokenInfo && tokenInfo.valid && tokenInfo.remaining_minutes <= 15
+  const runningModules = Object.entries(moduleFetchState).filter(([, state]) => state.is_fetching)
+  const moduleLabels: Record<string, string> = {
+    classes: 'Lớp',
+    teachers: 'Giáo viên',
+    tp: 'TP',
+    cp: 'CP',
+    oh: 'OH',
+    assignments: 'Bài tập',
+  }
 
   const handleShowLog = async () => {
     try {
@@ -46,8 +55,6 @@ export default function SidebarStatus() {
         <span className="sidebar-status-text">
           {fetchState.is_fetching
             ? 'Đang cập nhật...'
-            : fetchState.last_fetch
-            ? `Cập nhật ${formatTime(fetchState.last_fetch)}`
             : fetchState.last_status === 'error'
             ? (
               <span
@@ -55,9 +62,11 @@ export default function SidebarStatus() {
                 onClick={handleShowLog}
                 title="Bấm để xem chi tiết lỗi"
               >
-                Lỗi fetch ⓘ
+                {fetchState.last_message ? `Lỗi: ${fetchState.last_message}` : 'Lỗi fetch ⓘ'}
               </span>
             )
+            : fetchState.last_fetch
+            ? `Cập nhật ${formatTime(fetchState.last_fetch)}`
             : 'Chưa cập nhật'}
         </span>
       </div>
@@ -81,6 +90,23 @@ export default function SidebarStatus() {
         >
           ✕ Hủy
         </button>
+      )}
+
+      {runningModules.length > 0 && (
+        <div className="sidebar-module-fetch-list">
+          {runningModules.map(([module]) => (
+            <div key={module} className="sidebar-module-fetch-row">
+              <span>Đang tải {moduleLabels[module] ?? module}</span>
+              <button
+                className="sidebar-module-cancel-btn"
+                onClick={() => cancelModuleRefresh(module as 'classes' | 'teachers' | 'tp' | 'cp' | 'oh' | 'assignments')}
+                title={`Hủy tải ${moduleLabels[module] ?? module}`}
+              >
+                Hủy
+              </button>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Log modal */}

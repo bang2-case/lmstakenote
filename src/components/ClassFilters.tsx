@@ -3,6 +3,7 @@ import type { ClassFilters } from '../types'
 import DatePickerInput from './DatePickerInput'
 import MultiSelect from './MultiSelect'
 import SingleSelect from './SingleSelect'
+import { AREA_CENTRES, AREA_OPTIONS, filterCentresByArea } from '../utils/areas'
 
 interface Props {
   filters: ClassFilters
@@ -22,11 +23,19 @@ const STATUS_MAP: Record<string, string> = {
 
 export default function ClassFiltersComponent({ filters, onChange, centres, courses, statuses, mentors, blocks, onSummary }: Props) {
   const [localFilters, setLocalFilters] = useState<ClassFilters>(filters)
+  const centreOptions = filterCentresByArea(centres, localFilters.area)
 
   const update = (key: keyof ClassFilters, value: string) => {
     const newFilters = { ...localFilters, [key]: value }
     setLocalFilters(newFilters)
     onChange(newFilters)
+  }
+
+  const updateArea = (area: string) => {
+    const nextCentre = area && !AREA_CENTRES[area]?.some((keyword) => localFilters.centre.includes(keyword))
+      ? ''
+      : localFilters.centre
+    updateMultiple({ area, centre: nextCentre })
   }
 
   const updateMultiple = (updates: Partial<ClassFilters>) => {
@@ -49,8 +58,15 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
       </div>
 
       <SingleSelect
+        label="Khu vực"
+        options={AREA_OPTIONS}
+        value={localFilters.area}
+        onChange={updateArea}
+      />
+
+      <SingleSelect
         label="Cơ sở"
-        options={centres.map((c) => ({ value: c, label: c }))}
+        options={centreOptions.map((c) => ({ value: c, label: c }))}
         value={localFilters.centre}
         onChange={(v) => update('centre', v)}
       />
@@ -107,8 +123,9 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
       <SingleSelect
         label="Nhận xét"
         options={[
-          { value: '100', label: 'Đã nhận xét' },
-          { value: '0', label: 'Chưa nhận xét' },
+          { value: 'commented', label: 'Đã nhận xét' },
+          { value: 'pending',   label: 'Chưa nhận xét (Chưa quá hạn)' },
+          { value: 'overdue',   label: 'Chưa nhận xét (Đã quá hạn)' },
         ]}
         value={localFilters.hasComments}
         onChange={(v) => update('hasComments', v)}
@@ -152,7 +169,7 @@ export default function ClassFiltersComponent({ filters, onChange, centres, cour
         <label className="filter-label">&nbsp;</label>
         <button className="btn-reset" onClick={() => {
           const resetFilters: ClassFilters = {
-            centre: '', startDate: '', startDateTo: '', endDate: '', endDateTo: '',
+            area: '', centre: '', startDate: '', startDateTo: '', endDate: '', endDateTo: '',
             slot: '', slotTo: '', course: '', search: '', status: [], hasComments: '', mentor: '', tpRound: '', cpRound: '', block: []
           }
           setLocalFilters(resetFilters)

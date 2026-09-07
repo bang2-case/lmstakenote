@@ -12,6 +12,65 @@ export interface Slot {
   commentStatus: string
   studentsInSlot: number
   studentsWithComment: number
+  students?: { id: string; name: string; status?: string }[]
+}
+
+export interface CompletionInfo {
+  status: string | null
+  reason?: string | null
+  description?: string | null
+  note?: string | null
+}
+
+export interface StudentCustomer {
+  _id?: string | null
+  fullName?: string | null
+  phoneNumber?: string | null
+  email?: string | null
+  facebook?: string | null
+  zalo?: string | null
+}
+
+export interface PreviousClass {
+  id?: string | null
+  name?: string | null
+  startDate?: string | null
+}
+
+export interface CRStudent {
+  id: string
+  classId?: string
+  studentId?: string
+  learningMediumId?: string | null
+  note?: string | null
+  activeInClass?: boolean
+  completed?: boolean
+  completionInfo?: CompletionInfo | null
+  retentionDate?: string | null
+  grade?: string | number | null | { averageScore?: string | null }
+  isTransfer?: boolean
+  transfers?: { classFrom?: string | null; classTo?: string | null; dateFrom?: string | null; dateTo?: string | null }[]
+  previousClass?: PreviousClass | null
+  attended?: boolean
+  student: {
+    id: string
+    fullName: string
+    status?: string | null
+    waitingStatus?: string | null
+    phoneNumber?: string | null
+    email?: string | null
+    gender?: string | null
+    dob?: string | null
+    address?: string | null
+    imageUrl?: string | null
+    facebook?: string | null
+    zalo?: string | null
+    school?: string | null
+    contactPhoneNumber?: string | null
+    customer?: StudentCustomer | null
+    studentId?: string | null
+    isVip?: boolean
+  }
 }
 
 export interface ClassItem {
@@ -28,6 +87,7 @@ export interface ClassItem {
   level?: string
   block: string
   slots: Slot[]
+  students?: CRStudent[]
   studentCount: number
   attendedCount: number
   completedCount: number
@@ -64,6 +124,7 @@ export interface TeacherItem {
 }
 
 export interface ClassFilters {
+  area: string
   centre: string
   startDate: string
   startDateTo: string
@@ -117,6 +178,85 @@ export interface CPRecord {
   cp2Practical: number | null
   cp1_students: CPStudentDetail[]
   cp2_students: CPStudentDetail[]
+}
+
+export interface AssignmentStudent {
+  id: string
+  displayName: string
+  studentUid: string
+}
+
+export interface AssignmentLesson {
+  id: string
+  name: string
+  type: string
+  isActive: boolean
+  learningCourseId?: string
+  displayOrder: number
+}
+
+export interface AssignmentSubmission {
+  id: string
+  type: string
+  note: string
+  score: number
+  status: 'IN_PROGRESS' | 'SUBMITTED' | 'MARKED' | string
+  category: string
+  classId: string
+  lessonId: string
+  learningCourseId: string
+  studentUid: string
+  studentOriginalId?: string
+  classSessionId?: string
+  markedAt: string
+  markedBy: string
+  createdAt: string
+  submittedAt: string
+  submittedCount: number
+  content?: {
+    type: string
+    attachments: string[]
+    totalQuiz: number
+    submitQuiz: number
+    correctAnswer: number
+  }
+}
+
+export interface AssignmentClassRecord {
+  classId: string
+  className: string
+  centre: string | null
+  block: string
+  status?: string
+  studentCount?: number
+  lessonCount?: number
+  expectedCount?: number
+  submittedCount?: number
+  gradableSubmittedCount?: number
+  markedCount?: number
+  inProgressCount?: number
+  needsMarkingCount?: number
+  averageScore?: number | null
+  teachers: Teacher[]
+  students: AssignmentStudent[]
+  lessons: AssignmentLesson[]
+  submissions: AssignmentSubmission[]
+}
+
+export interface AssignmentFetchError {
+  classId: string
+  className: string
+  centre: string | null
+  block: string
+  status: string
+  errorType: 'mapping' | 'http' | 'network' | 'lms_error' | string
+  message: string
+  fetchedAt: string
+}
+
+export interface AssignmentPayload {
+  records: AssignmentClassRecord[]
+  errors: AssignmentFetchError[]
 }
 
 // ── Office Hours ──────────────────────────────────────────────────────────

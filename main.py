@@ -5,7 +5,9 @@ import os
 import sqlite3
 import base64
 import sys
-from datetime import datetime, timezone
+import atexit
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone, timedelta
 
 # Fix encoding cho Windows terminal
 if sys.stdout.encoding and sys.stdout.encoding.lower() not in ('utf-8', 'utf8'):
@@ -88,9 +90,188 @@ def update_env_token(new_token: str):
         f.writelines(new_lines)
     print("✅ Đã cập nhật token vào .env")
 
+_check_token_expiry_from_jwt = check_token_expiry
+
+
+def read_env_file_value(key: str) -> str | None:
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(env_path):
+        return None
+
+    with open(env_path, encoding="utf-8-sig") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.startswith(f"{key}="):
+                value = line[len(key) + 1:].strip().strip('"').strip("'")
+                if value:
+                    return value
+
+    return None
+
+
+def env_value(*keys: str) -> str | None:
+    for key in keys:
+        value = os.environ.get(key) or read_env_file_value(key)
+        if value:
+            return value
+    return None
+
+
+def refresh_token_from_login() -> str | None:
+    if not (
+        env_value("FIREBASE_API_KEY", "NEXT_PUBLIC_FIREBASE_API_KEY")
+        and env_value("LMS_LOGIN_EMAIL")
+        and env_value("LMS_LOGIN_PASSWORD")
+    ):
+        return None
+
+    import subprocess
+
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "get-idtoken.js")
+    try:
+        result = subprocess.run(
+            ["node", script],
+            check=True,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            env={**os.environ},
+        )
+        token = result.stdout.strip().splitlines()[-1].strip()
+        return token or None
+    except Exception as e:
+        print(f"Unable to refresh LMS_TOKEN from login credentials: {e}")
+        return None
+
+
+def load_token() -> str:
+    token = env_value("LMS_TOKEN")
+    if token:
+        return token
+
+    refreshed_token = refresh_token_from_login()
+    if refreshed_token:
+        return refreshed_token
+
+    print("Missing LMS_TOKEN in environment variables or .env")
+    sys.exit(1)
+
+
+def check_token_expiry(token: str) -> bool:
+    if _check_token_expiry_from_jwt(token):
+        return True
+
+    refreshed_token = refresh_token_from_login()
+    if not refreshed_token:
+        return False
+
+    globals()["TOKEN"] = refreshed_token
+    print("Refreshed LMS_TOKEN from login credentials")
+    return _check_token_expiry_from_jwt(refreshed_token)
+
 
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
 TOKEN = load_token()
+FETCH_LOCK_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".fetch.lock")
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _get_process_command_line(pid: int) -> str:
+    if os.name != "nt":
+        return ""
+    try:
+        import subprocess
+        result = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                f"(Get-CimInstance Win32_Process -Filter \"ProcessId = {int(pid)}\").CommandLine",
+            ],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=3,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+    except Exception:
+        return ""
+    return ""
+
+
+def _pid_is_fetch_process(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    if os.name == "nt":
+        try:
+            import ctypes
+            handle = ctypes.windll.kernel32.OpenProcess(0x1000, False, int(pid))
+            if handle:
+                ctypes.windll.kernel32.CloseHandle(handle)
+                command_line = _get_process_command_line(pid)
+                if command_line:
+                    normalized = command_line.replace("\\", "/").lower()
+                    return "main.py" in normalized
+                return True
+            return False
+        except Exception:
+            return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _read_fetch_lock() -> dict:
+    try:
+        with open(FETCH_LOCK_FILE, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def acquire_fetch_lock() -> bool:
+    flags = os.O_CREAT | os.O_EXCL | os.O_WRONLY
+    payload = {
+        "pid": os.getpid(),
+        "argv": sys.argv,
+        "cwd": PROJECT_ROOT,
+        "startedAt": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        fd = os.open(FETCH_LOCK_FILE, flags)
+    except FileExistsError:
+        existing = _read_fetch_lock()
+        pid = int(existing.get("pid") or 0)
+        if _pid_is_fetch_process(pid):
+            print(f"❌ Đang có tiến trình fetch khác chạy (PID {pid}).")
+            print("   Hãy đợi tiến trình đó xong hoặc bấm Hủy trong app trước khi fetch lại.")
+            return False
+        try:
+            os.unlink(FETCH_LOCK_FILE)
+        except OSError:
+            print("❌ Không thể xóa fetch lock cũ. Hãy đóng các phiên dev server cũ rồi thử lại.")
+            return False
+        fd = os.open(FETCH_LOCK_FILE, flags)
+
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False)
+    return True
+
+
+def release_fetch_lock():
+    existing = _read_fetch_lock()
+    if int(existing.get("pid") or 0) != os.getpid():
+        return
+    try:
+        os.unlink(FETCH_LOCK_FILE)
+    except FileNotFoundError:
+        pass
 
 # Kiểm tra token ngay khi khởi động
 if not check_token_expiry(TOKEN):
@@ -121,14 +302,31 @@ HEADERS = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-CENTRE_IDS = [
-    "62cc07753c1309654f472e60",     # Lũy Bán Bích
-    "63034f4a7d1d1e1cb14e4e57",     # Tây Thạnh
-    "62918d02af37d11e2da237e5",     # Tên Lửa
-    "62d6dcc16e356729147d73a6"      # Trường Chinh
-]
+AREA_CENTRES = {
+    "HCM1": {
+        "ids": [
+            "62d6dc936e356729147d7399",  # 01 To Ky
+            "609bf4149535070ca5e3edc0",  # Phan Van Tri
+            "62b0234675379306da49f051",  # 261-263 Phan Xich Long
+        ],
+        "keywords": ["Tô Ký", "To Ky", "Phan Văn Trị", "Phan Van Tri", "Phan Xích Long", "Phan Xich Long"],
+    },
+    "HCM4": {
+        "ids": [
+            "62cc07753c1309654f472e60",  # Luy Ban Bich
+            "63034f4a7d1d1e1cb14e4e57",  # Tay Thanh
+            "62918d02af37d11e2da237e5",  # Ten Lua
+            "62d6dcc16e356729147d73a6",  # Truong Chinh
+        ],
+        "keywords": ["Tên Lửa", "Ten Lua", "Tây Thạnh", "Tay Thanh", "Lũy Bán Bích", "Luy Ban Bich", "Trường Chinh", "Truong Chinh"],
+    },
+}
 
-HCM4_CENTRES = ["Tên Lửa", "Tây Thạnh", "Lũy Bán Bích", "Trường Chinh"]
+CENTRE_IDS = AREA_CENTRES["HCM1"]["ids"] + AREA_CENTRES["HCM4"]["ids"]
+TARGET_CENTRE_KEYWORDS = AREA_CENTRES["HCM1"]["keywords"] + AREA_CENTRES["HCM4"]["keywords"]
+CLASS_STATUSES_TO_FETCH = ["RUNNING", "FINISHED"]
+
+HCM4_CENTRES = AREA_CENTRES["HCM4"]["keywords"]
 
 def build_payload(page_index):
     return {
@@ -136,6 +334,7 @@ def build_payload(page_index):
         "variables": {
             "search": "",
             "centres": CENTRE_IDS,
+            "statusIn": CLASS_STATUSES_TO_FETCH,
             "courses": [],
             "courseLines": [],
             "startDate": [None, None],
@@ -176,17 +375,24 @@ def build_payload(page_index):
         }
       }
       students {
+        _id
+        note
+        activeInClass
+        completed
         student {
           id
-          customer {
-            fullName
-          }
+          fullName
+          status
+          waitingStatus
+          studentId
         }
         completionInfo {
           status
           note
           reason
+          description
         }
+        retentionDate
       }
       slots {
         _id
@@ -232,12 +438,31 @@ def fetch_all():
     while True:
         print(f"Fetching page {page}...")
 
-        res = requests.post(GRAPHQL_URL, headers=HEADERS, json=build_payload(page))
+        res = None
+        for attempt in range(3):
+            try:
+                res = requests.post(GRAPHQL_URL, headers=HEADERS, json=build_payload(page), timeout=30)
+            except requests.RequestException as e:
+                print(f"  ⚠ Request error page {page} (lần {attempt + 1}/3): {e}")
+                if attempt == 2:
+                    raise
+                time.sleep(1.5 * (attempt + 1))
+                continue
+
+            if res.status_code == 200:
+                break
+
+            print(f"  ⚠ Status {res.status_code} page {page} (lần {attempt + 1}/3)")
+            if attempt < 2:
+                time.sleep(1.5 * (attempt + 1))
+
+        if res is None:
+            raise RuntimeError(f"Không nhận được phản hồi khi fetch page {page}")
 
         if res.status_code != 200:
             print(f"Status: {res.status_code}")
             print(f"Response: {res.text[:500]}")
-            break
+            raise RuntimeError(f"Fetch classes page {page} thất bại với HTTP {res.status_code}")
 
         data = res.json()
 
@@ -245,9 +470,9 @@ def fetch_all():
             classes = data["data"]["classes"]["data"]
             total = data["data"]["classes"]["pagination"]["total"]
             print(f"  → {len(classes)} lớp (tổng: {total})")
-        except:
+        except Exception as e:
             print("Lỗi:", json.dumps(data, indent=2, ensure_ascii=False)[:500])
-            break
+            raise RuntimeError(f"Không đọc được dữ liệu classes page {page}: {e}")
 
         if not classes:
             break
@@ -257,7 +482,7 @@ def fetch_all():
 
             # Nếu CENTRE_IDS trống thì filter theo tên, ngược lại lấy hết
             if not CENTRE_IDS:
-                if not any(x in centre_name for x in HCM4_CENTRES):
+                if not any(x in centre_name for x in TARGET_CENTRE_KEYWORDS):
                     continue
 
             # Lấy danh sách giáo viên — chỉ lấy role "Lecturer"
@@ -311,15 +536,37 @@ def fetch_all():
                         att for att in student_attendances
                         if att.get("status") not in ["ABSENT", "ABSENT_WITH_NOTICE"]
                     ]
+                    slot_students = []
+                    for att in students_present:
+                        student = att.get("student") or {}
+                        slot_students.append({
+                            "id": student.get("id"),
+                            "name": student.get("fullName", "Unknown"),
+                            "status": att.get("status"),
+                        })
                     students_in_slot = len(students_present)
 
                     # Đếm số học viên đã được comment
                     students_with_comment = 0
                     students_without_comment = []
+                    slot_comments = []
 
                     for att in students_present:
-                        student_name = att.get("student", {}).get("fullName", "Unknown")
-                        has_comment = bool(att.get("comment"))
+                        student = att.get("student") or {}
+                        student_name = student.get("fullName", "Unknown")
+                        comment_text = att.get("comment") or ""
+                        has_comment = bool(comment_text)
+                        if comment_text.strip():
+                            slot_comments.append({
+                                "id": att.get("_id") or f"{s.get('_id')}:{student.get('id') or student_name}",
+                                "slotId": s.get("_id"),
+                                "sessionIndex": session_num,
+                                "slotDate": s.get("date"),
+                                "studentId": student.get("id"),
+                                "studentName": student_name,
+                                "comment": comment_text,
+                                "sendCommentStatus": att.get("sendCommentStatus"),
+                            })
                         if not has_comment:
                             for t_att in teacher_attendances:
                                 if t_att.get("note"):
@@ -351,7 +598,9 @@ def fetch_all():
                         "endTime": s.get("endTime"),
                         "commentStatus": slot_comment_status,
                         "studentsInSlot": students_in_slot,
-                        "studentsWithComment": students_with_comment
+                        "studentsWithComment": students_with_comment,
+                        "students": slot_students,
+                        "comments": slot_comments,
                     })
 
                     # Lưu lại attendance thô của buổi CP để fetch_cp dùng
@@ -533,13 +782,13 @@ def fetch_teachers():
             if any(cl.get("name", "") == "18+" for cl in course_lines):
                 continue
 
-            # Chỉ lấy giáo viên có ít nhất 1 centre thuộc HCM4
+            # Chỉ lấy giáo viên có ít nhất 1 centre thuộc các khu vực đang theo dõi
             centres = t.get("centres", [])
-            hcm4_centres = [
+            target_centres = [
                 c for c in centres
-                if any(kw in c.get("name", "") for kw in HCM4_CENTRES)
+                if any(kw in c.get("name", "") for kw in TARGET_CENTRE_KEYWORDS)
             ]
-            if not hcm4_centres:
+            if not target_centres:
                 continue
 
             blocks = get_teacher_block(course_lines)
@@ -560,7 +809,7 @@ def fetch_teachers():
                 "joinedDate": t.get("joinedDate"),
                 "courseLines": [cl.get("name") for cl in course_lines],
                 "blocks": blocks,
-                "centres": [c.get("name") for c in hcm4_centres],  # Chỉ lưu cơ sở HCM4
+                "centres": [c.get("name") for c in target_centres],
             })
 
         fetched_so_far = (page + 1) * 100
@@ -573,8 +822,23 @@ def fetch_teachers():
     return all_teachers
 
 def save(data):
+    if not data:
+        print("\n⚠ Không có dữ liệu lớp mới; giữ nguyên public/classes.json và SQLite hiện tại")
+        return
+
+    public_data = []
+    for item in data:
+        public_item = dict(item)
+        public_slots = []
+        for slot in item.get("slots", []):
+            public_slot = dict(slot)
+            public_slot.pop("comments", None)
+            public_slots.append(public_slot)
+        public_item["slots"] = public_slots
+        public_data.append(public_item)
+
     with open("public/classes.json", "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+        json.dump(public_data, f, ensure_ascii=False, indent=2)
     print(f"\n✅ Đã lưu {len(data)} lớp vào public/classes.json")
     save_classes_to_sqlite(data)
 
@@ -602,6 +866,52 @@ def save_classes_to_sqlite(data: list):
     conn = get_sqlite_conn()
     c = conn.cursor()
     try:
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS slot_comments (
+                id                TEXT PRIMARY KEY,
+                classId           TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+                slotId            TEXT NOT NULL REFERENCES slots(id) ON DELETE CASCADE,
+                sessionIndex      INTEGER,
+                slotDate          TEXT,
+                studentId         TEXT,
+                studentName       TEXT,
+                comment           TEXT,
+                sendCommentStatus TEXT
+            )
+        """)
+        c.execute("CREATE INDEX IF NOT EXISTS idx_slot_comments_classId ON slot_comments(classId)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_slot_comments_slotId  ON slot_comments(slotId)")
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS slot_students (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                classId     TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+                slotId      TEXT NOT NULL REFERENCES slots(id) ON DELETE CASCADE,
+                studentId   TEXT,
+                studentName TEXT,
+                status      TEXT
+            )
+        """)
+        c.execute("CREATE INDEX IF NOT EXISTS idx_slot_students_classId ON slot_students(classId)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_slot_students_slotId  ON slot_students(slotId)")
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS class_students (
+                id              TEXT PRIMARY KEY,
+                classId         TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+                studentId       TEXT,
+                activeInClass   INTEGER DEFAULT 0,
+                completed       INTEGER DEFAULT 0,
+                attended        INTEGER DEFAULT 0,
+                note            TEXT,
+                grade           TEXT,
+                retentionDate   TEXT,
+                completionInfo  TEXT,
+                student         TEXT,
+                previousClass   TEXT
+            )
+        """)
+        c.execute("CREATE INDEX IF NOT EXISTS idx_class_students_classId ON class_students(classId)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_class_students_studentId ON class_students(studentId)")
+
         for item in data:
             cid = item["id"]
             c.execute("""
@@ -629,8 +939,35 @@ def save_classes_to_sqlite(data: list):
                     (cid, t.get("name"), t.get("email"), t.get("role"))
                 )
 
+            # Class students are fetched lazily via findClassStudent when the CR modal opens.
+            if "students" in item:
+                c.execute("DELETE FROM class_students WHERE classId=?", (cid,))
+                for s in item.get("students", []):
+                    student = s.get("student") or {}
+                    c.execute("""
+                        INSERT OR REPLACE INTO class_students
+                        (id, classId, studentId, activeInClass, completed, attended,
+                         note, grade, retentionDate, completionInfo, student, previousClass)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                    """, (
+                        s.get("id") or f"{cid}:{s.get('studentId') or student.get('id') or student.get('fullName') or ''}",
+                        cid,
+                        s.get("studentId") or student.get("id"),
+                        1 if s.get("activeInClass") else 0,
+                        1 if s.get("completed") else 0,
+                        1 if s.get("attended") else 0,
+                        s.get("note"),
+                        json.dumps(s.get("grade"), ensure_ascii=False),
+                        s.get("retentionDate"),
+                        json.dumps(s.get("completionInfo"), ensure_ascii=False),
+                        json.dumps(student, ensure_ascii=False),
+                        json.dumps(s.get("previousClass"), ensure_ascii=False),
+                    ))
+
             # Slots
             c.execute("DELETE FROM slots WHERE classId=?", (cid,))
+            c.execute("DELETE FROM slot_comments WHERE classId=?", (cid,))
+            c.execute("DELETE FROM slot_students WHERE classId=?", (cid,))
             for s in item.get("slots", []):
                 c.execute("""
                     INSERT OR REPLACE INTO slots
@@ -642,6 +979,28 @@ def save_classes_to_sqlite(data: list):
                     s.get("endTime"), s.get("commentStatus"),
                     s.get("studentsInSlot", 0), s.get("studentsWithComment", 0),
                 ))
+                for comment in s.get("comments", []):
+                    comment_id = comment.get("id") or f"{s.get('id')}:{comment.get('studentId') or comment.get('studentName') or ''}"
+                    c.execute("""
+                        INSERT OR REPLACE INTO slot_comments
+                        (id, classId, slotId, sessionIndex, slotDate, studentId,
+                         studentName, comment, sendCommentStatus)
+                        VALUES (?,?,?,?,?,?,?,?,?)
+                    """, (
+                        comment_id, cid, s.get("id"),
+                        comment.get("sessionIndex"), comment.get("slotDate"),
+                        comment.get("studentId"), comment.get("studentName"),
+                        comment.get("comment"), comment.get("sendCommentStatus"),
+                    ))
+                for student in s.get("students", []):
+                    c.execute("""
+                        INSERT INTO slot_students
+                        (classId, slotId, studentId, studentName, status)
+                        VALUES (?,?,?,?,?)
+                    """, (
+                        cid, s.get("id"), student.get("id"),
+                        student.get("name"), student.get("status"),
+                    ))
 
             # Incomplete students
             c.execute("DELETE FROM incomplete_students WHERE classId=?", (cid,))
@@ -1477,6 +1836,459 @@ def save_cp(data):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+
+# ASSIGNMENTS / HOMEWORK FETCH
+ASSIGNMENT_QUERY = """query FindStudentSubmissionByClass($payload: FindStudentSubmissionByClassQuery!) {
+  findStudentSubmissionByClass(payload: $payload) {
+    students { id displayName studentUid __typename }
+    lessons { id name type isActive learningCourseId displayOrder __typename }
+    submissions {
+      id type note score status category classId lessonId learningCourseId
+      studentUid studentOriginalId classSessionId markedAt markedBy createdAt submittedAt submittedCount
+      content { scratchState type attachments totalQuiz submitQuiz correctAnswer __typename }
+      __typename
+    }
+    __typename
+  }
+}"""
+
+ASSIGNMENT_CACHE_FILE = "public/assignments.json"
+ASSIGNMENT_CONCURRENCY = 2
+ASSIGNMENT_FINISHED_LOOKBACK_DAYS = 90
+ASSIGNMENT_MAX_RETRIES = 5
+
+
+def should_fetch_assignment_class(class_item: dict) -> bool:
+    status = class_item.get("status")
+    if status == "RUNNING":
+        return True
+    if status != "FINISHED":
+        return False
+
+    end_date = class_item.get("endDate")
+    if not end_date:
+        return False
+    try:
+        end_dt = datetime.fromisoformat(str(end_date).replace("Z", "+00:00"))
+    except Exception:
+        return False
+    return end_dt >= datetime.now(timezone.utc) - timedelta(days=ASSIGNMENT_FINISHED_LOOKBACK_DAYS)
+
+
+def build_assignment_fetch_error(class_item: dict, error_type: str, message: str) -> dict:
+    return {
+        "classId": class_item.get("id"),
+        "className": class_item.get("name", ""),
+        "centre": class_item.get("centre"),
+        "block": class_item.get("block", ""),
+        "status": class_item.get("status", ""),
+        "fetchError": {
+            "errorType": error_type,
+            "message": message,
+        },
+    }
+
+
+def classify_assignment_error(message: str) -> str:
+    text = message.lower()
+    if "not mapped on denise" in text:
+        return "mapping"
+    return "lms_error"
+
+
+def fetch_assignments_for_class(class_item: dict) -> dict | None:
+    class_id = class_item.get("id")
+    if not class_id:
+        return None
+
+    payload = {
+        "operationName": "FindStudentSubmissionByClass",
+        "variables": {"payload": {"classId": class_id}},
+        "query": ASSIGNMENT_QUERY,
+    }
+
+    last_error: dict | None = None
+    for attempt in range(1, ASSIGNMENT_MAX_RETRIES + 1):
+        try:
+            res = requests.post(GRAPHQL_URL, headers=HEADERS, json=payload, timeout=30)
+            if res.status_code != 200:
+                message = f"HTTP {res.status_code}"
+                print(f"  assignment {class_item.get('name', class_id)}: {message}")
+                last_error = build_assignment_fetch_error(class_item, "http", message)
+                if attempt < ASSIGNMENT_MAX_RETRIES and res.status_code in (429, 502, 503, 504):
+                    retry_after = res.headers.get("Retry-After")
+                    try:
+                        wait_seconds = float(retry_after) if retry_after else 0
+                    except Exception:
+                        wait_seconds = 0
+                    wait_seconds = max(wait_seconds, 2 ** attempt)
+                    time.sleep(wait_seconds)
+                    continue
+                return last_error
+
+            data = res.json()
+            if "errors" in data:
+                message = data["errors"][0].get("message", "") if data.get("errors") else "LMS returned an error"
+                error_type = classify_assignment_error(message)
+                print(f"  assignment {class_item.get('name', class_id)}: {message[:160]}")
+                return build_assignment_fetch_error(class_item, error_type, message)
+
+            result = (data.get("data") or {}).get("findStudentSubmissionByClass") or {}
+            return {
+                "classId": class_id,
+                "className": class_item.get("name", ""),
+                "centre": class_item.get("centre"),
+                "block": class_item.get("block", ""),
+                "status": class_item.get("status", ""),
+                "teachers": class_item.get("teachers", []),
+                "students": result.get("students") or [],
+                "lessons": result.get("lessons") or [],
+                "submissions": result.get("submissions") or [],
+            }
+        except Exception as e:
+            message = str(e)
+            print(f"  assignment {class_item.get('name', class_id)}: {message}")
+            last_error = build_assignment_fetch_error(class_item, "network", message)
+            if attempt < ASSIGNMENT_MAX_RETRIES:
+                time.sleep(2 ** attempt)
+                continue
+            return last_error
+
+    return last_error
+
+
+def load_classes_for_assignments_from_db() -> list[dict]:
+    conn = get_sqlite_conn()
+    conn.row_factory = sqlite3.Row
+    try:
+        rows = conn.execute("""
+            SELECT id, name, status, centre, block, endDate
+            FROM classes
+            WHERE status = 'RUNNING'
+               OR (
+                    status = 'FINISHED'
+                    AND date(substr(endDate, 1, 10)) >= date('now', ?)
+               )
+            ORDER BY createdAt DESC
+        """, (f"-{ASSIGNMENT_FINISHED_LOOKBACK_DAYS} day",)).fetchall()
+        class_ids = [r["id"] for r in rows]
+        teachers_map: dict[str, list] = {}
+        if class_ids:
+            placeholders = ",".join("?" * len(class_ids))
+            teachers = conn.execute(
+                f"SELECT classId, name, email, role FROM class_teachers WHERE classId IN ({placeholders})",
+                tuple(class_ids),
+            ).fetchall()
+            for t in teachers:
+                teachers_map.setdefault(t["classId"], []).append({
+                    "name": t["name"],
+                    "email": t["email"],
+                    "role": t["role"],
+                })
+
+        return [
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "status": r["status"],
+                "centre": r["centre"],
+                "block": r["block"],
+                "endDate": r["endDate"],
+                "teachers": teachers_map.get(r["id"], []),
+            }
+            for r in rows
+        ]
+    finally:
+        conn.close()
+
+
+def fetch_assignments(classes_data: list[dict] | None = None) -> list[dict]:
+    print("\nFetching assignment data...")
+    classes_data = classes_data or load_classes_for_assignments_from_db()
+    classes_data = [item for item in classes_data if should_fetch_assignment_class(item)]
+    records: list[dict] = []
+    errors = 0
+    total = len(classes_data)
+    if total == 0:
+        print("  No class data available for assignments")
+        return []
+
+    with ThreadPoolExecutor(max_workers=ASSIGNMENT_CONCURRENCY) as executor:
+        futures = {executor.submit(fetch_assignments_for_class, item): item for item in classes_data}
+        done = 0
+        for future in as_completed(futures):
+            done += 1
+            record = future.result()
+            if record is not None:
+                if record.get("fetchError"):
+                    errors += 1
+                records.append(record)
+            if done % 50 == 0 or done == total:
+                print(f"  assignment progress: {done}/{total}")
+            time.sleep(0.02)
+
+    records.sort(key=lambda r: r.get("className") or "")
+    print(f"  Assignment records: {len(records) - errors} success, {errors} errors")
+    return records
+
+
+def ensure_assignment_tables(cursor):
+    cursor.executescript("""
+        CREATE TABLE IF NOT EXISTS assignment_records (
+            classId     TEXT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
+            className   TEXT,
+            centre      TEXT,
+            block       TEXT,
+            status      TEXT,
+            updatedAt   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS assignment_students (
+            id          TEXT,
+            classId     TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+            displayName TEXT,
+            studentUid  TEXT,
+            PRIMARY KEY (classId, studentUid)
+        );
+        CREATE TABLE IF NOT EXISTS assignment_lessons (
+            id               TEXT,
+            classId          TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+            name             TEXT,
+            type             TEXT,
+            isActive         INTEGER DEFAULT 0,
+            learningCourseId TEXT,
+            displayOrder     INTEGER,
+            PRIMARY KEY (classId, id)
+        );
+        CREATE TABLE IF NOT EXISTS assignment_submissions (
+            id               TEXT PRIMARY KEY,
+            classId          TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+            type             TEXT,
+            note             TEXT,
+            score            REAL,
+            status           TEXT,
+            category         TEXT,
+            lessonId         TEXT,
+            learningCourseId TEXT,
+            studentUid       TEXT,
+            studentOriginalId TEXT,
+            classSessionId   TEXT,
+            markedAt         TEXT,
+            markedBy         TEXT,
+            createdAt        TEXT,
+            submittedAt      TEXT,
+            submittedCount   INTEGER DEFAULT 0,
+            contentJson      TEXT
+        );
+        CREATE TABLE IF NOT EXISTS assignment_teachers (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            classId     TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+            name        TEXT,
+            email       TEXT,
+            role        TEXT
+        );
+        CREATE TABLE IF NOT EXISTS assignment_fetch_errors (
+            classId    TEXT PRIMARY KEY,
+            className  TEXT,
+            centre     TEXT,
+            block      TEXT,
+            status     TEXT,
+            errorType  TEXT,
+            message    TEXT,
+            fetchedAt  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_assignment_students_classId ON assignment_students(classId);
+        CREATE INDEX IF NOT EXISTS idx_assignment_lessons_classId ON assignment_lessons(classId);
+        CREATE INDEX IF NOT EXISTS idx_assignment_submissions_classId ON assignment_submissions(classId);
+        CREATE INDEX IF NOT EXISTS idx_assignment_submissions_lessonId ON assignment_submissions(lessonId);
+        CREATE INDEX IF NOT EXISTS idx_assignment_submissions_studentUid ON assignment_submissions(studentUid);
+    """)
+
+
+def is_assignment_submitted(submission: dict) -> bool:
+    status = str(submission.get("status") or "").upper()
+    return (
+        status in ("SUBMITTED", "MARKED")
+        or bool(submission.get("submittedAt"))
+        or int(submission.get("submittedCount") or 0) > 0
+    )
+
+
+def is_assignment_resubmit_pending(submission: dict) -> bool:
+    status = str(submission.get("status") or "").upper()
+    return status in ("REDO", "RE_SUBMITTED")
+
+
+def is_assignment_gradable(submission: dict) -> bool:
+    return is_assignment_submitted(submission) and not is_assignment_resubmit_pending(submission)
+
+
+def is_assignment_marked(submission: dict) -> bool:
+    status = str(submission.get("status") or "").upper()
+    return status == "MARKED" or bool(submission.get("markedAt")) or bool(submission.get("markedBy"))
+
+
+def is_homework_submission(submission: dict) -> bool:
+    submission_type = str(submission.get("type") or "").upper()
+    category = str(submission.get("category") or "").upper()
+    return submission_type == "UPLOAD_FILE" or category.startswith("PRACTICE_TASK")
+
+
+def summarize_assignment_record(record: dict) -> dict:
+    lessons = [lesson for lesson in record.get("lessons", []) if lesson.get("isActive")]
+    submissions = [
+        submission for submission in record.get("submissions", [])
+        if is_homework_submission(submission)
+    ]
+    submitted = [submission for submission in submissions if is_assignment_submitted(submission)]
+    gradable_submitted = [submission for submission in submissions if is_assignment_gradable(submission)]
+    marked = [submission for submission in gradable_submitted if is_assignment_marked(submission)]
+    scored = [
+        float(submission.get("score") or 0)
+        for submission in gradable_submitted
+        if float(submission.get("score") or 0) > 0
+    ]
+    expected_count = len(submissions) or len(record.get("students", [])) * len(lessons)
+    return {
+        "classId": record.get("classId"),
+        "className": record.get("className"),
+        "centre": record.get("centre"),
+        "block": record.get("block"),
+        "status": record.get("status"),
+        "teachers": record.get("teachers", []),
+        "students": [],
+        "lessons": [],
+        "submissions": [],
+        "studentCount": len(record.get("students", [])),
+        "lessonCount": len(lessons),
+        "expectedCount": expected_count,
+        "submittedCount": len(submitted),
+        "gradableSubmittedCount": len(gradable_submitted),
+        "markedCount": len(marked),
+        "inProgressCount": len([
+            submission for submission in submissions
+            if str(submission.get("status") or "").upper() == "IN_PROGRESS"
+        ]),
+        "needsMarkingCount": max(0, len(gradable_submitted) - len(marked)),
+        "averageScore": round(sum(scored) / len(scored)) if scored else None,
+    }
+
+
+def chunks(items: list, size: int = 800):
+    for index in range(0, len(items), size):
+        yield items[index:index + size]
+
+
+def save_assignments_to_sqlite(data: list[dict]):
+    conn = get_sqlite_conn()
+    c = conn.cursor()
+    try:
+        ensure_assignment_tables(c)
+        for r in data:
+            cid = r["classId"]
+            fetch_error = r.get("fetchError")
+            if fetch_error:
+                c.execute("""
+                    INSERT OR REPLACE INTO assignment_fetch_errors
+                    (classId, className, centre, block, status, errorType, message, fetchedAt)
+                    VALUES (?,?,?,?,?,?,?,CURRENT_TIMESTAMP)
+                """, (
+                    cid, r.get("className"), r.get("centre"), r.get("block"), r.get("status"),
+                    fetch_error.get("errorType"), fetch_error.get("message"),
+                ))
+                continue
+
+            c.execute("""
+                INSERT OR REPLACE INTO assignment_records
+                (classId, className, centre, block, status, updatedAt)
+                VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)
+            """, (cid, r.get("className"), r.get("centre"), r.get("block"), r.get("status")))
+            c.execute("DELETE FROM assignment_fetch_errors WHERE classId=?", (cid,))
+
+            c.execute("DELETE FROM assignment_students WHERE classId=?", (cid,))
+            for s in r.get("students", []):
+                c.execute("""
+                    INSERT OR REPLACE INTO assignment_students
+                    (id, classId, displayName, studentUid)
+                    VALUES (?,?,?,?)
+                """, (s.get("id"), cid, s.get("displayName"), s.get("studentUid")))
+
+            c.execute("DELETE FROM assignment_lessons WHERE classId=?", (cid,))
+            for lesson in r.get("lessons", []):
+                c.execute("""
+                    INSERT OR REPLACE INTO assignment_lessons
+                    (id, classId, name, type, isActive, learningCourseId, displayOrder)
+                    VALUES (?,?,?,?,?,?,?)
+                """, (
+                    lesson.get("id"), cid, lesson.get("name"), lesson.get("type"),
+                    1 if lesson.get("isActive") else 0,
+                    lesson.get("learningCourseId"), lesson.get("displayOrder"),
+                ))
+
+            c.execute("DELETE FROM assignment_submissions WHERE classId=?", (cid,))
+            for submission in r.get("submissions", []):
+                c.execute("""
+                    INSERT OR REPLACE INTO assignment_submissions
+                    (id, classId, type, note, score, status, category, lessonId,
+                     learningCourseId, studentUid, studentOriginalId, classSessionId,
+                     markedAt, markedBy, createdAt, submittedAt, submittedCount, contentJson)
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """, (
+                    submission.get("id"), cid, submission.get("type"), submission.get("note"),
+                    submission.get("score"), submission.get("status"), submission.get("category"),
+                    submission.get("lessonId"), submission.get("learningCourseId"),
+                    submission.get("studentUid"), submission.get("studentOriginalId"),
+                    submission.get("classSessionId"), submission.get("markedAt"),
+                    submission.get("markedBy"), submission.get("createdAt"),
+                    submission.get("submittedAt"), submission.get("submittedCount", 0),
+                    json.dumps(submission.get("content") or {}, ensure_ascii=False),
+                ))
+
+            c.execute("DELETE FROM assignment_teachers WHERE classId=?", (cid,))
+            for t in r.get("teachers", []):
+                c.execute(
+                    "INSERT INTO assignment_teachers (classId, name, email, role) VALUES (?,?,?,?)",
+                    (cid, t.get("name"), t.get("email"), t.get("role"))
+                )
+
+        conn.commit()
+        success_count = len([r for r in data if not r.get("fetchError")])
+        error_count = len(data) - success_count
+        print(f"Saved {success_count} assignment records and {error_count} assignment errors to SQLite")
+    except Exception as e:
+        conn.rollback()
+        print(f"SQLite error (assignments): {e}")
+    finally:
+        conn.close()
+
+
+def save_assignments(data: list[dict]):
+    success_records = [record for record in data if not record.get("fetchError")]
+    public_map: dict[str, dict] = {}
+    if os.path.exists(ASSIGNMENT_CACHE_FILE):
+        try:
+            with open(ASSIGNMENT_CACHE_FILE, encoding="utf-8") as f:
+                existing_public_data = json.load(f)
+            if isinstance(existing_public_data, list):
+                public_map = {
+                    item.get("classId"): item
+                    for item in existing_public_data
+                    if isinstance(item, dict) and item.get("classId")
+                }
+        except Exception:
+            public_map = {}
+
+    for record in success_records:
+        summary = summarize_assignment_record(record)
+        if summary.get("classId"):
+            public_map[summary["classId"]] = summary
+
+    public_data = sorted(public_map.values(), key=lambda item: item.get("className") or "")
+    with open(ASSIGNMENT_CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(public_data, f, ensure_ascii=False, indent=2)
+    print(f"Saved {len(public_data)} assignment summaries to {ASSIGNMENT_CACHE_FILE}")
+    save_assignments_to_sqlite(data)
+
+
 # OFFICE HOURS (OH) FETCH
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1728,6 +2540,83 @@ if __name__ == "__main__":
     import threading
     import time as _time
 
+    if not acquire_fetch_lock():
+        sys.exit(9)
+    atexit.register(release_fetch_lock)
+
+    # ── Per-module fetch (--only=<module>) ───────────────────────────────────
+    only_module = None
+    for arg in sys.argv[1:]:
+        if arg.startswith("--only="):
+            only_module = arg[len("--only="):]
+            break
+
+    if only_module:
+        t_start = _time.time()
+        print(f"🔄 Fetch module: {only_module}")
+
+        if only_module == "classes":
+            data = fetch_all()
+            save(data)
+
+        elif only_module == "teachers":
+            teachers = fetch_teachers()
+            save_teachers(teachers)
+
+        elif only_module == "oh":
+            oh = fetch_oh()
+            save_oh(oh)
+
+        elif only_module == "tp":
+            # TP cần classes data — load từ DB thay vì fetch lại
+            import sqlite3 as _sq
+            conn = _sq.connect(os.path.join(os.path.dirname(__file__), "classroom_data.db"))
+            conn.row_factory = _sq.Row
+            rows = conn.execute("""
+                SELECT c.id, c.name, c.centre, c.block, c.status, c.endDate,
+                       GROUP_CONCAT(DISTINCT s.date || '|' || COALESCE(s.studentsInSlot,0)) as slot_data
+                FROM classes c
+                LEFT JOIN slots s ON s.classId = c.id
+                GROUP BY c.id
+            """).fetchall()
+            conn.close()
+
+            classes_for_tp = []
+            for r in rows:
+                slots = []
+                if r["slot_data"]:
+                    for part in r["slot_data"].split(","):
+                        bits = part.split("|")
+                        if len(bits) == 2:
+                            slots.append({"date": bits[0], "studentsInSlot": int(bits[1] or 0)})
+                classes_for_tp.append({
+                    "id": r["id"], "name": r["name"], "centre": r["centre"],
+                    "block": r["block"], "status": r["status"],
+                    "endDate": r["endDate"], "teachers": [], "slots": slots,
+                    "cp_slots": {},
+                })
+
+            tp_data = fetch_tp(classes_for_tp)
+            save_tp(tp_data)
+
+        elif only_module == "cp":
+            # CP cần cp_slots từ fetch_all — fetch lại classes để lấy slots
+            data = fetch_all()
+            cp_data = fetch_cp(data)
+            save_cp(cp_data)
+
+        elif only_module == "assignments":
+            assignment_data = fetch_assignments()
+            save_assignments(assignment_data)
+
+        else:
+            print(f"❌ Module không hợp lệ: {only_module}")
+            sys.exit(1)
+
+        elapsed = _time.time() - t_start
+        print(f"✅ Hoàn tất module '{only_module}' sau {elapsed:.0f}s")
+        sys.exit(0)
+
     t_start = _time.time()
 
     print("=" * 50)
@@ -1739,6 +2628,7 @@ if __name__ == "__main__":
     oh_result: dict = {}
     tp_result: dict = {}
     cp_result: dict = {}
+    assignment_result: dict = {}
     errors: list = []
 
     # ── Phase 1: fetch_all + fetch_teachers + fetch_oh song song ──────────
@@ -1827,6 +2717,19 @@ if __name__ == "__main__":
 
     save_tp(tp_result["data"])
     save_cp(cp_result["data"])
+
+    print()
+    print("=" * 50)
+    print("Fetching assignments")
+    print("=" * 50)
+
+    try:
+        classes_for_assignments = [item for item in data if should_fetch_assignment_class(item)]
+        assignment_result["data"] = fetch_assignments(classes_for_assignments)
+        save_assignments(assignment_result["data"])
+    except Exception as e:
+        errors.append(f"fetch_assignments: {e}")
+        assignment_result["data"] = []
 
     elapsed_total = _time.time() - t_start
     print()

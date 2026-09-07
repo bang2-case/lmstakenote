@@ -14,12 +14,21 @@ export interface TokenInfo {
   remaining_minutes: number
 }
 
+export interface ModuleFetchState {
+  is_fetching: boolean
+  last_status: 'idle' | 'running' | 'success' | 'error'
+  last_message: string
+}
+
 export interface ServerStatus {
   connected: boolean
   fetchState: FetchState
   tokenInfo: TokenInfo | null
+  moduleFetchState: Record<string, ModuleFetchState>
   triggerRefresh: () => Promise<void>
   cancelFetch: () => Promise<void>
+  cancelModuleRefresh: (module: 'classes' | 'teachers' | 'tp' | 'cp' | 'oh' | 'assignments') => Promise<void>
+  triggerModuleRefresh: (module: 'classes' | 'teachers' | 'tp' | 'cp' | 'oh' | 'assignments') => Promise<void>
 }
 
 const DEFAULT_FETCH_STATE: FetchState = {
@@ -30,62 +39,87 @@ const DEFAULT_FETCH_STATE: FetchState = {
   next_fetch: null,
 }
 
+const DEFAULT_MODULE_STATE: ModuleFetchState = {
+  is_fetching: false,
+  last_status: 'idle',
+  last_message: '',
+}
+
 export function useServerStatus(): ServerStatus {
   const [connected, setConnected] = useState(false)
   const [fetchState, setFetchState] = useState<FetchState>(DEFAULT_FETCH_STATE)
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null)
-  const wsRef = useRef<WebSocket | null>(null)
+  const [moduleFetchState, setModuleFetchState] = useState<Record<string, ModuleFetchState>>({
+    classes: { ...DEFAULT_MODULE_STATE },
+    teachers: { ...DEFAULT_MODULE_STATE },
+    tp: { ...DEFAULT_MODULE_STATE },
+    cp: { ...DEFAULT_MODULE_STATE },
+    oh: { ...DEFAULT_MODULE_STATE },
+    assignments: { ...DEFAULT_MODULE_STATE },
+  })
+  const hasSyncedRef = useRef(false)
+  const previousFetchStateRef = useRef<FetchState | null>(null)
+  const previousModuleStateRef = useRef<Record<string, ModuleFetchState> | null>(null)
 
   useEffect(() => {
-    let ws: WebSocket
-    let retryTimeout: ReturnType<typeof setTimeout>
+    let alive = true
 
-    const connect = () => {
+    const syncStatus = async () => {
       try {
-        ws = new WebSocket('ws://localhost:8000/ws')
-        wsRef.current = ws
+        const [fetchRes, moduleRes, tokenRes] = await Promise.all([
+          fetch('/api/fetch-status'),
+          fetch('/api/module-fetch-status'),
+          fetch('/api/token-status'),
+        ])
+        if (!alive) return
+        if (fetchRes.ok && moduleRes.ok && tokenRes.ok) {
+          setConnected(true)
+        } else {
+          setConnected(false)
+        }
+        const nextFetchState: FetchState | null = fetchRes.ok ? await fetchRes.json() : null
+        const nextModuleState: Record<string, ModuleFetchState> | null = moduleRes.ok ? await moduleRes.json() : null
+        const nextTokenInfo: TokenInfo | null = tokenRes.ok ? await tokenRes.json() : null
+        if (nextFetchState) setFetchState(nextFetchState)
+        if (nextModuleState) {
+          setModuleFetchState(nextModuleState)
+        }
+        if (nextTokenInfo) setTokenInfo(nextTokenInfo)
 
-        ws.onopen = () => setConnected(true)
+        if (hasSyncedRef.current) {
+          const previousFetchState = previousFetchStateRef.current
+          if (
+            previousFetchState?.last_status === 'running' &&
+            nextFetchState?.last_status === 'success'
+          ) {
+            window.dispatchEvent(new CustomEvent('lms-data-updated'))
+            window.dispatchEvent(new CustomEvent('lms-assignments-updated'))
+          }
 
-        ws.onmessage = (e) => {
-          try {
-            const msg = JSON.parse(e.data)
-            if (msg.type === 'state') {
-              setFetchState(msg.fetch_state)
-              setTokenInfo(msg.token)
-            } else if (msg.type === 'fetch_start') {
-              setFetchState((s) => ({ ...s, is_fetching: true, last_status: 'running', last_message: msg.message }))
-            } else if (msg.type === 'fetch_done') {
-              setFetchState((s) => ({
-                ...s,
-                is_fetching: false,
-                last_status: msg.status === 'canceled' ? 'idle' : msg.status,
-                last_message: msg.message,
-                last_fetch: msg.status === 'success' ? msg.timestamp : s.last_fetch,
-              }))
-              // Reload data after successful fetch
-              if (msg.status === 'success') {
-                window.dispatchEvent(new CustomEvent('lms-data-updated'))
+          const previousModuleState = previousModuleStateRef.current
+          if (previousModuleState && nextModuleState) {
+            for (const [module, state] of Object.entries(nextModuleState)) {
+              if (previousModuleState[module]?.last_status === 'running' && state.last_status === 'success') {
+                const eventName = module === 'assignments' ? 'lms-assignments-updated' : 'lms-data-updated'
+                window.dispatchEvent(new CustomEvent(eventName))
               }
             }
-          } catch { /* ignore */ }
+          }
         }
 
-        ws.onclose = () => {
-          setConnected(false)
-          retryTimeout = setTimeout(connect, 3000)
-        }
-
-        ws.onerror = () => {
-          ws.close()
-        }
-      } catch { /* ignore */ }
+        if (nextFetchState) previousFetchStateRef.current = nextFetchState
+        if (nextModuleState) previousModuleStateRef.current = nextModuleState
+        hasSyncedRef.current = true
+      } catch {
+        if (alive) setConnected(false)
+      }
     }
 
-    connect()
+    syncStatus()
+    const interval = setInterval(syncStatus, 3000)
     return () => {
-      clearTimeout(retryTimeout)
-      ws?.close()
+      alive = false
+      clearInterval(interval)
     }
   }, [])
 
@@ -101,5 +135,17 @@ export function useServerStatus(): ServerStatus {
     } catch { /* ignore */ }
   }, [])
 
-  return { connected, fetchState, tokenInfo, triggerRefresh, cancelFetch }
+  const cancelModuleRefresh = useCallback(async (module: 'classes' | 'teachers' | 'tp' | 'cp' | 'oh' | 'assignments') => {
+    try {
+      await fetch(`/api/cancel/${module}`, { method: 'POST' })
+    } catch { /* ignore */ }
+  }, [])
+
+  const triggerModuleRefresh = useCallback(async (module: 'classes' | 'teachers' | 'tp' | 'cp' | 'oh' | 'assignments') => {
+    try {
+      await fetch(`/api/refresh/${module}`, { method: 'POST' })
+    } catch { /* ignore */ }
+  }, [])
+
+  return { connected, fetchState, tokenInfo, moduleFetchState, triggerRefresh, cancelFetch, cancelModuleRefresh, triggerModuleRefresh }
 }

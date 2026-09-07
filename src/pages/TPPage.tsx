@@ -3,10 +3,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { useTP } from '../hooks/useTP'
 import { useClasses } from '../hooks/useClasses'
 import SingleSelect from '../components/SingleSelect'
+import RefreshButton from '../components/RefreshButton'
 import type { TPRecord, TPStudentDetail } from '../types'
+import { AREA_OPTIONS, centreMatchesArea, filterCentresByArea } from '../utils/areas'
 
 interface TPFilters {
   search: string
+  area: string
   centre: string
   mentor: string
   tpRound: '' | 'tp1' | 'tp2'
@@ -217,17 +220,24 @@ function TPModal({ record, onClose }: { record: TPRecord; onClose: () => void })
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function TPPage() {
   const { tpData, loading, error } = useTP()
-  const { classes } = useClasses()
+  const { classes } = useClasses({ includeSlots: false })
   const [filters, setFilters] = useState<TPFilters>({
-    search: '', centre: '', mentor: '', tpRound: '', scoreRange: ''
+    search: '', area: '', centre: '', mentor: '', tpRound: '', scoreRange: ''
   })
   const [selectedRecord, setSelectedRecord] = useState<TPRecord | null>(null)
 
   const update = (key: keyof TPFilters, value: string) =>
     setFilters((f) => ({ ...f, [key]: value }))
 
+  const updateArea = (area: string) =>
+    setFilters((f) => ({
+      ...f,
+      area,
+      centre: area && !centreMatchesArea(f.centre, area) ? '' : f.centre,
+    }))
+
   const resetFilters = () =>
-    setFilters({ search: '', centre: '', mentor: '', tpRound: '', scoreRange: '' })
+    setFilters({ search: '', area: '', centre: '', mentor: '', tpRound: '', scoreRange: '' })
 
   // Normalize TP data based on session timing
   const normalizedTPData = useMemo(() => {
@@ -261,9 +271,12 @@ export default function TPPage() {
     return { centres: Array.from(cs).sort(), mentors: Array.from(ms).sort() }
   }, [normalizedTPData])
 
+  const centreOptions = useMemo(() => filterCentresByArea(centres, filters.area), [centres, filters.area])
+
   const filtered = useMemo(() => {
     return normalizedTPData.filter((r) => {
       if (filters.search && !r.className.toLowerCase().includes(filters.search.toLowerCase())) return false
+      if (filters.area && !centreMatchesArea(r.centre, filters.area)) return false
       if (filters.centre && r.centre !== filters.centre) return false
       if (filters.mentor && !r.teachers.some((t) => t.name === filters.mentor)) return false
       if (filters.tpRound === 'tp1' && r.tp1 === null) return false
@@ -310,7 +323,10 @@ export default function TPPage() {
           <h1 className="tp-page-banner-title">Quản lý TP</h1>
           <p className="tp-page-banner-sub">Teacher Point — Khối Coding</p>
         </div>
-        <span className="tp-page-badge">{filtered.length} / {normalizedTPData.length} lớp</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="tp-page-badge">{filtered.length} / {normalizedTPData.length} lớp</span>
+          <RefreshButton module="tp" />
+        </div>
       </div>
 
       {/* ── Chart ── */}
@@ -324,8 +340,14 @@ export default function TPPage() {
             onChange={(e) => update('search', e.target.value)} />
         </div>
         <SingleSelect
+          label="Khu vực"
+          options={AREA_OPTIONS}
+          value={filters.area}
+          onChange={updateArea}
+        />
+        <SingleSelect
           label="Cơ sở"
-          options={centres.map((c) => ({ value: c, label: c }))}
+          options={centreOptions.map((c) => ({ value: c, label: c }))}
           value={filters.centre}
           onChange={(v) => update('centre', v)}
         />

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import SidebarStatus from './SidebarStatus'
 
 // Pages
-export type Page = 'classes' | 'mentors' | 'cr' | 'tp' | 'cp' | 'oh' | 'demo'
+export type Page = 'classes' | 'mentors' | 'cr' | 'tp' | 'cp' | 'assignments' | 'oh' | 'demo'
 
 interface SidebarProps {
   activePage: Page
@@ -48,6 +48,14 @@ function IconProgressCheck() {
   return (
     <svg width="18" height="18" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true">
       <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209L241 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L335 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/>
+    </svg>
+  )
+}
+
+function IconClipboardList() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 384 512" fill="currentColor" aria-hidden="true">
+      <path d="M192 0c-41.8 0-77.4 26.7-90.5 64H64C28.7 64 0 92.7 0 128v320c0 35.3 28.7 64 64 64h256c35.3 0 64-28.7 64-64V128c0-35.3-28.7-64-64-64h-37.5C269.4 26.7 233.8 0 192 0zm0 64a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM112 256h160c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16zm0 96h160c8.8 0 16 7.2 16 16s-7.2 16-16 16H112c-8.8 0-16-7.2-16-16s7.2-16 16-16z"/>
     </svg>
   )
 }
@@ -103,6 +111,7 @@ const navStructure: NavItem[] = [
     children: [
       { key: 'tp',  label: 'Quản lý TP',  icon: <IconStarHalfStroke /> },
       { key: 'cp',  label: 'Quản lý CP',  icon: <IconFilePen /> },
+      { key: 'assignments', label: 'Quản lý bài tập', icon: <IconClipboardList /> },
       { key: 'cr',  label: 'Quản lý CPR', icon: <IconProgressCheck /> },
     ],
   },

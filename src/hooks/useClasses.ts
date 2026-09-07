@@ -1,13 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { ClassItem } from '../types'
 
-export function useClasses() {
+interface UseClassesOptions {
+  includeStudents?: boolean
+  includeSlots?: boolean
+}
+
+export function useClasses(options: UseClassesOptions = {}) {
+  const includeStudents = Boolean(options.includeStudents)
+  const includeSlots = options.includeSlots !== false
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(() => {
-    fetch('/api/classes')
+    const params = new URLSearchParams()
+    if (includeStudents) params.set('include_students', 'true')
+    if (!includeSlots) params.set('include_slots', 'false')
+    const query = params.toString()
+    const url = query ? `/api/classes?${query}` : '/api/classes'
+    fetch(url)
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         return res.json()
@@ -26,7 +38,7 @@ export function useClasses() {
           .catch((e) => setError(e.message))
       })
       .finally(() => setLoading(false))
-  }, [])
+  }, [includeStudents, includeSlots])
 
   useEffect(() => {
     load()

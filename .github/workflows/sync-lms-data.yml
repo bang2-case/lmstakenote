@@ -1,0 +1,66 @@
+name: Sync LMS Data
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: sync-lms-data
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Fetch LMS data and upload Supabase cache
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    env:
+      PYTHONIOENCODING: utf-8
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LMS_TOKEN: ${{ secrets.LMS_TOKEN }}
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+      LMS_LOGIN_EMAIL: ${{ secrets.LMS_LOGIN_EMAIL }}
+      LMS_LOGIN_PASSWORD: ${{ secrets.LMS_LOGIN_PASSWORD }}
+      GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+      USE_SUPABASE: "0"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate required secrets
+        run: |
+          python - <<'PY'
+          import os
+          import sys
+
+          has_database = bool(os.getenv("DATABASE_URL"))
+          has_token = bool(os.getenv("LMS_TOKEN"))
+          has_login = all(os.getenv(name) for name in ("FIREBASE_API_KEY", "LMS_LOGIN_EMAIL", "LMS_LOGIN_PASSWORD"))
+
+          missing = []
+          if not has_database:
+              missing.append("DATABASE_URL")
+          if not has_token and not has_login:
+              missing.append("LMS_TOKEN or FIREBASE_API_KEY + LMS_LOGIN_EMAIL + LMS_LOGIN_PASSWORD")
+
+          if missing:
+              print("Missing required GitHub Secrets:")
+              for item in missing:
+                  print(f"- {item}")
+              sys.exit(1)
+          PY
+
+      - name: Fetch data from LMS
+        run: python main.py
+
+      - name: Upload cache to Supabase
+        run: python scripts/sync_supabase_cache.py

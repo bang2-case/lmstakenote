@@ -2,10 +2,13 @@ import { useState, useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts'
 import { useCP } from '../hooks/useCP'
 import SingleSelect from '../components/SingleSelect'
+import RefreshButton from '../components/RefreshButton'
 import type { CPRecord, CPStudentDetail } from '../types'
+import { AREA_OPTIONS, centreMatchesArea, filterCentresByArea } from '../utils/areas'
 
 interface CPFilters {
   search: string
+  area: string
   centre: string
   mentor: string
   cpRound: '' | 'cp1' | 'cp2'
@@ -241,15 +244,22 @@ function CPModal({ record, onClose }: { record: CPRecord; onClose: () => void })
 export default function CPPage() {
   const { cpData, loading, error } = useCP()
   const [filters, setFilters] = useState<CPFilters>({
-    search: '', centre: '', mentor: '', cpRound: '', scoreRange: ''
+    search: '', area: '', centre: '', mentor: '', cpRound: '', scoreRange: ''
   })
   const [selectedRecord, setSelectedRecord] = useState<CPRecord | null>(null)
 
   const update = (key: keyof CPFilters, value: string) =>
     setFilters((f) => ({ ...f, [key]: value }))
 
+  const updateArea = (area: string) =>
+    setFilters((f) => ({
+      ...f,
+      area,
+      centre: area && !centreMatchesArea(f.centre, area) ? '' : f.centre,
+    }))
+
   const resetFilters = () =>
-    setFilters({ search: '', centre: '', mentor: '', cpRound: '', scoreRange: '' })
+    setFilters({ search: '', area: '', centre: '', mentor: '', cpRound: '', scoreRange: '' })
 
   const { centres, mentors } = useMemo(() => {
     const cs = new Set<string>()
@@ -261,9 +271,12 @@ export default function CPPage() {
     return { centres: Array.from(cs).sort(), mentors: Array.from(ms).sort() }
   }, [cpData])
 
+  const centreOptions = useMemo(() => filterCentresByArea(centres, filters.area), [centres, filters.area])
+
   const filtered = useMemo(() => {
     return cpData.filter((r) => {
       if (filters.search && !r.className.toLowerCase().includes(filters.search.toLowerCase())) return false
+      if (filters.area && !centreMatchesArea(r.centre, filters.area)) return false
       if (filters.centre && r.centre !== filters.centre) return false
       if (filters.mentor && !r.teachers.some((t) => t.name === filters.mentor)) return false
       if (filters.cpRound === 'cp1' && r.cp1Theory === null && r.cp1Practical === null) return false
@@ -310,7 +323,10 @@ export default function CPPage() {
           <h1 className="cp-page-banner-title">Quản lý CP</h1>
           <p className="cp-page-banner-sub">Checkpoint — Khối Coding</p>
         </div>
-        <span className="cp-page-badge">{filtered.length} / {cpData.length} lớp</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="cp-page-badge">{filtered.length} / {cpData.length} lớp</span>
+          <RefreshButton module="cp" />
+        </div>
       </div>
 
       {/* ── Chart ── */}
@@ -324,8 +340,14 @@ export default function CPPage() {
             onChange={(e) => update('search', e.target.value)} />
         </div>
         <SingleSelect
+          label="Khu vực"
+          options={AREA_OPTIONS}
+          value={filters.area}
+          onChange={updateArea}
+        />
+        <SingleSelect
           label="Cơ sở"
-          options={centres.map((c) => ({ value: c, label: c }))}
+          options={centreOptions.map((c) => ({ value: c, label: c }))}
           value={filters.centre}
           onChange={(v) => update('centre', v)}
         />

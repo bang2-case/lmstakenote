@@ -6,6 +6,7 @@ import MentorsPage from './pages/MentorsPage'
 import CRPage from './pages/CRPage'
 import TPPage from './pages/TPPage'
 import CPPage from './pages/CPPage'
+import AssignmentsPage from './pages/AssignmentsPage'
 import OHPage from './pages/OHPage'
 import DEMOPage from './pages/DEMOPage'
 import './App.css'
@@ -16,6 +17,7 @@ const pageRoutes: Record<Page, string> = {
   cr: '/cr',
   tp: '/tp',
   cp: '/cp',
+  assignments: '/assignments',
   oh: '/oh',
   demo: '/demo',
 }
@@ -60,6 +62,7 @@ export default function App() {
           <Route path="/cr" element={<CRPage />} />
           <Route path="/tp" element={<TPPage />} />
           <Route path="/cp" element={<CPPage />} />
+          <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/oh" element={<OHPage />} />
           <Route path="/demo" element={<DEMOPage />} />
           <Route path="*" element={<Navigate to="/classes" replace />} />

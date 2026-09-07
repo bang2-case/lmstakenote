@@ -27,6 +27,25 @@ def import_classes(data):
     conn = get_conn()
     c = conn.cursor()
     try:
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS class_students (
+                id              TEXT PRIMARY KEY,
+                classId         TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+                studentId       TEXT,
+                activeInClass   INTEGER DEFAULT 0,
+                completed       INTEGER DEFAULT 0,
+                attended        INTEGER DEFAULT 0,
+                note            TEXT,
+                grade           TEXT,
+                retentionDate   TEXT,
+                completionInfo  TEXT,
+                student         TEXT,
+                previousClass   TEXT
+            )
+        """)
+        c.execute("CREATE INDEX IF NOT EXISTS idx_class_students_classId ON class_students(classId)")
+        c.execute("CREATE INDEX IF NOT EXISTS idx_class_students_studentId ON class_students(studentId)")
+
         for item in data:
             cid = item["id"]
             c.execute("""
@@ -49,6 +68,23 @@ def import_classes(data):
             for t in item.get("teachers", []):
                 c.execute("INSERT INTO class_teachers (classId, name, email, role) VALUES (?,?,?,?)",
                           (cid, t.get("name"), t.get("email"), t.get("role")))
+            if "students" in item:
+                c.execute("DELETE FROM class_students WHERE classId=?", (cid,))
+                for s in item.get("students", []):
+                    student = s.get("student") or {}
+                    c.execute("""INSERT OR REPLACE INTO class_students
+                        (id, classId, studentId, activeInClass, completed, attended,
+                         note, grade, retentionDate, completionInfo, student, previousClass)
+                        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
+                        (s.get("id") or f"{cid}:{s.get('studentId') or student.get('id') or student.get('fullName') or ''}",
+                         cid, s.get("studentId") or student.get("id"),
+                         1 if s.get("activeInClass") else 0,
+                         1 if s.get("completed") else 0,
+                         1 if s.get("attended") else 0,
+                         s.get("note"), json.dumps(s.get("grade"), ensure_ascii=False), s.get("retentionDate"),
+                         json.dumps(s.get("completionInfo"), ensure_ascii=False),
+                         json.dumps(student, ensure_ascii=False),
+                         json.dumps(s.get("previousClass"), ensure_ascii=False)))
             c.execute("DELETE FROM slots WHERE classId=?", (cid,))
             for s in item.get("slots", []):
                 c.execute("""INSERT OR REPLACE INTO slots

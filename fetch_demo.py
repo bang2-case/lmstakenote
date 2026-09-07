@@ -84,6 +84,17 @@ def get_block(name: str) -> str:
     return "Coding"
 
 
+def get_class_status(item) -> str:
+    status = item.get("status") if isinstance(item, dict) else ""
+    if isinstance(status, dict):
+        status = status.get("name") or status.get("code") or status.get("value") or ""
+    return str(status or "").strip().upper()
+
+
+def is_running_class(item) -> bool:
+    return get_class_status(item) == "RUNNING"
+
+
 def fmt_time_utc7(iso: str) -> str:
     """Format ISO time string sang HH:MM (UTC+7)."""
     if not iso:
@@ -138,11 +149,12 @@ def day_of_week_vn(date_str: str) -> str:
 # GraphQL query — chỉ lấy fields cần thiết, không lấy studentAttendance
 # ─────────────────────────────────────────────────────────────────────────────
 
-DEMO_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $pageIndex: Int!, $itemsPerPage: Int!) {
+DEMO_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $status: String, $pageIndex: Int!, $itemsPerPage: Int!) {
   classes(payload: {
     centre_in: $centres,
     haveSlot_from: $haveSlotFrom,
     haveSlot_to: $haveSlotTo,
+    status_equals: $status,
     pageIndex: $pageIndex,
     itemsPerPage: $itemsPerPage,
     orderBy: "createdAt_desc"
@@ -150,6 +162,7 @@ DEMO_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveS
     data {
       id
       name
+      status
       centre { id name }
       teachers {
         teacher { fullName }
@@ -200,19 +213,20 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
 
     ITEMS_PER_PAGE = 100
 
-    TOTAL_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $pageIndex: Int!, $itemsPerPage: Int!) {
-  classes(payload: { centre_in: $centres, haveSlot_from: $haveSlotFrom, haveSlot_to: $haveSlotTo, pageIndex: $pageIndex, itemsPerPage: $itemsPerPage }) {
+    TOTAL_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $status: String, $pageIndex: Int!, $itemsPerPage: Int!) {
+  classes(payload: { centre_in: $centres, haveSlot_from: $haveSlotFrom, haveSlot_to: $haveSlotTo, status_equals: $status, pageIndex: $pageIndex, itemsPerPage: $itemsPerPage }) {
     pagination { total }
   }
 }"""
 
-    def fetch_page(page: int) -> list:
+    def fetch_page(page: int, from_date: str = date_from) -> list:
         payload = {
             "operationName": "GetClasses",
             "variables": {
                 "centres": DEMO_CENTRE_IDS,
-                "haveSlotFrom": date_from,
+                "haveSlotFrom": from_date,
                 "haveSlotTo": date_to,
+                "status": "RUNNING",
                 "pageIndex": page,
                 "itemsPerPage": ITEMS_PER_PAGE,
             },
@@ -229,13 +243,14 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
         except Exception:
             return []
 
-    def get_total() -> int:
+    def get_total(from_date: str = date_from) -> int:
         payload = {
             "operationName": "GetClasses",
             "variables": {
                 "centres": DEMO_CENTRE_IDS,
-                "haveSlotFrom": date_from,
+                "haveSlotFrom": from_date,
                 "haveSlotTo": date_to,
+                "status": "RUNNING",
                 "pageIndex": 0,
                 "itemsPerPage": 1,
             },
@@ -256,14 +271,25 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
             raise RuntimeError(f"Không thể kết nối LMS API: {e}")
 
     # Lấy tổng số lớp
-    total = get_total()
+    # Lùi haveSlotFrom 1 ngày để bắt được slot UTC buổi tối ngày trước
+    # (buổi học VN 08:00 = UTC 01:00 cùng ngày, nhưng buổi học 18:00 VN = UTC 11:00 cùng ngày)
+    # Thực tế các lớp học VN đều > UTC+7 nên slot.date UTC luôn = ngày VN, nhưng
+    # để an toàn lùi 1 ngày, filter sau bằng date_utc7() vẫn đảm bảo đúng
+    from datetime import timedelta as _td
+    try:
+        _dt_from = datetime.strptime(date_from, "%Y-%m-%d")
+        api_date_from = (_dt_from - _td(days=1)).strftime("%Y-%m-%d")
+    except Exception:
+        api_date_from = date_from
+
+    total = get_total(api_date_from)
     num_pages = max(1, (total + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
 
-    # Fetch song song tất cả pages (max 5 concurrent để tránh rate-limit)
+    # Fetch song song tất cả pages với api_date_from (lùi 1 ngày)
     import concurrent.futures
     all_raw = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(fetch_page, p): p for p in range(num_pages)}
+        futures = {executor.submit(fetch_page, p, api_date_from): p for p in range(num_pages)}
         for future in concurrent.futures.as_completed(futures):
             try:
                 all_raw.extend(future.result())
@@ -273,6 +299,9 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
     # Filter: chỉ lấy lớp có buổi 14 diễn ra trong khoảng date_from → date_to
     all_classes = []
     for c in all_raw:
+        if not is_running_class(c):
+            continue
+
         centre_id = (c.get("centre") or {}).get("id", "")
         centre_name = (c.get("centre") or {}).get("name", "")
         centre_info = DEMO_CENTRES.get(centre_id, {"name": centre_name, "area": "?"})
@@ -308,6 +337,7 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
         all_classes.append({
             "id":            c.get("id"),
             "name":          c.get("name", ""),
+            "status":        c.get("status", ""),
             "centre":        centre_info["name"].replace("HCM - ", ""),
             "centre_full":   centre_info["name"],
             "area":          centre_info["area"],
@@ -377,6 +407,8 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
 
     sheet_id = load_sheet_id()
     spreadsheet = gc.open_by_key(sheet_id)
+    classes = [c for c in classes if is_running_class(c)]
+    worksheets_before = spreadsheet.worksheets()
 
     # ── Tên tab = range ngày ──────────────────────────────────────────────
     if not date_to or date_to == date_from:
@@ -392,16 +424,41 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
         except Exception:
             tab_name = f"{date_from} - {date_to}"
 
+    def pick_format_template():
+        candidates = [
+            w for w in worksheets_before
+            if w.title != tab_name and not w.title.startswith("_temp_export_")
+        ]
+        dated = [w for w in candidates if re.search(r"\d{2}/\d{2}", w.title)]
+        return (dated or candidates or [None])[-1]
+
+    format_template_ws = pick_format_template()
+
     # ── Tạo/ghi đè tab ───────────────────────────────────────────────────
-    # Luôn tạo temp trước để tránh lỗi "can't remove all visible sheets"
-    temp_ws = spreadsheet.add_worksheet(title="_temp_export_", rows=1, cols=1)
+    # Chỉ tạo temp khi ghi đè sheet cuối cùng để tránh lỗi "can't remove all visible sheets".
+    temp_ws = None
     try:
         existing_ws = spreadsheet.worksheet(tab_name)
-        spreadsheet.del_worksheet(existing_ws)
     except gspread.exceptions.WorksheetNotFound:
-        pass
-    ws = spreadsheet.add_worksheet(title=tab_name, rows=300, cols=44)
-    spreadsheet.del_worksheet(temp_ws)
+        existing_ws = None
+
+    if existing_ws is not None:
+        if len(spreadsheet.worksheets()) <= 1:
+            temp_title = f"_temp_export_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
+            temp_ws = spreadsheet.add_worksheet(title=temp_title, rows=1, cols=1)
+        spreadsheet.del_worksheet(existing_ws)
+
+    sheet_rows = max(300, len(classes) + 20)
+    ws = spreadsheet.add_worksheet(title=tab_name, rows=sheet_rows, cols=44)
+    if temp_ws is not None:
+        spreadsheet.del_worksheet(temp_ws)
+
+    for stale_ws in spreadsheet.worksheets():
+        if stale_ws.id != ws.id and stale_ws.title.startswith("_temp_export_") and len(spreadsheet.worksheets()) > 1:
+            try:
+                spreadsheet.del_worksheet(stale_ws)
+            except Exception:
+                pass
     sid = ws.id
 
     # ── Phân loại theo khối ───────────────────────────────────────────────
@@ -566,7 +623,6 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
 
     # ── Merge bảng tổng hợp ───────────────────────────────────────────────
     # "Tổng lớp End/BA ( Khối )" cols B-E (1-4), row 10 (index 9)
-    reqs.append(merge(9, 10, 1, 5))
     # C9:E9 → merge cols C,D,E (index 2-4), row 9 (index 8) — text "Course"
     reqs.append(merge(8, 9, 2, 5))
 
@@ -712,6 +768,40 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
             inner_v_style="SOLID",
             inner_h_style="DOTTED",
         ))
+
+    if format_template_ws is not None:
+        try:
+            template_meta = service.spreadsheets().get(
+                spreadsheetId=sheet_id,
+                includeGridData=True,
+                fields="sheets(properties(sheetId,title),data(rowMetadata(pixelSize),columnMetadata(pixelSize)))",
+            ).execute()
+            template_sheet = next(
+                (
+                    s for s in template_meta.get("sheets", [])
+                    if s.get("properties", {}).get("sheetId") == format_template_ws.id
+                ),
+                None,
+            )
+            template_data = (template_sheet or {}).get("data", [{}])[0]
+            template_rows = (template_sheet or {}).get("properties", {}).get("gridProperties", {}).get("rowCount", sheet_rows)
+            copy_rows = min(sheet_rows, template_rows or sheet_rows)
+            reqs.append({"copyPaste": {
+                "source": rng(0, copy_rows, 0, 44) | {"sheetId": format_template_ws.id},
+                "destination": rng(0, copy_rows, 0, 44),
+                "pasteType": "PASTE_FORMAT",
+                "pasteOrientation": "NORMAL",
+            }})
+            for idx, meta in enumerate(template_data.get("columnMetadata", [])[:44]):
+                px = meta.get("pixelSize")
+                if px:
+                    reqs.append(col_width(idx, idx + 1, px))
+            for idx, meta in enumerate(template_data.get("rowMetadata", [])[:min(40, sheet_rows)]):
+                px = meta.get("pixelSize")
+                if px:
+                    reqs.append(row_height(idx, idx + 1, px))
+        except Exception:
+            pass
 
     service.spreadsheets().batchUpdate(
         spreadsheetId=sheet_id,

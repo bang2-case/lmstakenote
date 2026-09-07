@@ -1,8 +1,11 @@
 import { useState, useMemo } from 'react'
 import { useOH } from '../hooks/useOH'
 import SingleSelect from '../components/SingleSelect'
+import MultiSelect from '../components/MultiSelect'
 import DatePickerInput from '../components/DatePickerInput'
+import RefreshButton from '../components/RefreshButton'
 import type { OHRecord, OHAppointment } from '../types'
+import { AREA_OPTIONS, centreMatchesArea, filterCentresByArea } from '../utils/areas'
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -19,6 +22,8 @@ const APPT_STATUS_COLOR: Record<string, string> = {
   FAIL:     'oh-badge-fail',
   PASSED:   'oh-badge-passed',
 }
+
+const OH_BLOCK_OPTIONS = ['ART', 'CODING', 'ROBOTICS']
 
 function fmtTime(iso: string): string {
   if (!iso) return '—'
@@ -45,6 +50,17 @@ function getSubject(record: OHRecord): string {
 function getCourse(record: OHRecord): string {
   if (record.courses.length > 0) return record.courses.map(c => c.name).join(', ')
   return '—'
+}
+
+function getOHBlocks(record: OHRecord): string[] {
+  const blocks = new Set<string>()
+  for (const cl of record.courseLines) {
+    const name = cl.name.toUpperCase()
+    if (name.includes('XART') || name.includes('ART')) blocks.add('ART')
+    else if (name.includes('ROB') || name.includes('KIND')) blocks.add('ROBOTICS')
+    else blocks.add('CODING')
+  }
+  return Array.from(blocks)
 }
 
 // Tổng hợp trạng thái appointments của 1 OH
@@ -252,9 +268,12 @@ function OHSummaryModal({ records, onClose }: { records: OHRecord[]; onClose: ()
 // ── Main page ──────────────────────────────────────────────────────────────
 
 interface OHFilters {
+  area: string
   centre: string
+  block: string
   teacher: string
   subject: string
+  type: string[]
   apptStatus: string
   dateFrom: string
   dateTo: string
@@ -263,25 +282,34 @@ interface OHFilters {
 export default function OHPage() {
   const { ohData, loading, error } = useOH()
   const [filters, setFilters] = useState<OHFilters>({
-    centre: '', teacher: '', subject: '', apptStatus: '', dateFrom: '', dateTo: '',
+    area: '', centre: '', block: '', teacher: '', subject: '', type: [], apptStatus: '', dateFrom: '', dateTo: '',
   })
   const [selected, setSelected] = useState<OHRecord | null>(null)
   const [showSummary, setShowSummary] = useState(false)
 
-  const update = (key: keyof OHFilters, v: string) =>
+  const update = <K extends keyof OHFilters>(key: K, v: OHFilters[K]) =>
     setFilters(f => ({ ...f, [key]: v }))
 
+  const updateArea = (area: string) =>
+    setFilters((f) => ({
+      ...f,
+      area,
+      centre: area && !centreMatchesArea(f.centre, area) ? '' : f.centre,
+    }))
+
   const resetFilters = () =>
-    setFilters({ centre: '', teacher: '', subject: '', apptStatus: '', dateFrom: '', dateTo: '' })
+    setFilters({ area: '', centre: '', block: '', teacher: '', subject: '', type: [], apptStatus: '', dateFrom: '', dateTo: '' })
 
   // Build filter options
-  const { centres, teachers, subjects } = useMemo(() => {
+  const { centres, teachers, subjects, types } = useMemo(() => {
     const cs = new Set<string>()
     const ts = new Set<string>()
     const ss = new Set<string>()
+    const tys = new Set<string>()
     ohData.forEach(r => {
       if (r.centre?.name) cs.add(r.centre.name.replace('HCM - ', ''))
       if (r.teacher?.fullName) ts.add(r.teacher.fullName)
+      if (r.type) tys.add(r.type)
       // Bộ môn = courseLines
       r.courseLines.forEach(cl => ss.add(cl.name))
     })
@@ -289,8 +317,11 @@ export default function OHPage() {
       centres: Array.from(cs).sort(),
       teachers: Array.from(ts).sort(),
       subjects: Array.from(ss).sort(),
+      types: Array.from(tys).sort(),
     }
   }, [ohData])
+
+  const centreOptions = useMemo(() => filterCentresByArea(centres, filters.area), [centres, filters.area])
 
   // Stats
   const stats = useMemo(() => {
@@ -312,9 +343,12 @@ export default function OHPage() {
       const subject = getSubject(r)
       const centreName = r.centre?.name?.replace('HCM - ', '') ?? ''
 
+      if (filters.area && !centreMatchesArea(centreName, filters.area)) return false
       if (filters.centre && centreName !== filters.centre) return false
+      if (filters.block && !getOHBlocks(r).includes(filters.block)) return false
       if (filters.teacher && r.teacher?.fullName !== filters.teacher) return false
       if (filters.subject && !subject.includes(filters.subject)) return false
+      if (filters.type.length > 0 && !filters.type.includes(r.type)) return false
 
       if (filters.apptStatus) {
         const hasStatus = r.appointments.some(a => a.status === filters.apptStatus)
@@ -382,6 +416,7 @@ export default function OHPage() {
           </div>
         </div>
         <span className="oh-page-badge">{filtered.length} / {ohData.length} OH</span>
+        <RefreshButton module="oh" />
       </div>
 
       {/* Filters */}
@@ -392,10 +427,22 @@ export default function OHPage() {
           onChange={(from, to) => setFilters(f => ({ ...f, dateFrom: from, dateTo: to }))}
         />
         <SingleSelect
+          label="Khu vực"
+          options={AREA_OPTIONS}
+          value={filters.area}
+          onChange={updateArea}
+        />
+        <SingleSelect
           label="Cơ sở"
-          options={centres.map(c => ({ value: c, label: c }))}
+          options={centreOptions.map(c => ({ value: c, label: c }))}
           value={filters.centre}
           onChange={v => update('centre', v)}
+        />
+        <SingleSelect
+          label="Khối"
+          options={OH_BLOCK_OPTIONS.map(b => ({ value: b, label: b }))}
+          value={filters.block}
+          onChange={v => update('block', v)}
         />
         <SingleSelect
           label="Giáo viên"
@@ -408,6 +455,12 @@ export default function OHPage() {
           options={subjects.map(s => ({ value: s, label: s }))}
           value={filters.subject}
           onChange={v => update('subject', v)}
+        />
+        <MultiSelect
+          label="Type"
+          options={types}
+          selected={filters.type}
+          onChange={v => update('type', v)}
         />
         <SingleSelect
           label="Trạng thái"

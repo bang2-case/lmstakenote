@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react'
 export interface DemoClass {
   id: string
   name: string
+  status: string
   centre: string
   centre_full: string
   area: string
@@ -44,14 +45,16 @@ export function useDemo() {
       const data = await res.json()
       if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`)
       setClasses(data)
+      return data as DemoClass[]
     } catch (e: any) {
       setError(e.message)
+      throw e
     } finally {
       setLoading(false)
     }
   }, [])
 
-  const exportSheet = useCallback(async (date: string, dateTo: string = "") => {
+  const exportSheet = useCallback(async (date: string, dateTo: string = "", classesToExport?: DemoClass[]) => {
     setExporting(true)
     setError(null)
     setExportResult(null)
@@ -59,13 +62,15 @@ export function useDemo() {
       const res = await fetch('/api/demo/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ date, date_to: dateTo || date }),
+        body: JSON.stringify({ date, date_to: dateTo || date, classes: classesToExport }),
       })
       const data = await res.json()
       if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`)
       setExportResult(data)
+      return data as ExportResult
     } catch (e: any) {
       setError(e.message)
+      throw e
     } finally {
       setExporting(false)
     }

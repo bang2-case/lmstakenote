@@ -3,7 +3,9 @@ import { useClasses } from '../hooks/useClasses'
 import { useTP } from '../hooks/useTP'
 import ClassFiltersComponent from '../components/ClassFilters'
 import ClassDetail from '../components/ClassDetail'
+import RefreshButton from '../components/RefreshButton'
 import type { ClassItem, ClassFilters, Slot } from '../types'
+import { centreMatchesArea } from '../utils/areas'
 
 const STATUS_MAP: Record<string, string> = {
   PENDING: 'Pending',
@@ -120,30 +122,61 @@ function SummaryModal({ classes, onClose }: { classes: ClassItem[]; onClose: () 
   )
 }
 
-function ClassCard({ item, onClick, hasUncommentedSlots, hasPendingSurvey, pendingSurveyInfo }: { 
-  item: ClassItem; 
-  onClick: () => void; 
-  hasUncommentedSlots: boolean;
+// Helper: tính trạng thái nhận xét của 1 lớp dựa trên endTime từng slot
+// 'commented' | 'pending' (chưa quá hạn) | 'overdue' (đã quá hạn) | 'none'
+function getCommentStatus(classItem: ClassItem): 'commented' | 'pending' | 'overdue' | 'none' {
+  const now = new Date()
+  const OVERDUE_MS = 48 * 60 * 60 * 1000 // 48h tính từ endTime buổi học
+
+  const pastSlotsWithStudents = classItem.slots.filter(s => {
+    const endTime = new Date(s.endTime || s.date)
+    return endTime < now && s.studentsInSlot > 0
+  })
+
+  if (pastSlotsWithStudents.length === 0) return 'none'
+
+  const uncommented = pastSlotsWithStudents.filter(s => s.commentStatus !== 'Đã nhận xét')
+
+  if (uncommented.length === 0) return 'commented'
+
+  const hasOverdue = uncommented.some(s => {
+    const endTime = new Date(s.endTime || s.date)
+    return now.getTime() - endTime.getTime() > OVERDUE_MS
+  })
+
+  return hasOverdue ? 'overdue' : 'pending'
+}
+
+function ClassCard({ item, onClick, commentStatus, hasPendingSurvey, pendingSurveyInfo }: {
+  item: ClassItem;
+  onClick: () => void;
+  commentStatus: 'commented' | 'pending' | 'overdue' | 'none';
   hasPendingSurvey: boolean;
   pendingSurveyInfo?: { round: string; missing: number }[];
 }) {
   const mainTeacher = item.teachers[0]?.name || '—'
-  const cardClass = hasPendingSurvey ? 'card-pending-survey' : (hasUncommentedSlots ? 'card-uncommented' : '')
 
-  // Tìm các buổi đã qua nhưng chưa nhận xét
+  // Ưu tiên màu viền: pending survey > overdue > pending > commented
+  let cardClass = ''
+  if (hasPendingSurvey) {
+    cardClass = 'card-pending-survey'
+  } else if (commentStatus === 'overdue') {
+    cardClass = 'card-overdue'
+  } else if (commentStatus === 'pending') {
+    cardClass = 'card-comment-pending'
+  } else if (commentStatus === 'commented') {
+    cardClass = 'card-commented'
+  }
+
+  // Tìm các buổi đã qua nhưng chưa nhận xét (dùng endTime)
   const now = new Date()
   const uncommentedSlots = item.slots
     .map((s, i) => ({ ...s, index: i }))
     .filter(s => {
-      const d = new Date(s.date)
-      return d < now && s.commentStatus !== 'Đã nhận xét' && s.studentsInSlot > 0
+      const endTime = new Date(s.endTime || s.date)
+      return endTime < now && s.commentStatus !== 'Đã nhận xét' && s.studentsInSlot > 0
     })
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-
-  const hasPastSlotsWithStudents = item.slots.some(s => {
-    const d = new Date(s.date)
-    return d < now && s.studentsInSlot > 0
-  })
 
   return (
     <div className={`card ${cardClass}`} onClick={onClick}>
@@ -160,16 +193,15 @@ function ClassCard({ item, onClick, hasUncommentedSlots, hasPendingSurvey, pendi
       <p className="card-meta">👥 {item.studentCount} học viên</p>
 
       {/* Trạng thái nhận xét */}
-      {hasPastSlotsWithStudents && (
-        uncommentedSlots.length === 0 ? (
-          <p className="card-meta" style={{ color: '#16a34a', fontWeight: 600 }}>
-            ✅ Đã nhận xét đầy đủ
-          </p>
-        ) : (
-          <p className="card-meta" style={{ color: '#dc2626', fontWeight: 600 }}>
-            💬 Buổi chưa nhận xét: {uncommentedSlots.map(s => `Buổi ${s.index + 1}`).join(', ')}
-          </p>
-        )
+      {commentStatus === 'commented' && (
+        <p className="card-meta" style={{ color: '#16a34a', fontWeight: 600 }}>
+          ✅ Đã nhận xét đầy đủ
+        </p>
+      )}
+      {(commentStatus === 'pending' || commentStatus === 'overdue') && uncommentedSlots.length > 0 && (
+        <p className="card-meta" style={{ color: commentStatus === 'overdue' ? '#dc2626' : '#d97706', fontWeight: 600 }}>
+          💬 Buổi chưa nhận xét: {uncommentedSlots.map(s => `Buổi ${s.index + 1}`).join(', ')}
+        </p>
       )}
 
       {hasPendingSurvey && pendingSurveyInfo && pendingSurveyInfo.map(info => (
@@ -185,6 +217,7 @@ export default function ClassesPage() {
   const { classes, loading, error } = useClasses()
   const { tpData } = useTP()
   const [filters, setFilters] = useState<ClassFilters>({
+    area: '',
     centre: '',
     startDate: '',
     startDateTo: '',
@@ -238,6 +271,7 @@ export default function ClassesPage() {
   const filteredClasses = useMemo(() => {
     return classes.filter((c) => {
       if (filters.search && !c.name.toLowerCase().includes(filters.search.toLowerCase())) return false
+      if (filters.area && !centreMatchesArea(c.centre, filters.area)) return false
       if (filters.centre && c.centre !== filters.centre) return false
       if (filters.course && c.course !== filters.course) return false
       if (filters.status.length > 0 && !filters.status.includes(c.status)) return false
@@ -401,25 +435,36 @@ export default function ClassesPage() {
         
         // Lọc nhận xét cho các slot (trong range nếu có)
         if (filters.hasComments) {
-          const threshold = parseInt(filters.hasComments)
-          
-          if (threshold === 100) {
-            // Đã nhận xét - tất cả slots phải đã nhận xét hoặc chưa bắt đầu
-            const allCommented = slotsInRange.every(slot => 
-              slot.commentStatus === 'Đã nhận xét' || slot.commentStatus === 'Chưa bắt đầu'
-            )
-            if (!allCommented) return false
-          } else if (threshold === 0) {
-            // Chưa nhận xét - có ít nhất 1 slot chưa nhận xét (không bao gồm "Chưa bắt đầu")
-            const now = new Date()
-            const hasUncommented = slotsInRange.some(slot => {
-              const slotDate = new Date(slot.date)
-              // Chỉ tính những slot đã diễn ra và chưa nhận xét
-              return slotDate <= now && 
-                     slot.commentStatus !== 'Đã nhận xét' && 
-                     slot.commentStatus !== 'Chưa bắt đầu'
+          const now = new Date()
+          const OVERDUE_MS = 48 * 60 * 60 * 1000
+
+          const pastSlots = slotsInRange.filter(slot => {
+            const endTime = new Date(slot.endTime || slot.date)
+            return endTime < now && slot.studentsInSlot > 0
+          })
+
+          if (pastSlots.length === 0) return false
+
+          const uncommented = pastSlots.filter(s => s.commentStatus !== 'Đã nhận xét')
+
+          if (filters.hasComments === 'commented') {
+            if (uncommented.length > 0) return false
+          } else if (filters.hasComments === 'pending') {
+            // Chưa nhận xét + chưa quá hạn
+            if (uncommented.length === 0) return false
+            const hasOverdue = uncommented.some(s => {
+              const endTime = new Date(s.endTime || s.date)
+              return now.getTime() - endTime.getTime() > OVERDUE_MS
             })
-            if (!hasUncommented) return false
+            if (hasOverdue) return false
+          } else if (filters.hasComments === 'overdue') {
+            // Chưa nhận xét + đã quá hạn
+            if (uncommented.length === 0) return false
+            const hasOverdue = uncommented.some(s => {
+              const endTime = new Date(s.endTime || s.date)
+              return now.getTime() - endTime.getTime() > OVERDUE_MS
+            })
+            if (!hasOverdue) return false
           }
         }
       }
@@ -427,15 +472,6 @@ export default function ClassesPage() {
       return true
     })
   }, [classes, filters, tpData])
-
-  // Check if class has uncommented slots (for card styling)
-  const getHasUncommentedSlots = (classItem: ClassItem) => {
-    const now = new Date()
-    return classItem.slots.some(slot => {
-      const slotDate = new Date(slot.date)
-      return slotDate < now && slot.commentStatus !== 'Đã nhận xét'
-    })
-  }
 
   // Check if class has pending survey (for card styling)
   // Trả về array để hiển thị cả TP1 và TP2 nếu cả hai đều thiếu
@@ -506,7 +542,10 @@ export default function ClassesPage() {
           <h1 className="page-banner-title">Danh sách lớp học</h1>
           <p className="page-banner-sub">Quản lý và theo dõi tất cả lớp học</p>
         </div>
-        <span className="page-banner-badge">{filteredClasses.length} / {classes.length} lớp</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="page-banner-badge">{filteredClasses.length} / {classes.length} lớp</span>
+          <RefreshButton module="classes" />
+        </div>
       </div>
 
       <ClassFiltersComponent
@@ -528,7 +567,7 @@ export default function ClassesPage() {
               key={c.id} 
               item={c} 
               onClick={() => setSelectedClass(c)}
-              hasUncommentedSlots={getHasUncommentedSlots(c)}
+              commentStatus={getCommentStatus(c)}
               hasPendingSurvey={!!pendingSurveyInfo}
               pendingSurveyInfo={pendingSurveyInfo ?? undefined}
             />

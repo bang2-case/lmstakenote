@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -6,12 +6,12 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const requiredFiles = ['classes.json', 'teachers.json', 'tp.json', 'cp.json', 'oh.json'];
 
-function run(command, args) {
+function run(command, args, extraEnv = {}) {
   const result = spawnSync(command, args, {
     cwd: root,
     stdio: 'inherit',
     shell: process.platform === 'win32',
-    env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
+    env: { ...process.env, ...extraEnv, PYTHONIOENCODING: 'utf-8' },
   });
   return result.status === 0;
 }
@@ -36,20 +36,12 @@ function readEnvFile() {
   return values;
 }
 
-function writeBuildEnv(values) {
-  const lines = Object.entries(values)
-    .filter(([, value]) => value)
-    .map(([key, value]) => `${key}=${String(value).replace(/\r?\n/g, '')}`);
-
-  writeFileSync(join(root, '.env'), `${lines.join('\n')}\n`, 'utf8');
-}
-
-function getIdToken() {
+function getIdToken(extraEnv = {}) {
   const result = spawnSync('node', ['get-idtoken.js'], {
     cwd: root,
     encoding: 'utf8',
     shell: process.platform === 'win32',
-    env: { ...process.env },
+    env: { ...process.env, ...extraEnv },
   });
 
   if (result.status !== 0) {
@@ -62,7 +54,7 @@ function getIdToken() {
   return result.stdout.trim().split(/\r?\n/).at(-1);
 }
 
-function ensureMainPyEnv() {
+function loadMainPyEnv() {
   const existing = readEnvFile();
   const values = {
     ...existing,
@@ -75,10 +67,10 @@ function ensureMainPyEnv() {
 
   if (!values.LMS_TOKEN && values.FIREBASE_API_KEY && values.LMS_LOGIN_EMAIL && values.LMS_LOGIN_PASSWORD) {
     console.log('[prepare-data] Fetching LMS_TOKEN from login credentials.');
-    values.LMS_TOKEN = getIdToken();
+    values.LMS_TOKEN = getIdToken(values);
   }
 
-  writeBuildEnv(values);
+  return values;
 }
 
 function findPython() {
@@ -100,6 +92,12 @@ function findPython() {
 
 const missing = requiredFiles.filter((name) => !existsSync(join(root, 'public', name)));
 const forceFetch = process.env.FORCE_FETCH_DATA === '1';
+const skipPrepareData = process.env.SKIP_PREPARE_DATA === '1';
+
+if (skipPrepareData) {
+  console.log('[prepare-data] SKIP_PREPARE_DATA=1. Skipping LMS data generation.');
+  process.exit(0);
+}
 
 if (missing.length === 0 && !forceFetch) {
   console.log('[prepare-data] Static data files already exist. Skipping LMS fetch.');
@@ -113,7 +111,7 @@ if (!python) {
 }
 
 console.log(`[prepare-data] Generating LMS data. Missing: ${missing.join(', ') || 'none'}`);
-ensureMainPyEnv();
+const mainPyEnv = loadMainPyEnv();
 
 if (existsSync(join(root, 'requirements.txt'))) {
   const pipCommand = process.platform === 'win32' && python === 'py' ? 'py' : python;
@@ -130,7 +128,7 @@ if (existsSync(join(root, 'requirements.txt'))) {
 const mainCommand = process.platform === 'win32' && python === 'py' ? 'py' : python;
 const mainArgs = process.platform === 'win32' && python === 'py' ? ['-3', 'main.py'] : ['main.py'];
 
-if (!run(mainCommand, mainArgs)) {
+if (!run(mainCommand, mainArgs, mainPyEnv)) {
   console.error('[prepare-data] Failed to generate LMS data.');
   process.exit(1);
 }

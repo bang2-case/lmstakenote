@@ -2,7 +2,10 @@ import { useState, useMemo } from 'react'
 import { useTeachers } from '../hooks/useTeachers'
 import { useClasses } from '../hooks/useClasses'
 import MultiSelect from '../components/MultiSelect'
+import SingleSelect from '../components/SingleSelect'
+import RefreshButton from '../components/RefreshButton'
 import type { ClassItem, TeacherItem } from '../types'
+import { AREA_OPTIONS, centreMatchesArea, filterCentresByArea } from '../utils/areas'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -169,6 +172,7 @@ function TeacherDetail({
 
 interface TeacherFilters {
   search: string
+  area: string
   centres: string[]
   blocks: string[]
   birthMonth: string  // '1' - '12' hoặc ''
@@ -230,8 +234,8 @@ function SummaryModal({ teachers, onClose }: { teachers: TeacherItem[]; onClose:
 
 export default function MentorsPage() {
   const { teachers, loading, error } = useTeachers()
-  const { classes, loading: classesLoading, error: classesError } = useClasses()
-  const [filters, setFilters] = useState<TeacherFilters>({ search: '', centres: [], blocks: [], birthMonth: '' })
+  const { classes, loading: classesLoading, error: classesError } = useClasses({ includeSlots: false })
+  const [filters, setFilters] = useState<TeacherFilters>({ search: '', area: '', centres: [], blocks: [], birthMonth: '' })
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherItem | null>(null)
   const [showSummary, setShowSummary] = useState(false)
 
@@ -248,13 +252,26 @@ export default function MentorsPage() {
   const update = (key: keyof TeacherFilters, value: any) =>
     setFilters((f) => ({ ...f, [key]: value }))
 
+  const updateArea = (area: string) =>
+    setFilters((f) => ({
+      ...f,
+      area,
+      centres: area ? f.centres.filter((centre) => centreMatchesArea(centre, area)) : f.centres,
+    }))
+
+  const filteredCentreOptions = useMemo(
+    () => filterCentresByArea(centreOptions, filters.area),
+    [centreOptions, filters.area]
+  )
+
   // Apply filters
   const filtered = useMemo(() => {
     return teachers.filter((t) => {
       if (filters.search) {
-        const q = filters.search.toLowerCase()
-        if (!t.fullName.toLowerCase().includes(q)) return false
+          const q = filters.search.toLowerCase()
+          if (!t.fullName.toLowerCase().includes(q)) return false
       }
+      if (filters.area && !t.centres.some((c) => centreMatchesArea(c, filters.area))) return false
       if (filters.centres.length > 0 && !filters.centres.some((c) => t.centres.includes(c))) return false
       if (filters.blocks.length > 0 && !filters.blocks.some((b) => t.blocks.includes(b))) return false
       if (filters.birthMonth) {
@@ -286,9 +303,12 @@ export default function MentorsPage() {
       <div className="page-banner">
         <div>
           <h1 className="page-banner-title">Quản lý giáo viên</h1>
-          <p className="page-banner-sub">Danh sách giáo viên HCM4</p>
+          <p className="page-banner-sub">Danh sách giáo viên HCM 4</p>
         </div>
-        <span className="page-banner-badge">{filtered.length} / {teachers.length} giáo viên</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="page-banner-badge">{filtered.length} / {teachers.length} giáo viên</span>
+          <RefreshButton module="teachers" />
+        </div>
       </div>
 
       {/* Bộ lọc */}
@@ -310,9 +330,16 @@ export default function MentorsPage() {
           </div>
         </div>
 
+        <SingleSelect
+          label="Khu vực"
+          options={AREA_OPTIONS}
+          value={filters.area}
+          onChange={updateArea}
+        />
+
         <MultiSelect
           label="Cơ sở"
-          options={centreOptions}
+          options={filteredCentreOptions}
           selected={filters.centres}
           onChange={(val) => update('centres', val)}
           placeholder="Tất cả"
@@ -338,7 +365,7 @@ export default function MentorsPage() {
 
         <div className="filter-group">
           <label className="filter-label">&nbsp;</label>
-          <button className="btn-reset" onClick={() => setFilters({ search: '', centres: [], blocks: [], birthMonth: '' })}>
+          <button className="btn-reset" onClick={() => setFilters({ search: '', area: '', centres: [], blocks: [], birthMonth: '' })}>
             Xóa bộ lọc
           </button>
         </div>

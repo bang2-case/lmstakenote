@@ -61,6 +61,49 @@ def init_db():
     )
     """)
 
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS slot_comments (
+        id                TEXT PRIMARY KEY,
+        classId           TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+        slotId            TEXT NOT NULL REFERENCES slots(id) ON DELETE CASCADE,
+        sessionIndex      INTEGER,
+        slotDate          TEXT,
+        studentId         TEXT,
+        studentName       TEXT,
+        comment           TEXT,
+        sendCommentStatus TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS slot_students (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        classId     TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+        slotId      TEXT NOT NULL REFERENCES slots(id) ON DELETE CASCADE,
+        studentId   TEXT,
+        studentName TEXT,
+        status      TEXT
+    )
+    """)
+
+    # ── Class students (CR modal) ───────────────────────────────────────────
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS class_students (
+        id              TEXT PRIMARY KEY,
+        classId         TEXT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+        studentId       TEXT,
+        activeInClass   INTEGER DEFAULT 0,
+        completed       INTEGER DEFAULT 0,
+        attended        INTEGER DEFAULT 0,
+        note            TEXT,
+        grade           TEXT,
+        retentionDate   TEXT,
+        completionInfo  TEXT,
+        student         TEXT,
+        previousClass   TEXT
+    )
+    """)
+
     # ── Incomplete students (CR) ─────────────────────────────────────────────
     c.execute("""
     CREATE TABLE IF NOT EXISTS incomplete_students (
@@ -185,6 +228,74 @@ def init_db():
     """)
 
     # ── OH (Office Hours) ────────────────────────────────────────────────────
+    # Assignment / homework
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS assignment_records (
+        classId     TEXT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
+        className   TEXT,
+        centre      TEXT,
+        block       TEXT,
+        status      TEXT,
+        updatedAt   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS assignment_students (
+        id          TEXT,
+        classId     TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+        displayName TEXT,
+        studentUid  TEXT,
+        PRIMARY KEY (classId, studentUid)
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS assignment_lessons (
+        id               TEXT,
+        classId          TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+        name             TEXT,
+        type             TEXT,
+        isActive         INTEGER DEFAULT 0,
+        learningCourseId TEXT,
+        displayOrder     INTEGER,
+        PRIMARY KEY (classId, id)
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS assignment_submissions (
+        id                TEXT PRIMARY KEY,
+        classId           TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+        type              TEXT,
+        note              TEXT,
+        score             REAL,
+        status            TEXT,
+        category          TEXT,
+        lessonId          TEXT,
+        learningCourseId  TEXT,
+        studentUid        TEXT,
+        studentOriginalId TEXT,
+        classSessionId    TEXT,
+        markedAt          TEXT,
+        markedBy          TEXT,
+        createdAt         TEXT,
+        submittedAt       TEXT,
+        submittedCount    INTEGER DEFAULT 0,
+        contentJson       TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS assignment_teachers (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        classId     TEXT NOT NULL REFERENCES assignment_records(classId) ON DELETE CASCADE,
+        name        TEXT,
+        email       TEXT,
+        role        TEXT
+    )
+    """)
+
     c.execute("""
     CREATE TABLE IF NOT EXISTS oh_records (
         id              TEXT PRIMARY KEY,
@@ -258,6 +369,17 @@ def init_db():
     c.execute("CREATE INDEX IF NOT EXISTS idx_classes_centre  ON classes(centre)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_classes_block   ON classes(block)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_slots_classId   ON slots(classId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_slot_comments_classId ON slot_comments(classId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_slot_comments_slotId  ON slot_comments(slotId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_slot_students_classId ON slot_students(classId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_slot_students_slotId  ON slot_students(slotId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_class_students_classId ON class_students(classId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_class_students_studentId ON class_students(studentId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_assignment_students_classId ON assignment_students(classId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_assignment_lessons_classId ON assignment_lessons(classId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_assignment_submissions_classId ON assignment_submissions(classId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_assignment_submissions_lessonId ON assignment_submissions(lessonId)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_assignment_submissions_studentUid ON assignment_submissions(studentUid)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_tp_centre       ON tp_records(centre)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_cp_centre       ON cp_records(centre)")
 

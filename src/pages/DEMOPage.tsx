@@ -71,10 +71,14 @@ export default function DEMOPage() {
   // Dùng dateFrom (ngày bắt đầu) làm ngày lọc chính
   const activeDate = dateFrom
 
-  const handleExport = () => {
+  const handleExport = async () => {
     if (activeDate) {
-      fetchClasses(activeDate, dateTo)
-      exportSheet(activeDate, dateTo)
+      try {
+        const latestClasses = await fetchClasses(activeDate, dateTo)
+        await exportSheet(activeDate, dateTo, latestClasses)
+      } catch {
+        // Error state is handled by useDemo.
+      }
     }
   }
 
