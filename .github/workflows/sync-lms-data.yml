@@ -77,6 +77,18 @@ jobs:
                   f.write("- LMS auth: configured\n")
           PY
 
+      - name: Resolve LMS token from login credentials
+        if: ${{ env.LMS_TOKEN == '' }}
+        run: |
+          echo "LMS_TOKEN was not provided. Fetching a fresh token from login credentials..."
+          TOKEN="$(node get-idtoken.js | tail -n 1)"
+          if [ -z "$TOKEN" ]; then
+            echo "::error title=Token refresh failed::get-idtoken.js returned an empty token"
+            exit 1
+          fi
+          echo "::add-mask::$TOKEN"
+          echo "LMS_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
       - name: Fetch data from LMS
         run: python main.py
 

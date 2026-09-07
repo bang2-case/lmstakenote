@@ -50,8 +50,13 @@ def _normalize_database_url(database_url: str) -> str:
 
 
 def use_supabase_cache() -> bool:
+    return wants_supabase_cache() and bool(get_database_url())
+
+
+def wants_supabase_cache() -> bool:
     flag = get_env_value("USE_SUPABASE", "0").lower()
-    return bool(get_database_url()) and (flag in {"1", "true", "yes", "on"} or bool(os.getenv("VERCEL")))
+    is_vercel = bool(os.getenv("VERCEL")) or bool(os.getenv("VERCEL_ENV"))
+    return flag in {"1", "true", "yes", "on"} or is_vercel
 
 
 def _connect():

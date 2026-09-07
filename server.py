@@ -30,6 +30,7 @@ from supabase_cache import (
     read_classes_summary_cache,
     strip_class_slots,
     use_supabase_cache,
+    wants_supabase_cache,
     write_class_students_cache,
 )
 
@@ -1129,12 +1130,12 @@ async def websocket_endpoint(ws: WebSocket):
 
 @app.get("/api/token-status")
 def token_status():
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return {
             "valid": True,
             "expires_at": None,
             "remaining_minutes": 999999,
-            "message": "Đang dùng Supabase cache",
+            "message": "Đang dùng Supabase cache" if use_supabase_cache() else "Supabase cache mode thiếu DATABASE_URL",
             "mode": "supabase_cache",
             "auto_refresh": {"configured": False, "missing": []},
         }
@@ -1158,7 +1159,7 @@ def token_status():
 @app.post("/api/refresh")
 async def manual_refresh(background_tasks: BackgroundTasks):
     """Trigger manual fetch."""
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return JSONResponse({
             "ok": False,
             "message": "Bản deploy đang dùng Supabase cache. Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data.",
@@ -1270,6 +1271,14 @@ async def cancel_module_fetch(module: str):
 
 @app.get("/api/fetch-status")
 def fetch_status():
+    if wants_supabase_cache():
+        return {
+            "is_fetching": False,
+            "last_fetch": None,
+            "last_status": "success" if use_supabase_cache() else "error",
+            "last_message": "Dữ liệu từ Supabase" if use_supabase_cache() else "Missing DATABASE_URL in environment",
+            "next_fetch": None,
+        }
     return current_fetch_state()
 
 
@@ -1440,7 +1449,7 @@ async def run_module_fetch(module: str):
 
 @app.post("/api/refresh/classes")
 async def refresh_classes():
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["classes"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải classes..."})
@@ -1450,7 +1459,7 @@ async def refresh_classes():
 
 @app.post("/api/refresh/teachers")
 async def refresh_teachers():
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["teachers"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải teachers..."})
@@ -1460,7 +1469,7 @@ async def refresh_teachers():
 
 @app.post("/api/refresh/tp")
 async def refresh_tp():
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["tp"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải TP..."})
@@ -1470,7 +1479,7 @@ async def refresh_tp():
 
 @app.post("/api/refresh/cp")
 async def refresh_cp():
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["cp"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải CP..."})
@@ -1480,7 +1489,7 @@ async def refresh_cp():
 
 @app.post("/api/refresh/oh")
 async def refresh_oh():
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["oh"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Đang tải OH..."})
@@ -1490,7 +1499,7 @@ async def refresh_oh():
 
 @app.post("/api/refresh/assignments")
 async def refresh_assignments():
-    if use_supabase_cache():
+    if wants_supabase_cache():
         return JSONResponse({"ok": False, "message": "Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data."}, status_code=409)
     if module_fetch_state["assignments"]["is_fetching"]:
         return JSONResponse({"ok": False, "message": "Dang tai assignments..."})
