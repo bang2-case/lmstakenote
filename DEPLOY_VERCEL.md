@@ -58,6 +58,7 @@ GOOGLE_SHEET_ID=optional
 ```
 
 `SKIP_PREPARE_DATA=1` keeps Vercel builds fast and avoids running the long LMS fetch during deploy.
+`vercel.json` also sets this for the build command, so Vercel should not try to run `python main.py` while deploying.
 
 ## Notes
 

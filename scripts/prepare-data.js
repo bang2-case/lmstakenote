@@ -93,9 +93,12 @@ function findPython() {
 const missing = requiredFiles.filter((name) => !existsSync(join(root, 'public', name)));
 const forceFetch = process.env.FORCE_FETCH_DATA === '1';
 const skipPrepareData = process.env.SKIP_PREPARE_DATA === '1';
+const isVercelBuild = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_ENV);
+const useSupabase = ['1', 'true', 'yes', 'on'].includes((process.env.USE_SUPABASE || '').toLowerCase());
 
-if (skipPrepareData) {
-  console.log('[prepare-data] SKIP_PREPARE_DATA=1. Skipping LMS data generation.');
+if (skipPrepareData || (isVercelBuild && useSupabase)) {
+  const reason = skipPrepareData ? 'SKIP_PREPARE_DATA=1' : 'Vercel Supabase mode';
+  console.log(`[prepare-data] ${reason}. Skipping LMS data generation.`);
   process.exit(0);
 }
 
