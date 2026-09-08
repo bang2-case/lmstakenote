@@ -580,7 +580,7 @@ function AssignmentsModal({ row, onClose }: { row: AssignmentRow; onClose: () =>
 }
 
 export default function AssignmentsPage() {
-  const { classes, loading: classesLoading, error: classesError } = useClasses()
+  const { classes, loading: classesLoading, error: classesError } = useClasses({ includeSlots: false })
   const { assignmentData, assignmentErrors, loading: assignmentsLoading, error: assignmentsError } = useAssignments()
   const [filters, setFilters] = useState<AssignmentFilters>({
     search: '',

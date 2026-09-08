@@ -16,14 +16,9 @@ export function useTeachers() {
         setTeachers(data)
         setError(null)
       })
-      .catch(() => {
-        fetch('/teachers.json')
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
-          })
-          .then((data: TeacherItem[]) => setTeachers(data))
-          .catch((e) => setError(e.message))
+      .catch((e) => {
+        setTeachers([])
+        setError(e.message)
       })
       .finally(() => setLoading(false))
   }, [])

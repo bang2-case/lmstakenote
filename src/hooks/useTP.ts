@@ -16,14 +16,9 @@ export function useTP() {
         setTpData(data)
         setError(null)
       })
-      .catch(() => {
-        fetch('/tp.json')
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
-          })
-          .then((data: TPRecord[]) => setTpData(data))
-          .catch((e) => setError(e.message))
+      .catch((e) => {
+        setTpData([])
+        setError(e.message)
       })
       .finally(() => setLoading(false))
   }, [])

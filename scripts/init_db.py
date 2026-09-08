@@ -297,6 +297,19 @@ def init_db():
     """)
 
     c.execute("""
+    CREATE TABLE IF NOT EXISTS assignment_fetch_errors (
+        classId    TEXT PRIMARY KEY,
+        className  TEXT,
+        centre     TEXT,
+        block      TEXT,
+        status     TEXT,
+        errorType  TEXT,
+        message    TEXT,
+        fetchedAt  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    c.execute("""
     CREATE TABLE IF NOT EXISTS oh_records (
         id              TEXT PRIMARY KEY,
         startTime       TEXT,

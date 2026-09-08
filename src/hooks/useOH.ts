@@ -17,17 +17,9 @@ export function useOH() {
         setOhData(data)
         setError(null)
       })
-      .catch(() => {
-        fetch('/oh.json')
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
-          })
-          .then((data: OHRecord[]) => {
-            setOhData(data)
-            setError(null)
-          })
-          .catch((e) => setError(e.message))
+      .catch((e) => {
+        setOhData([])
+        setError(e.message)
       })
       .finally(() => setLoading(false))
   }, [])

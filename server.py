@@ -26,12 +26,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from supabase_cache import (
     read_api_cache,
+    read_assignment_detail_db,
+    read_assignments_db,
     read_class_students_cache,
+    read_class_students_db,
+    read_classes_db,
     read_classes_summary_cache,
+    read_comment_rows_db,
+    read_cp_db,
+    read_oh_db,
+    read_slot_students_db,
+    read_teachers_db,
+    read_tp_db,
     strip_class_slots,
     use_supabase_cache,
     wants_supabase_cache,
     write_class_students_cache,
+    write_class_students_db,
 )
 
 # UTF-8 JSON response to fix Vietnamese encoding
@@ -311,7 +322,22 @@ def decode_class_student_row(row: dict) -> dict:
 
 
 def get_attended_student_ids(class_id: str) -> set[str]:
-    if use_supabase_cache() and not os.path.exists(DB_PATH):
+    if use_supabase_cache():
+        try:
+            slots = read_slot_students_db(class_id)
+            return {
+                student.get("id")
+                for students in slots.values()
+                for student in students
+                if student.get("id")
+            }
+        except Exception:
+            if os.path.exists(DB_PATH):
+                pass
+            else:
+                return set()
+
+    if not os.path.exists(DB_PATH):
         return set()
     ensure_slot_students_table()
     rows = query("""
@@ -638,18 +664,6 @@ def ensure_assignment_tables(conn: sqlite3.Connection):
         CREATE INDEX IF NOT EXISTS idx_assignment_submissions_studentUid ON assignment_submissions(studentUid);
     """)
     conn.commit()
-
-
-def load_assignments_cache() -> list:
-    cache_path = os.path.join(os.path.dirname(__file__), "public", "assignments.json")
-    if not os.path.exists(cache_path):
-        return []
-    try:
-        with open(cache_path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, list) else []
-    except Exception:
-        return []
 
 
 def normalize_comment_text(value: str | None) -> str:
@@ -1135,7 +1149,7 @@ def token_status():
             "valid": True,
             "expires_at": None,
             "remaining_minutes": 999999,
-            "message": "Đang dùng Supabase cache" if use_supabase_cache() else "Supabase cache mode thiếu DATABASE_URL",
+            "message": "Đang dùng Supabase database" if use_supabase_cache() else "Supabase database mode thiếu DATABASE_URL",
             "mode": "supabase_cache",
             "auto_refresh": {"configured": False, "missing": []},
         }
@@ -1162,7 +1176,7 @@ async def manual_refresh(background_tasks: BackgroundTasks):
     if wants_supabase_cache():
         return JSONResponse({
             "ok": False,
-            "message": "Bản deploy đang dùng Supabase cache. Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data.",
+            "message": "Bản deploy đang dùng Supabase database. Hãy cập nhật dữ liệu bằng GitHub Actions: Sync LMS Data.",
         }, status_code=409)
 
     if fetch_state["is_fetching"]:
@@ -1276,7 +1290,7 @@ def fetch_status():
             "is_fetching": False,
             "last_fetch": None,
             "last_status": "success" if use_supabase_cache() else "error",
-            "last_message": "Dữ liệu từ Supabase" if use_supabase_cache() else "Missing DATABASE_URL in environment",
+            "last_message": "Dữ liệu từ Supabase database" if use_supabase_cache() else "Missing DATABASE_URL in environment",
             "next_fetch": None,
         }
     return current_fetch_state()
@@ -1554,6 +1568,16 @@ async def export_demo_to_sheet(request: Request):
 def get_classes(include_slot_students: bool = False, include_students: bool = False, include_slots: bool = True):
     if use_supabase_cache():
         try:
+            relational = read_classes_db(
+                include_slot_students=include_slot_students,
+                include_students=include_students,
+                include_slots=include_slots,
+            )
+            if relational is not None:
+                return relational
+        except Exception as relational_error:
+            fallback_error = relational_error
+        try:
             if include_slots:
                 cached = read_api_cache("classes")
                 if cached is None:
@@ -1566,9 +1590,9 @@ def get_classes(include_slot_students: bool = False, include_students: bool = Fa
             if cached is not None:
                 return cached
         except Exception as e:
-            return JSONResponse({"error": f"Supabase cache error: {e}"}, status_code=503)
+            return JSONResponse({"error": f"Supabase database error: {fallback_error}; fallback cache error: {e}"}, status_code=503)
         return JSONResponse(
-            {"error": "Supabase classes cache missing. Run python scripts/sync_supabase_cache.py."},
+            {"error": f"Supabase classes data missing. Run GitHub Actions: Sync LMS Data. Detail: {fallback_error}"},
             status_code=503,
         )
 
@@ -1675,11 +1699,12 @@ def get_classes(include_slot_students: bool = False, include_students: bool = Fa
 def get_class_students(class_id: str):
     if use_supabase_cache():
         try:
-            cached = read_class_students_cache(class_id)
+            cached = read_class_students_db(class_id) or read_class_students_cache(class_id)
         except Exception:
             cached = None
         try:
             students = fetch_class_students_from_lms(class_id)
+            write_class_students_db(class_id, students)
             write_class_students_cache(class_id, students)
             return students
         except Exception as e:
@@ -1703,6 +1728,12 @@ def get_class_students(class_id: str):
 
 @app.get("/api/classes/{class_id}/slot-students")
 def get_class_slot_students(class_id: str):
+    if use_supabase_cache():
+        try:
+            return read_slot_students_db(class_id)
+        except Exception as e:
+            return JSONResponse({"error": f"Supabase slot students error: {e}"}, status_code=503)
+
     if not os.path.exists(DB_PATH):
         return JSONResponse({"error": "DB not found."}, status_code=503)
 
@@ -1728,20 +1759,21 @@ def get_class_slot_students(class_id: str):
 def get_assignments():
     if use_supabase_cache():
         try:
+            return read_assignments_db()
+        except Exception as relational_error:
+            fallback_error = relational_error
+        try:
             cached = read_api_cache("assignments")
             if cached is not None:
                 return {"records": cached, "errors": []}
         except Exception as e:
-            return JSONResponse({"error": f"Supabase cache error: {e}"}, status_code=503)
+            return JSONResponse({"error": f"Supabase database error: {fallback_error}; fallback cache error: {e}"}, status_code=503)
         return JSONResponse(
-            {"error": "Supabase cache missing 'assignments'. Run python scripts/sync_supabase_cache.py."},
+            {"error": f"Supabase assignments data missing. Run GitHub Actions: Sync LMS Data. Detail: {fallback_error}"},
             status_code=503,
         )
 
-    cached = load_assignments_cache()
     if not os.path.exists(DB_PATH):
-        if cached:
-            return cached
         return JSONResponse({"error": "DB not found."}, status_code=503)
 
     conn = get_db()
@@ -1761,7 +1793,7 @@ def get_assignments():
             ORDER BY e.fetchedAt DESC, e.className
         """).fetchall()]
         if not records:
-            return {"records": cached, "errors": error_rows}
+            return {"records": [], "errors": error_rows}
 
         student_counts = {
             r["classId"]: r["total"]
@@ -1953,6 +1985,15 @@ def build_assignment_detail(conn: sqlite3.Connection, class_id: str) -> dict | N
 
 @app.get("/api/assignments/{class_id}")
 def get_assignment_detail(class_id: str):
+    if use_supabase_cache():
+        try:
+            detail = read_assignment_detail_db(class_id)
+        except Exception as e:
+            return JSONResponse({"error": f"Supabase assignment detail error: {e}"}, status_code=503)
+        if not detail:
+            return JSONResponse({"error": "Assignment data not found."}, status_code=404)
+        return detail
+
     if not os.path.exists(DB_PATH):
         return JSONResponse({"error": "DB not found."}, status_code=503)
 
@@ -1970,17 +2011,23 @@ def get_assignment_detail(class_id: str):
 
 @app.get("/api/classes/{class_id}/comment-duplicates")
 def get_class_comment_duplicates(class_id: str):
-    if not os.path.exists(DB_PATH):
-        return JSONResponse({"error": "DB not found. Run python main.py first."}, status_code=503)
+    if use_supabase_cache():
+        try:
+            rows = read_comment_rows_db(class_id)
+        except Exception as e:
+            return JSONResponse({"error": f"Supabase comment duplicates error: {e}"}, status_code=503)
+    else:
+        if not os.path.exists(DB_PATH):
+            return JSONResponse({"error": "DB not found. Run python main.py first."}, status_code=503)
 
-    ensure_slot_comments_table()
-    rows = query("""
-        SELECT id, classId, slotId, sessionIndex, slotDate, studentId,
-               studentName, comment, sendCommentStatus
-        FROM slot_comments
-        WHERE classId = ?
-        ORDER BY sessionIndex, studentName
-    """, (class_id,))
+        ensure_slot_comments_table()
+        rows = query("""
+            SELECT id, classId, slotId, sessionIndex, slotDate, studentId,
+                   studentName, comment, sendCommentStatus
+            FROM slot_comments
+            WHERE classId = ?
+            ORDER BY sessionIndex, studentName
+        """, (class_id,))
 
     comments = []
     for row in rows:
@@ -2009,13 +2056,17 @@ def get_class_comment_duplicates(class_id: str):
 def get_teachers():
     if use_supabase_cache():
         try:
+            return read_teachers_db()
+        except Exception as relational_error:
+            fallback_error = relational_error
+        try:
             cached = read_api_cache("teachers")
             if cached is not None:
                 return cached
         except Exception as e:
-            return JSONResponse({"error": f"Supabase cache error: {e}"}, status_code=503)
+            return JSONResponse({"error": f"Supabase database error: {fallback_error}; fallback cache error: {e}"}, status_code=503)
         return JSONResponse(
-            {"error": "Supabase cache missing 'teachers'. Run python scripts/sync_supabase_cache.py."},
+            {"error": f"Supabase teachers data missing. Run GitHub Actions: Sync LMS Data. Detail: {fallback_error}"},
             status_code=503,
         )
 
@@ -2067,13 +2118,17 @@ def get_teachers():
 def get_tp():
     if use_supabase_cache():
         try:
+            return read_tp_db()
+        except Exception as relational_error:
+            fallback_error = relational_error
+        try:
             cached = read_api_cache("tp")
             if cached is not None:
                 return cached
         except Exception as e:
-            return JSONResponse({"error": f"Supabase cache error: {e}"}, status_code=503)
+            return JSONResponse({"error": f"Supabase database error: {fallback_error}; fallback cache error: {e}"}, status_code=503)
         return JSONResponse(
-            {"error": "Supabase cache missing 'tp'. Run python scripts/sync_supabase_cache.py."},
+            {"error": f"Supabase TP data missing. Run GitHub Actions: Sync LMS Data. Detail: {fallback_error}"},
             status_code=503,
         )
 
@@ -2131,13 +2186,17 @@ def get_tp():
 def get_cp():
     if use_supabase_cache():
         try:
+            return read_cp_db()
+        except Exception as relational_error:
+            fallback_error = relational_error
+        try:
             cached = read_api_cache("cp")
             if cached is not None:
                 return cached
         except Exception as e:
-            return JSONResponse({"error": f"Supabase cache error: {e}"}, status_code=503)
+            return JSONResponse({"error": f"Supabase database error: {fallback_error}; fallback cache error: {e}"}, status_code=503)
         return JSONResponse(
-            {"error": "Supabase cache missing 'cp'. Run python scripts/sync_supabase_cache.py."},
+            {"error": f"Supabase CP data missing. Run GitHub Actions: Sync LMS Data. Detail: {fallback_error}"},
             status_code=503,
         )
 
@@ -2191,13 +2250,17 @@ def get_cp():
 def get_oh():
     if use_supabase_cache():
         try:
+            return read_oh_db()
+        except Exception as relational_error:
+            fallback_error = relational_error
+        try:
             cached = read_api_cache("oh")
             if cached is not None:
                 return cached
         except Exception as e:
-            return JSONResponse({"error": f"Supabase cache error: {e}"}, status_code=503)
+            return JSONResponse({"error": f"Supabase database error: {fallback_error}; fallback cache error: {e}"}, status_code=503)
         return JSONResponse(
-            {"error": "Supabase cache missing 'oh'. Run python scripts/sync_supabase_cache.py."},
+            {"error": f"Supabase OH data missing. Run GitHub Actions: Sync LMS Data. Detail: {fallback_error}"},
             status_code=503,
         )
 

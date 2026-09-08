@@ -32,23 +32,10 @@ export function useAssignments() {
         setAssignmentErrors(payload.errors)
         setError(null)
       })
-      .catch(() => {
-        return fetch('/assignments.json')
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
-          })
-          .then((data: AssignmentResponse) => {
-            const payload = normalizeAssignmentResponse(data)
-            setAssignmentData(payload.records)
-            setAssignmentErrors(payload.errors)
-            setError(null)
-          })
-          .catch((e) => {
-            setAssignmentData([])
-            setAssignmentErrors([])
-            setError(e.message)
-          })
+      .catch((e) => {
+        setAssignmentData([])
+        setAssignmentErrors([])
+        setError(e.message)
       })
       .finally(() => setLoading(false))
   }, [])

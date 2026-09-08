@@ -14,13 +14,13 @@ For class-only refresh:
 python main.py --only=classes
 ```
 
-2. Upload deploy cache to Supabase:
+2. Upload database tables to Supabase:
 
 ```bash
-python scripts/sync_supabase_cache.py
+python scripts/sync_supabase_db.py
 ```
 
-This uploads lightweight class summaries plus teachers, TP, CP, OH, and assignment summaries.
+This uploads all generated SQLite tables into the private `lms` schema in Supabase. It also writes a small legacy cache as a fallback, but the deployed API reads the relational tables first.
 
 ## GitHub Actions sync flow
 
@@ -42,8 +42,8 @@ GitHub Actions secrets are separate from Vercel Environment Variables. Values ad
 
 3. Open `Actions` -> `Sync LMS Data` -> `Run workflow`.
 
-The workflow runs `python main.py` and then `python scripts/sync_supabase_cache.py`, so Vercel will read the updated Supabase cache without a new deploy.
-On the deployed website, the in-app refresh buttons are disabled in Supabase cache mode. Use this GitHub Action whenever you want fresh data.
+The workflow runs `python main.py` and then `python scripts/sync_supabase_db.py`, so Vercel will read the updated Supabase database without a new deploy.
+On the deployed website, the in-app refresh buttons are disabled in Supabase database mode. Use this GitHub Action whenever you want fresh data.
 
 ## Vercel environment variables
 
@@ -66,5 +66,6 @@ GOOGLE_SHEET_ID=optional
 ## Notes
 
 - `/cr`, `/tp`, and `/mentors` use lightweight class summaries, so they do not download all slots.
-- Student data in `/cr` is fetched on demand per class and cached in Supabase.
-- Full slot-heavy class data is still local-first. Do not upload `public/classes.json` with slots unless you intentionally need it; it is very large.
+- Student data in `/cr` is fetched on demand per class and saved back into `lms.class_students`.
+- Full slot-heavy class data now lives in relational Supabase tables (`lms.slots`, `lms.slot_students`, `lms.slot_comments`) instead of relying on `public/classes.json`.
+- The `lms` schema is intended for server-side access through `DATABASE_URL`; do not expose it through frontend Supabase keys.

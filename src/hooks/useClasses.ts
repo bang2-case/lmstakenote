@@ -28,14 +28,9 @@ export function useClasses(options: UseClassesOptions = {}) {
         setClasses(data)
         setError(null)
       })
-      .catch(() => {
-        fetch('/classes.json')
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
-          })
-          .then((data: ClassItem[]) => setClasses(data))
-          .catch((e) => setError(e.message))
+      .catch((e) => {
+        setClasses([])
+        setError(e.message)
       })
       .finally(() => setLoading(false))
   }, [includeStudents, includeSlots])

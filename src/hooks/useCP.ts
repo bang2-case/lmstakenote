@@ -16,14 +16,9 @@ export function useCP() {
         setCpData(data)
         setError(null)
       })
-      .catch(() => {
-        fetch('/cp.json')
-          .then((res) => {
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
-            return res.json()
-          })
-          .then((data: CPRecord[]) => setCpData(data))
-          .catch((e) => setError(e.message))
+      .catch((e) => {
+        setCpData([])
+        setError(e.message)
       })
       .finally(() => setLoading(false))
   }, [])

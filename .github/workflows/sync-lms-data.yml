@@ -9,7 +9,7 @@ concurrency:
 
 jobs:
   sync:
-    name: Fetch LMS data and upload Supabase cache
+    name: Fetch LMS data and upload Supabase database
     runs-on: ubuntu-latest
     timeout-minutes: 120
 
@@ -156,15 +156,15 @@ jobs:
             exit 1
           fi
 
-      - name: Upload cache to Supabase
+      - name: Upload relational tables to Supabase
         run: |
           set -o pipefail
-          if ! python scripts/sync_supabase_cache.py 2>&1 | tee sync_supabase_cache.log; then
+          if ! python scripts/sync_supabase_db.py 2>&1 | tee sync_supabase_db.log; then
             {
-              echo "## Upload cache to Supabase failed"
+              echo "## Upload relational tables to Supabase failed"
               echo
               echo '```text'
-              tail -n 80 sync_supabase_cache.log
+              tail -n 80 sync_supabase_db.log
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
             exit 1

@@ -17,6 +17,9 @@ __pycache__/
 *.pyc
 *.pyo
 
+# Runtime locks
+.fetch.lock
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -30,6 +33,7 @@ public/teachers.json
 public/tp.json
 public/cp.json
 public/oh.json
+public/assignments.json
 
 # Debug/test scripts (temporary)
 debug_*.py
