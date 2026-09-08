@@ -20,7 +20,13 @@ python main.py --only=classes
 python scripts/sync_supabase_db.py
 ```
 
-This uploads all generated SQLite tables into the private `lms` schema in Supabase. It also writes a small legacy cache as a fallback, but the deployed API reads the relational tables first.
+This uploads all generated SQLite tables into the private `lms` schema in Supabase. The deployed API reads these relational tables first.
+
+The legacy JSON cache is optional. Only run it manually if you need to debug an older deploy:
+
+```bash
+python scripts/sync_supabase_db.py --with-fallback-cache
+```
 
 ## GitHub Actions sync flow
 

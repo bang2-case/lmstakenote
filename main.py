@@ -2674,6 +2674,10 @@ if __name__ == "__main__":
 
     if errors:
         print(f"⚠ Lỗi phase 1: {errors}")
+        sys.exit(1)
+    if not classes_result["data"]:
+        print("❌ Không tải được dữ liệu lớp; dừng để tránh upload dữ liệu rỗng.")
+        sys.exit(1)
 
     # Lưu ngay sau phase 1
     data = classes_result["data"]
@@ -2717,6 +2721,7 @@ if __name__ == "__main__":
 
     if errors:
         print(f"⚠ Lỗi phase 2: {errors}")
+        sys.exit(1)
 
     save_tp(tp_result["data"])
     save_cp(cp_result["data"])
@@ -2733,6 +2738,10 @@ if __name__ == "__main__":
     except Exception as e:
         errors.append(f"fetch_assignments: {e}")
         assignment_result["data"] = []
+
+    if errors:
+        print(f"❌ Lỗi khi fetch LMS: {errors}")
+        sys.exit(1)
 
     elapsed_total = _time.time() - t_start
     print()

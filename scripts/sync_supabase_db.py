@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -18,12 +19,48 @@ CACHE_FILES = {
     "assignments": "assignments.json",
 }
 
+REQUIRED_SQLITE_TABLES = ["classes", "teachers", "oh_records"]
+
 
 def load_public_json(filename: str):
     path = ROOT / "public" / filename
     if not path.exists():
         raise FileNotFoundError(f"Missing {path}. Run python main.py first.")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def validate_sqlite_source(db_path: Path) -> None:
+    if not db_path.exists():
+        raise FileNotFoundError(f"Missing {db_path}. Run python main.py first.")
+
+    conn = sqlite3.connect(db_path)
+    try:
+        missing = []
+        empty = []
+        for table in REQUIRED_SQLITE_TABLES:
+            exists = conn.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+                (table,),
+            ).fetchone()
+            if not exists:
+                missing.append(table)
+                continue
+            count = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
+            if count <= 0:
+                empty.append(table)
+        if missing or empty:
+            details = []
+            if missing:
+                details.append(f"missing tables: {', '.join(missing)}")
+            if empty:
+                details.append(f"empty tables: {', '.join(empty)}")
+            raise RuntimeError(
+                "SQLite source is incomplete after python main.py; "
+                + "; ".join(details)
+                + ". Check the Fetch data from LMS log above."
+            )
+    finally:
+        conn.close()
 
 
 def main() -> int:
@@ -33,9 +70,15 @@ def main() -> int:
         action="store_true",
         help="Also upload public/classes.json with slots. This file can be very large.",
     )
+    parser.add_argument(
+        "--with-fallback-cache",
+        action="store_true",
+        help="Also upload the old JSON cache tables. The deployed app reads relational tables first.",
+    )
     args = parser.parse_args()
 
     db_path = ROOT / "classroom_data.db"
+    validate_sqlite_source(db_path)
     print("Uploading relational LMS tables to Supabase...", flush=True)
     counts = sync_sqlite_to_supabase(
         db_path,
@@ -44,6 +87,9 @@ def main() -> int:
     synced_tables = sum(1 for count in counts.values() if count > 0)
     synced_rows = sum(counts.values())
     print(f"Uploaded relational tables: {synced_rows} rows across {synced_tables} tables", flush=True)
+
+    if not args.with_fallback_cache:
+        return 0
 
     print("Loading classes_summary from SQLite for fallback cache...", flush=True)
     os.environ["USE_SUPABASE"] = "0"
