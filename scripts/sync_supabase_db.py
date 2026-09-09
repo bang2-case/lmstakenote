@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from supabase_cache import sync_sqlite_to_supabase, write_api_cache, write_classes_summary_cache
+from supabase_cache import DEFAULT_SKIPPED_SYNC_TABLES, sync_sqlite_to_supabase, write_api_cache, write_classes_summary_cache
 
 CACHE_FILES = {
     "teachers": "teachers.json",
@@ -75,13 +75,36 @@ def main() -> int:
         action="store_true",
         help="Also upload the old JSON cache tables. The deployed app reads relational tables first.",
     )
+    parser.add_argument(
+        "--include-slot-comments",
+        action="store_true",
+        help="Upload lms.slot_comments too. This table is very large and can exceed small Supabase database limits.",
+    )
+    parser.add_argument(
+        "--skip-slot-students",
+        action="store_true",
+        help="Skip and clear lms.slot_students. Use only if assignment slot-student details are not needed.",
+    )
     args = parser.parse_args()
 
     db_path = ROOT / "classroom_data.db"
     validate_sqlite_source(db_path)
+    excluded_tables = set()
+    if not args.include_slot_comments:
+        excluded_tables.update(DEFAULT_SKIPPED_SYNC_TABLES)
+    if args.skip_slot_students:
+        excluded_tables.add("slot_students")
+
     print("Uploading relational LMS tables to Supabase...", flush=True)
+    if excluded_tables:
+        print(
+            "Skipping and clearing heavy tables: " + ", ".join(sorted(excluded_tables)),
+            flush=True,
+        )
     counts = sync_sqlite_to_supabase(
         db_path,
+        exclude_tables=excluded_tables,
+        truncate_excluded=True,
         progress=lambda table, total: print(f"  {table}: {total}", flush=True),
     )
     synced_tables = sum(1 for count in counts.values() if count > 0)

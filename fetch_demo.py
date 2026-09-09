@@ -11,6 +11,7 @@ import json
 import os
 import base64
 import re
+import subprocess
 from datetime import datetime, timezone, timedelta
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -31,23 +32,86 @@ DEMO_CENTRES = {
 
 DEMO_CENTRE_IDS = list(DEMO_CENTRES.keys())
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+ENV_PATH = os.path.join(PROJECT_ROOT, ".env")
+IDTOKEN_SCRIPT = os.path.join(PROJECT_ROOT, "get-idtoken.js")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def load_token() -> str:
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-    if not os.path.exists(env_path):
-        raise RuntimeError("Không tìm thấy file .env")
-    with open(env_path, encoding="utf-8-sig") as f:
+def read_env_file_value(key: str) -> str | None:
+    if not os.path.exists(ENV_PATH):
+        return None
+    with open(ENV_PATH, encoding="utf-8-sig") as f:
         for line in f:
             line = line.strip()
-            if line.startswith("LMS_TOKEN="):
-                token = line[len("LMS_TOKEN="):].strip().strip('"').strip("'")
-                if token:
-                    return token
-    raise RuntimeError("Không tìm thấy LMS_TOKEN trong .env")
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            name, value = line.split("=", 1)
+            if name.strip() == key:
+                value = value.strip().strip('"').strip("'")
+                return value or None
+    return None
+
+
+def env_value(*keys: str) -> str | None:
+    for key in keys:
+        value = os.environ.get(key) or read_env_file_value(key)
+        if value:
+            return value.strip().strip('"').strip("'")
+    return None
+
+
+def refresh_token_from_login() -> str | None:
+    if not os.path.exists(IDTOKEN_SCRIPT):
+        return None
+    if not (
+        env_value("FIREBASE_API_KEY", "NEXT_PUBLIC_FIREBASE_API_KEY")
+        and env_value("LMS_LOGIN_EMAIL")
+        and env_value("LMS_LOGIN_PASSWORD")
+    ):
+        return None
+    try:
+        result = subprocess.run(
+            ["node", IDTOKEN_SCRIPT],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=PROJECT_ROOT,
+            env={**os.environ},
+        )
+        if result.returncode != 0:
+            return None
+        token = result.stdout.strip().splitlines()[-1].strip()
+        if not token or len(token) < 100:
+            return None
+        info = check_token(token)
+        if not info["valid"]:
+            return None
+        os.environ["LMS_TOKEN"] = token
+        return token
+    except Exception:
+        return None
+
+
+def load_token() -> str:
+    token = env_value("LMS_TOKEN")
+    if token and check_token(token)["valid"]:
+        return token
+
+    refreshed_token = refresh_token_from_login()
+    if refreshed_token:
+        return refreshed_token
+
+    if token:
+        raise RuntimeError(
+            "Token đã hết hạn và không thể tự lấy token mới. "
+            "Hãy kiểm tra FIREBASE_API_KEY, LMS_LOGIN_EMAIL, LMS_LOGIN_PASSWORD trong .env."
+        )
+    raise RuntimeError(
+        "Không tìm thấy LMS_TOKEN hoặc thông tin đăng nhập LMS trong .env."
+    )
 
 
 def check_token(token: str) -> dict:
@@ -369,15 +433,34 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def load_sheet_id() -> str:
-    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
-    with open(env_path, encoding="utf-8-sig") as f:
-        for line in f:
-            line = line.strip()
-            if line.startswith("GOOGLE_SHEET_ID="):
-                val = line[len("GOOGLE_SHEET_ID="):].strip().strip('"').strip("'")
-                if val:
-                    return val
+    sheet_id = env_value("GOOGLE_SHEET_ID")
+    if sheet_id:
+        return sheet_id
     raise RuntimeError("Không tìm thấy GOOGLE_SHEET_ID trong .env")
+
+
+def load_google_credentials(scopes):
+    from google.oauth2.service_account import Credentials
+
+    raw_credentials = env_value("GOOGLE_CREDENTIALS_JSON", "GOOGLE_SERVICE_ACCOUNT_JSON")
+    if raw_credentials:
+        try:
+            raw_credentials = raw_credentials.strip()
+            if raw_credentials.startswith("{"):
+                info = json.loads(raw_credentials)
+            else:
+                decoded = base64.b64decode(raw_credentials).decode("utf-8")
+                info = json.loads(decoded)
+            return Credentials.from_service_account_info(info, scopes=scopes)
+        except Exception as e:
+            raise RuntimeError(f"GOOGLE_CREDENTIALS_JSON không hợp lệ: {e}")
+
+    creds_path = os.path.join(PROJECT_ROOT, "google_credentials.json")
+    if not os.path.exists(creds_path):
+        raise RuntimeError(
+            "Không tìm thấy google_credentials.json hoặc GOOGLE_CREDENTIALS_JSON trong env"
+        )
+    return Credentials.from_service_account_file(creds_path, scopes=scopes)
 
 
 
@@ -390,18 +473,13 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
     cột Judge nền hồng, đường viền solid/dot, kích thước cột/hàng chuẩn.
     """
     import gspread
-    from google.oauth2.service_account import Credentials
     import googleapiclient.discovery
-
-    creds_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "google_credentials.json")
-    if not os.path.exists(creds_path):
-        raise RuntimeError("Không tìm thấy google_credentials.json")
 
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
-    creds = Credentials.from_service_account_file(creds_path, scopes=scopes)
+    creds = load_google_credentials(scopes)
     gc = gspread.authorize(creds)
     service = googleapiclient.discovery.build('sheets', 'v4', credentials=creds)
 

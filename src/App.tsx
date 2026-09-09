@@ -9,6 +9,7 @@ import CPPage from './pages/CPPage'
 import AssignmentsPage from './pages/AssignmentsPage'
 import OHPage from './pages/OHPage'
 import DEMOPage from './pages/DEMOPage'
+import TFSchedulePage from './pages/TFSchedulePage'
 import './App.css'
 
 const pageRoutes: Record<Page, string> = {
@@ -20,6 +21,7 @@ const pageRoutes: Record<Page, string> = {
   assignments: '/assignments',
   oh: '/oh',
   demo: '/demo',
+  tfSchedule: '/tf-schedule',
 }
 
 const routePages = Object.fromEntries(
@@ -65,6 +67,7 @@ export default function App() {
           <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/oh" element={<OHPage />} />
           <Route path="/demo" element={<DEMOPage />} />
+          <Route path="/tf-schedule" element={<TFSchedulePage />} />
           <Route path="*" element={<Navigate to="/classes" replace />} />
         </Routes>
       </main>

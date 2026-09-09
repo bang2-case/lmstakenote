@@ -2,7 +2,7 @@ import { useState } from 'react'
 import SidebarStatus from './SidebarStatus'
 
 // Pages
-export type Page = 'classes' | 'mentors' | 'cr' | 'tp' | 'cp' | 'assignments' | 'oh' | 'demo'
+export type Page = 'classes' | 'mentors' | 'cr' | 'tp' | 'cp' | 'assignments' | 'oh' | 'demo' | 'tfSchedule'
 
 interface SidebarProps {
   activePage: Page
@@ -76,6 +76,14 @@ function IconDemo() {
   )
 }
 
+function IconCalendarWeek() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 448 512" fill="currentColor" aria-hidden="true">
+      <path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h32c35.3 0 64 28.7 64 64v320c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128C0 92.7 28.7 64 64 64H96V32c0-17.7 14.3-32 32-32zM48 192v256c0 8.8 7.2 16 16 16H384c8.8 0 16-7.2 16-16V192H48zm48 64h64v64H96V256zm96 0h64v64H192V256zm96 0h64v64H288V256zM96 352h64v64H96V352zm96 0h64v64H192V352zm96 0h64v64H288V352z"/>
+    </svg>
+  )
+}
+
 function IconChevron({ open }: { open: boolean }) {
   return (
     <svg
@@ -122,10 +130,12 @@ const navStructure: NavItem[] = [
     icon: <IconSeedling />,
   },
   {
-    type: 'item',
-    key: 'demo',
     label: 'Quản lý DEMO',
-    icon: <IconDemo />,
+    type: 'group',
+    children: [
+      { key: 'demo', label: 'Quản lý DEMO', icon: <IconDemo /> },
+      { key: 'tfSchedule', label: 'Lịch làm TF', icon: <IconCalendarWeek /> },
+    ],
   },
 ]
 

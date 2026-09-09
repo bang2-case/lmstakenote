@@ -2,7 +2,7 @@ import json
 import os
 import sqlite3
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parent
@@ -41,6 +41,8 @@ RELATIONAL_TABLES = [
     "oh_appointments",
     "oh_appointment_courses",
 ]
+
+DEFAULT_SKIPPED_SYNC_TABLES = {"slot_comments"}
 
 CONFLICT_COLUMNS = {
     "classes": ["id"],
@@ -772,6 +774,39 @@ def _sqlite_table_exists(conn: sqlite3.Connection, table: str) -> bool:
     return bool(row)
 
 
+def _normalize_table_names(tables: Iterable[str] | None) -> set[str]:
+    result: set[str] = set()
+    for table in tables or []:
+        name = (table or "").strip()
+        if not name:
+            continue
+        if name not in RELATIONAL_TABLES:
+            raise ValueError(f"Unsupported table: {name}")
+        result.add(name)
+    return result
+
+
+def truncate_relational_tables(tables: Iterable[str], *, progress: Callable[[str, int], None] | None = None) -> None:
+    table_names = _normalize_table_names(tables)
+    if not table_names:
+        return
+
+    try:
+        from psycopg import sql
+    except ImportError as exc:
+        raise RuntimeError("Missing psycopg. Run pip install -r requirements.txt.") from exc
+
+    ensure_relational_schema()
+    with _connect() as conn:
+        for table in RELATIONAL_TABLES:
+            if table not in table_names:
+                continue
+            conn.execute(sql.SQL("TRUNCATE {}.{}").format(sql.Identifier(LMS_SCHEMA), sql.Identifier(table)))
+            conn.commit()
+            if progress:
+                progress(table, 0)
+
+
 def _prepare_sqlite_row(table: str, row: sqlite3.Row, columns: list[str]) -> dict[str, Any]:
     data = {column.lower(): row[column] for column in columns}
     if table == "assignment_students" and not data.get("studentuid"):
@@ -792,6 +827,8 @@ def _sync_table(
     batch_size: int = 1000,
     progress: Callable[[str, int], None] | None = None,
 ) -> int:
+    if table not in RELATIONAL_TABLES:
+        raise ValueError(f"Unsupported table: {table}")
     if not _sqlite_table_exists(sqlite_conn, table):
         return 0
 
@@ -847,6 +884,9 @@ def sync_sqlite_to_supabase(
     db_path: str | Path,
     *,
     batch_size: int = 1000,
+    include_tables: Iterable[str] | None = None,
+    exclude_tables: Iterable[str] | None = None,
+    truncate_excluded: bool = False,
     progress: Callable[[str, int], None] | None = None,
 ) -> dict[str, int]:
     ensure_relational_schema()
@@ -854,12 +894,30 @@ def sync_sqlite_to_supabase(
     if not sqlite_path.exists():
         raise FileNotFoundError(f"Missing SQLite database: {sqlite_path}")
 
+    included = _normalize_table_names(include_tables) if include_tables is not None else set(RELATIONAL_TABLES)
+    excluded = _normalize_table_names(exclude_tables)
+    tables_to_sync = [table for table in RELATIONAL_TABLES if table in included and table not in excluded]
+
     result: dict[str, int] = {}
     sqlite_conn = sqlite3.connect(sqlite_path)
     sqlite_conn.row_factory = sqlite3.Row
     try:
         with _connect() as pg_conn:
+            from psycopg import sql
+
+            if truncate_excluded:
+                for table in RELATIONAL_TABLES:
+                    if table not in excluded:
+                        continue
+                    pg_conn.execute(sql.SQL("TRUNCATE {}.{}").format(sql.Identifier(LMS_SCHEMA), sql.Identifier(table)))
+                    pg_conn.commit()
+                    result[table] = 0
+                    if progress:
+                        progress(f"{table} skipped/cleared", 0)
             for table in RELATIONAL_TABLES:
+                if table not in tables_to_sync:
+                    result.setdefault(table, 0)
+                    continue
                 result[table] = _sync_table(
                     sqlite_conn,
                     pg_conn,
@@ -867,7 +925,7 @@ def sync_sqlite_to_supabase(
                     batch_size=batch_size,
                     progress=progress,
                 )
-            pg_conn.commit()
+                pg_conn.commit()
     finally:
         sqlite_conn.close()
     return result

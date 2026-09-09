@@ -2,6 +2,7 @@ import { spawn, execSync } from 'child_process'
 import net from 'net'
 
 const DEFAULT_API_PORT = Number(process.env.API_PORT || process.env.VITE_API_PORT || 8000)
+const DEFAULT_WEB_PORT = Number(process.env.WEB_PORT || process.env.VITE_WEB_PORT || 5173)
 
 function canUsePort(port) {
   return new Promise((resolve) => {
@@ -25,16 +26,21 @@ async function findAvailablePort(startPort) {
 }
 
 const apiPort = await findAvailablePort(DEFAULT_API_PORT)
+const webPort = await findAvailablePort(DEFAULT_WEB_PORT)
 const env = {
   ...process.env,
   API_PORT: String(apiPort),
   VITE_API_PORT: String(apiPort),
+  WEB_PORT: String(webPort),
   DISABLE_AUTO_FETCH: process.env.DISABLE_AUTO_FETCH ?? '1',
   PYTHONIOENCODING: 'utf-8',
 }
 
 if (apiPort !== DEFAULT_API_PORT) {
   console.log(`Port ${DEFAULT_API_PORT} is busy. Using API port ${apiPort} instead.`)
+}
+if (webPort !== DEFAULT_WEB_PORT) {
+  console.log(`Port ${DEFAULT_WEB_PORT} is busy. Using web port ${webPort} instead.`)
 }
 
 console.log(`Starting API server on http://127.0.0.1:${apiPort}...`)
@@ -63,7 +69,7 @@ if (apiExited) {
 } else {
   console.log('Starting Vite...')
   try {
-    execSync('npx vite', { stdio: 'inherit', env })
+    execSync(`npx vite --port ${webPort}`, { stdio: 'inherit', env })
   } finally {
     apiServer.kill()
   }
