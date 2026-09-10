@@ -130,12 +130,16 @@ const navStructure: NavItem[] = [
     icon: <IconSeedling />,
   },
   {
+    type: 'item',
+    key: 'demo',
     label: 'Quản lý DEMO',
-    type: 'group',
-    children: [
-      { key: 'demo', label: 'Quản lý DEMO', icon: <IconDemo /> },
-      { key: 'tfSchedule', label: 'Lịch làm TF', icon: <IconCalendarWeek /> },
-    ],
+    icon: <IconDemo />,
+  },
+  {
+    type: 'item',
+    key: 'tfSchedule',
+    label: 'Lịch làm TF',
+    icon: <IconCalendarWeek />,
   },
 ]
 
