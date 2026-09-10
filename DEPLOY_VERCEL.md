@@ -80,6 +80,7 @@ GOOGLE_CREDENTIALS_JSON=optional_for_demo_export
 `SKIP_PREPARE_DATA=1` keeps Vercel builds fast and avoids running the long LMS fetch during deploy.
 `vercel.json` also sets this for the build command, so Vercel should not try to run `python main.py` while deploying.
 For DEMO export on Vercel, set both `GOOGLE_SHEET_ID` and `GOOGLE_CREDENTIALS_JSON`. `GOOGLE_CREDENTIALS_JSON` can be the full service-account JSON on one line, or base64-encoded JSON.
+Vercel installs the slim runtime dependencies from `requirements.txt`. GitHub Actions installs `requirements-workflow.txt`, which includes extra fetch-only packages needed by `main.py`.
 
 ## Notes
 

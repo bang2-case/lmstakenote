@@ -13,6 +13,7 @@ import base64
 import re
 import subprocess
 from datetime import datetime, timezone, timedelta
+from urllib.parse import quote
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Centre IDs
@@ -463,6 +464,73 @@ def load_google_credentials(scopes):
     return Credentials.from_service_account_file(creds_path, scopes=scopes)
 
 
+def google_api_request(creds, method: str, url: str, **kwargs):
+    from google.auth.transport.requests import Request as GoogleAuthRequest
+
+    if not creds.valid:
+        creds.refresh(GoogleAuthRequest())
+
+    headers = dict(kwargs.pop("headers", {}) or {})
+    headers["Authorization"] = f"Bearer {creds.token}"
+    headers.setdefault("Accept", "application/json")
+
+    response = requests.request(method, url, headers=headers, timeout=30, **kwargs)
+    if response.status_code >= 400:
+        detail = response.text[:800]
+        raise RuntimeError(f"Google Sheets API lỗi {response.status_code}: {detail}")
+    if not response.content:
+        return {}
+    return response.json()
+
+
+def sheet_range(tab_name: str, a1_range: str) -> str:
+    escaped = tab_name.replace("'", "''")
+    return quote(f"'{escaped}'!{a1_range}", safe="")
+
+
+def get_spreadsheet(creds, sheet_id: str, fields: str):
+    return google_api_request(
+        creds,
+        "GET",
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}",
+        params={"fields": fields},
+    )
+
+
+def batch_update_spreadsheet(creds, sheet_id: str, requests_list: list[dict]):
+    if not requests_list:
+        return {}
+    return google_api_request(
+        creds,
+        "POST",
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}:batchUpdate",
+        json={"requests": requests_list},
+    )
+
+
+def update_sheet_values(creds, sheet_id: str, tab_name: str, values: list[list]):
+    return google_api_request(
+        creds,
+        "PUT",
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{sheet_range(tab_name, 'A1')}",
+        params={"valueInputOption": "USER_ENTERED"},
+        json={"values": values},
+    )
+
+
+def list_sheet_refs(spreadsheet_meta: dict) -> list[dict]:
+    result = []
+    for sheet in spreadsheet_meta.get("sheets", []):
+        props = sheet.get("properties", {}) or {}
+        result.append({
+            "id": props.get("sheetId"),
+            "title": props.get("title", ""),
+            "rowCount": (props.get("gridProperties", {}) or {}).get("rowCount"),
+            "columnCount": (props.get("gridProperties", {}) or {}).get("columnCount"),
+        })
+    return result
+
+
 
 def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
     """
@@ -472,21 +540,19 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
     Format: font Exo, ẩn gridlines, màu header đúng, bảng tổng hợp trái,
     cột Judge nền hồng, đường viền solid/dot, kích thước cột/hàng chuẩn.
     """
-    import gspread
-    import googleapiclient.discovery
-
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
     ]
     creds = load_google_credentials(scopes)
-    gc = gspread.authorize(creds)
-    service = googleapiclient.discovery.build('sheets', 'v4', credentials=creds)
 
     sheet_id = load_sheet_id()
-    spreadsheet = gc.open_by_key(sheet_id)
     classes = [c for c in classes if is_running_class(c)]
-    worksheets_before = spreadsheet.worksheets()
+    spreadsheet_meta = get_spreadsheet(
+        creds,
+        sheet_id,
+        "sheets(properties(sheetId,title,gridProperties(rowCount,columnCount)))",
+    )
+    worksheets_before = list_sheet_refs(spreadsheet_meta)
 
     # ── Tên tab = range ngày ──────────────────────────────────────────────
     if not date_to or date_to == date_from:
@@ -505,39 +571,73 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
     def pick_format_template():
         candidates = [
             w for w in worksheets_before
-            if w.title != tab_name and not w.title.startswith("_temp_export_")
+            if w["title"] != tab_name and not w["title"].startswith("_temp_export_")
         ]
-        dated = [w for w in candidates if re.search(r"\d{2}/\d{2}", w.title)]
+        dated = [w for w in candidates if re.search(r"\d{2}/\d{2}", w["title"])]
         return (dated or candidates or [None])[-1]
 
     format_template_ws = pick_format_template()
 
     # ── Tạo/ghi đè tab ───────────────────────────────────────────────────
     # Chỉ tạo temp khi ghi đè sheet cuối cùng để tránh lỗi "can't remove all visible sheets".
-    temp_ws = None
-    try:
-        existing_ws = spreadsheet.worksheet(tab_name)
-    except gspread.exceptions.WorksheetNotFound:
-        existing_ws = None
+    temp_sheet_id = None
+    existing_ws = next((w for w in worksheets_before if w["title"] == tab_name), None)
 
     if existing_ws is not None:
-        if len(spreadsheet.worksheets()) <= 1:
+        if len(worksheets_before) <= 1:
             temp_title = f"_temp_export_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
-            temp_ws = spreadsheet.add_worksheet(title=temp_title, rows=1, cols=1)
-        spreadsheet.del_worksheet(existing_ws)
+            temp_result = batch_update_spreadsheet(creds, sheet_id, [{
+                "addSheet": {
+                    "properties": {
+                        "title": temp_title,
+                        "gridProperties": {"rowCount": 1, "columnCount": 1},
+                    }
+                }
+            }])
+            temp_sheet_id = (
+                temp_result.get("replies", [{}])[0]
+                .get("addSheet", {})
+                .get("properties", {})
+                .get("sheetId")
+            )
+        batch_update_spreadsheet(creds, sheet_id, [{
+            "deleteSheet": {"sheetId": existing_ws["id"]}
+        }])
 
     sheet_rows = max(300, len(classes) + 20)
-    ws = spreadsheet.add_worksheet(title=tab_name, rows=sheet_rows, cols=44)
-    if temp_ws is not None:
-        spreadsheet.del_worksheet(temp_ws)
+    add_result = batch_update_spreadsheet(creds, sheet_id, [{
+        "addSheet": {
+            "properties": {
+                "title": tab_name,
+                "gridProperties": {"rowCount": sheet_rows, "columnCount": 44},
+            }
+        }
+    }])
+    sid = (
+        add_result.get("replies", [{}])[0]
+        .get("addSheet", {})
+        .get("properties", {})
+        .get("sheetId")
+    )
+    if sid is None:
+        raise RuntimeError("Không tạo được tab Google Sheet mới.")
 
-    for stale_ws in spreadsheet.worksheets():
-        if stale_ws.id != ws.id and stale_ws.title.startswith("_temp_export_") and len(spreadsheet.worksheets()) > 1:
-            try:
-                spreadsheet.del_worksheet(stale_ws)
-            except Exception:
-                pass
-    sid = ws.id
+    cleanup_reqs = []
+    cleanup_sheet_ids = set()
+    if temp_sheet_id is not None:
+        cleanup_sheet_ids.add(temp_sheet_id)
+        cleanup_reqs.append({"deleteSheet": {"sheetId": temp_sheet_id}})
+    refreshed_meta = get_spreadsheet(
+        creds,
+        sheet_id,
+        "sheets(properties(sheetId,title))",
+    )
+    for stale_ws in list_sheet_refs(refreshed_meta):
+        stale_id = stale_ws["id"]
+        if stale_id != sid and stale_id not in cleanup_sheet_ids and stale_ws["title"].startswith("_temp_export_"):
+            cleanup_sheet_ids.add(stale_id)
+            cleanup_reqs.append({"deleteSheet": {"sheetId": stale_id}})
+    batch_update_spreadsheet(creds, sheet_id, cleanup_reqs)
 
     # ── Phân loại theo khối ───────────────────────────────────────────────
     coding   = [c for c in classes if c["block"] == "Coding"]
@@ -622,7 +722,7 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
                  ["Tổng", "", "", "", "", str(len(art)),      "", "", "", "", ""] + [""])
     all_rows.append(total_row)
 
-    ws.update(values=all_rows, range_name="A1")
+    update_sheet_values(creds, sheet_id, tab_name, all_rows)
 
     # ── Helpers ───────────────────────────────────────────────────────────
     def rng(r0, r1, c0, c1):
@@ -849,15 +949,19 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
 
     if format_template_ws is not None:
         try:
-            template_meta = service.spreadsheets().get(
-                spreadsheetId=sheet_id,
-                includeGridData=True,
-                fields="sheets(properties(sheetId,title),data(rowMetadata(pixelSize),columnMetadata(pixelSize)))",
-            ).execute()
+            template_meta = google_api_request(
+                creds,
+                "GET",
+                f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}",
+                params={
+                    "includeGridData": "true",
+                    "fields": "sheets(properties(sheetId,title,gridProperties(rowCount,columnCount)),data(rowMetadata(pixelSize),columnMetadata(pixelSize)))",
+                },
+            )
             template_sheet = next(
                 (
                     s for s in template_meta.get("sheets", [])
-                    if s.get("properties", {}).get("sheetId") == format_template_ws.id
+                    if s.get("properties", {}).get("sheetId") == format_template_ws["id"]
                 ),
                 None,
             )
@@ -865,7 +969,7 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
             template_rows = (template_sheet or {}).get("properties", {}).get("gridProperties", {}).get("rowCount", sheet_rows)
             copy_rows = min(sheet_rows, template_rows or sheet_rows)
             reqs.append({"copyPaste": {
-                "source": rng(0, copy_rows, 0, 44) | {"sheetId": format_template_ws.id},
+                "source": rng(0, copy_rows, 0, 44) | {"sheetId": format_template_ws["id"]},
                 "destination": rng(0, copy_rows, 0, 44),
                 "pasteType": "PASTE_FORMAT",
                 "pasteOrientation": "NORMAL",
@@ -881,12 +985,9 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
         except Exception:
             pass
 
-    service.spreadsheets().batchUpdate(
-        spreadsheetId=sheet_id,
-        body={"requests": reqs}
-    ).execute()
+    batch_update_spreadsheet(creds, sheet_id, reqs)
 
-    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={ws.id}"
+    sheet_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit#gid={sid}"
     return {
         "url": sheet_url,
         "tab_name": tab_name,

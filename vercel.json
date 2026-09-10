@@ -4,7 +4,8 @@
   "outputDirectory": "dist",
   "functions": {
     "api/index.py": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "excludeFiles": "{.git/**,.github/**,.vscode/**,dist/**,node_modules/**,public/**,src/**,exports/**,classroom_data.db,*.db,*.db-wal,*.db-shm,main.py,*.log}"
     }
   },
   "rewrites": [
