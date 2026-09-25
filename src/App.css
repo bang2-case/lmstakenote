@@ -374,7 +374,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   background: white;
   color: var(--text);
   width: 100%;
@@ -397,7 +397,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   width: 100%;
 }
 
@@ -418,7 +418,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   white-space: nowrap;
   width: 100%;
 }
@@ -1684,6 +1684,20 @@
   min-width: 150px;
 }
 
+.cr-td-cs {
+  min-width: 140px;
+  max-width: 190px;
+}
+
+.cr-td-cs-text,
+.summary-cs-name {
+  display: block;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .cr-td-center {
   text-align: center;
 }
@@ -1875,7 +1889,7 @@
 .cr-student-row {
   width: 100%;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-columns: 28px minmax(0, 1fr) 148px;
   align-items: center;
   gap: 10px;
   min-height: 58px;
@@ -1933,15 +1947,37 @@
 
 .cr-status-pill {
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 24px;
-  max-width: 160px;
-  padding: 3px 9px;
-  border-radius: 999px;
+  gap: 2px;
+  min-height: 28px;
+  max-width: 180px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  text-align: center;
+  white-space: normal;
+}
+
+.cr-student-row > .cr-status-pill {
+  width: 100%;
+  min-width: 0;
+  max-width: 148px;
+  justify-self: end;
+}
+
+.cr-status-pill-main {
   font-size: 12px;
   font-weight: 800;
-  white-space: nowrap;
+}
+
+.cr-status-pill-reason {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  opacity: 0.85;
 }
 
 .cr-status-complete { color: #15803d; background: #dcfce7; }
@@ -2185,7 +2221,7 @@
 .date-picker-popup .rdp-root {
   --rdp-accent-color: #dc2626;
   --rdp-accent-background-color: #fef2f2;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   font-size: 14px;
 }
 
@@ -2304,7 +2340,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   background: white;
   color: var(--text);
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -2467,7 +2503,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
 }
 
 .tp-modal-tab.active {
@@ -2674,7 +2710,7 @@
   cursor: pointer;
   transition: all 0.15s;
   min-width: 80px;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
 }
 
 .tp-modal-card:hover {
@@ -3003,7 +3039,7 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   background: white;
   color: var(--text);
   width: 100%;
@@ -3214,7 +3250,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   white-space: nowrap;
 }
 
@@ -3306,7 +3342,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   text-align: center;
 }
 
@@ -3546,7 +3582,7 @@
   cursor: pointer;
   transition: all 0.15s;
   min-width: 100px;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
 }
 
 .cp-modal-card:hover {
@@ -4220,7 +4256,7 @@
   border: 1px solid var(--border);
   background: #fff;
   color: var(--text);
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   font-weight: 700;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, color 0.15s;
@@ -4291,7 +4327,7 @@
   display: block;
   width: 100%;
   color: var(--text);
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   font-size: 13px;
   font-weight: 700;
   text-align: center;
@@ -4417,7 +4453,7 @@
   gap: 6px;
   cursor: pointer;
   text-align: left;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   transition: background 0.15s;
 }
 
@@ -4546,7 +4582,7 @@
   padding: 0 12px;
   background: #fff;
   color: var(--text);
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   font-size: 14px;
   font-weight: 600;
 }
@@ -4593,7 +4629,7 @@
   border-radius: 6px;
   background: #fef2f2;
   color: #b91c1c;
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: Cambria, Georgia, serif;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;

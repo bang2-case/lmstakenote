@@ -57,6 +57,7 @@ DB_PATH   = os.path.join(os.path.dirname(__file__), "classroom_data.db")
 ENV_PATH  = os.path.join(os.path.dirname(__file__), ".env")
 FETCH_LOCK_PATH = os.path.join(os.path.dirname(__file__), ".fetch.lock")
 FETCH_INTERVAL_HOURS = 3
+MODULE_FETCH_TIMEOUT_SECONDS = int(os.getenv("MODULE_FETCH_TIMEOUT_SECONDS", "1800"))
 GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
 
 app.add_middleware(
@@ -65,6 +66,28 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def ensure_class_operator_column():
+    with sqlite3.connect(DB_PATH) as conn:
+        columns = {row[1] for row in conn.execute("PRAGMA table_info(classes)").fetchall()}
+        if "operator" not in columns:
+            conn.execute("ALTER TABLE classes ADD COLUMN operator TEXT")
+            conn.commit()
+
+
+def decode_operator(value):
+    if value is None or isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            return json.loads(text)
+        except Exception:
+            return {"displayName": text}
+    return None
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # WebSocket connection manager
@@ -1355,23 +1378,23 @@ async def run_module_fetch(module: str):
             try:
                 with open(log_path, 'w', encoding='utf-8') as log_file:
                     proc = subprocess.Popen(
-                        [sys.executable, "main.py", f"--only={module}"],
+                        [sys.executable, "-u", "main.py", f"--only={module}"],
                         stdout=log_file, stderr=log_file,
                         text=True, encoding="utf-8",
-                        env={**os.environ, "PYTHONIOENCODING": "utf-8"},
+                        env={**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUNBUFFERED": "1"},
                         cwd=os.path.dirname(__file__),
                     )
                     with _module_fetch_process_lock:
                         _module_fetch_processes[module] = proc
                 try:
-                    proc.wait(timeout=600)
+                    proc.wait(timeout=MODULE_FETCH_TIMEOUT_SECONDS)
                     with _module_fetch_process_lock:
                         canceled = module in _module_cancel_requested
                     returncode = -999 if canceled else proc.returncode
                 except subprocess.TimeoutExpired:
                     proc.kill()
                     proc.wait()
-                    returncode = -1
+                    returncode = -2
             finally:
                 with _module_fetch_process_lock:
                     if proc is not None and _module_fetch_processes.get(module) is proc:
@@ -1433,6 +1456,17 @@ async def run_module_fetch(module: str):
                 "module": module,
                 "status": "error",
                 "message": "Đang có tiến trình fetch khác chạy. Hãy đợi hoặc hủy tiến trình cũ rồi thử lại.",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            })
+        elif returncode == -2:
+            timeout_minutes = MODULE_FETCH_TIMEOUT_SECONDS // 60
+            state["last_status"] = "error"
+            state["last_message"] = f"Quá thời gian tải tối đa ({timeout_minutes} phút)"
+            await manager.broadcast({
+                "type": "module_fetch_done",
+                "module": module,
+                "status": "error",
+                "message": state["last_message"],
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             })
         else:
@@ -1552,10 +1586,10 @@ async def export_demo_to_sheet(request: Request):
     if not date:
         return JSONResponse({"error": "Thiếu tham số date"}, status_code=400)
     try:
-        from fetch_demo import fetch_demo_classes, export_to_sheet, is_running_class
+        from fetch_demo import fetch_demo_classes, export_to_sheet, is_demo_class
         loop = asyncio.get_event_loop()
         if isinstance(provided_classes, list) and all(isinstance(c, dict) and "status" in c for c in provided_classes):
-            classes = [c for c in provided_classes if is_running_class(c)]
+            classes = [c for c in provided_classes if is_demo_class(c)]
         else:
             classes = await loop.run_in_executor(None, lambda: fetch_demo_classes(date, date_to))
         result = await loop.run_in_executor(None, lambda: export_to_sheet(classes, date, date_to))
@@ -1599,8 +1633,9 @@ def get_classes(include_slot_students: bool = False, include_students: bool = Fa
     if not os.path.exists(DB_PATH):
         return JSONResponse({"error": "DB not found. Run python main.py first."}, status_code=503)
 
+    ensure_class_operator_column()
     classes = query("""
-        SELECT id, name, status, course, centre, block, level, sessions,
+        SELECT id, name, status, course, centre, operator, block, level, sessions,
                studentCount, attendedCount, completedCount, completionRate,
                commentPercentage, totalSlotsWithStudents, slotsWithFullComments,
                startDate, endDate, createdAt
@@ -1686,6 +1721,7 @@ def get_classes(include_slot_students: bool = False, include_students: bool = Fa
 
     for c in classes:
         cid = c["id"]
+        c["operator"] = decode_operator(c.get("operator"))
         c["teachers"] = teachers_map.get(cid, [])
         c["slots"] = slots_map.get(cid, [])
         c["incompleteStudents"] = incomplete_map.get(cid, [])

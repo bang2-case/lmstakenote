@@ -61,6 +61,10 @@ function displayValue(value: string | number | boolean | null | undefined) {
   return cleanText(value === undefined || value === null ? '' : String(value)) || '—'
 }
 
+function getClassOperatorName(classItem: ClassItem) {
+  return cleanText(classItem.operator?.displayName) || cleanText(classItem.operator?.username) || '—'
+}
+
 function formatDate(value: string | null | undefined) {
   const text = cleanText(value)
   if (!text) return '—'
@@ -75,7 +79,7 @@ function humanizeStatus(value: string | null | undefined) {
   const map: Record<string, string> = {
     ACTIVE: 'Active',
     COMPLETED: 'Complete',
-    UNCOMPLETED: 'Incomplete',
+    UNCOMPLETED: 'Uncompleted',
     WAITING: 'Waiting',
     WAITING_CLASS: 'Waiting class',
     ON_HOLD: 'On hold',
@@ -83,21 +87,39 @@ function humanizeStatus(value: string | null | undefined) {
   return map[status.toUpperCase()] || status.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+function isClassCompleted(student: CRStudent) {
+  return cleanText(student.completionInfo?.status).toUpperCase() === 'COMPLETED'
+}
+
 function completionLabel(student: CRStudent) {
   const status = cleanText(student.completionInfo?.status)
+  return status ? humanizeStatus(status) : 'Not set'
+}
+
+function completionReasonLabel(student: CRStudent) {
+  const status = cleanText(student.completionInfo?.status).toUpperCase()
+  if (status !== 'UNCOMPLETED') return ''
   const reason = cleanText(student.completionInfo?.reason)
-  if (status.toUpperCase() === 'COMPLETED') return 'Complete'
-  if (reason) return humanizeStatus(reason)
-  return humanizeStatus(status || student.student.status)
+  return reason ? humanizeStatus(reason) : ''
 }
 
 function completionPillClass(student: CRStudent) {
-  const label = completionLabel(student).toLowerCase()
   const status = cleanText(student.completionInfo?.status).toUpperCase()
-  if (status === 'COMPLETED' || label === 'complete' || label === 'completed') return 'cr-status-complete'
-  if (label.includes('hold') || label.includes('waiting')) return 'cr-status-hold'
-  if (status === 'UNCOMPLETED' || label.includes('incomplete')) return 'cr-status-incomplete'
+  if (status === 'COMPLETED') return 'cr-status-complete'
+  if (status === 'UNCOMPLETED') return 'cr-status-incomplete'
   return 'cr-status-neutral'
+}
+
+function CompletionBadge({ student }: { student: CRStudent }) {
+  const label = completionLabel(student)
+  const reason = completionReasonLabel(student)
+  const title = reason ? `${label}: ${reason}` : label
+  return (
+    <span className={`cr-status-pill ${completionPillClass(student)}`} title={title}>
+      <span className="cr-status-pill-main">{label}</span>
+      {reason && <span className="cr-status-pill-reason">{reason}</span>}
+    </span>
+  )
 }
 
 function DetailItem({ label, value }: { label: string; value: string | number | boolean | null | undefined }) {
@@ -130,7 +152,7 @@ function StudentDetail({ item }: { item: CRStudent | null }) {
           <div className="cr-student-detail-name">{student.fullName || '—'}</div>
           <div className="cr-student-detail-sub">Mã HV {displayValue(student.studentId)}</div>
         </div>
-        <span className={`cr-status-pill ${completionPillClass(item)}`}>{completionLabel(item)}</span>
+        <CompletionBadge student={item} />
       </div>
 
       <section className="cr-detail-section">
@@ -157,6 +179,7 @@ function StudentDetail({ item }: { item: CRStudent | null }) {
         <h3>Thông tin trong lớp</h3>
         <div className="cr-detail-grid">
           <DetailItem label="Đang active" value={item.activeInClass} />
+          <DetailItem label="Completion status" value={humanizeStatus(item.completionInfo?.status)} />
           <DetailItem label="Completion reason" value={humanizeStatus(item.completionInfo?.reason)} />
           <DetailItem label="Completion note" value={item.completionInfo?.note} />
           <DetailItem label="Completion description" value={item.completionInfo?.description} />
@@ -217,7 +240,10 @@ function CRStudentsModal({ classItem, onClose }: { classItem: ClassItem; onClose
     }
   }, [classItem.id, classItem.students])
 
-  const completed = students.filter((student) => cleanText(student.completionInfo?.status).toUpperCase() === 'COMPLETED').length
+  const completed = students.filter(isClassCompleted).length
+  const liveAttendedCount = students.filter((student) => student.attended).length
+  const completionTotal = liveAttendedCount || classItem.attendedCount || students.length
+  const liveCompletionRate = completionTotal > 0 ? Math.round((completed / completionTotal) * 100) : 0
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -230,11 +256,11 @@ function CRStudentsModal({ classItem, onClose }: { classItem: ClassItem; onClose
           <div className="cr-modal-side">
             <div className="cr-modal-kpis">
               <div className="cr-modal-kpi">
-                <span>{classItem.completionRate}%</span>
+                <span>{liveCompletionRate}%</span>
                 <small>CPR</small>
               </div>
               <div className="cr-modal-kpi">
-                <span>{completed}/{classItem.attendedCount || students.length}</span>
+                <span>{completed}/{completionTotal}</span>
                 <small>Complete</small>
               </div>
             </div>
@@ -272,7 +298,7 @@ function CRStudentsModal({ classItem, onClose }: { classItem: ClassItem; onClose
                       <span className="cr-student-name">{student.student.fullName || '—'}</span>
                       <span className="cr-student-code">{student.student.studentId || student.student.id || '—'}</span>
                     </span>
-                    <span className={`cr-status-pill ${completionPillClass(student)}`}>{completionLabel(student)}</span>
+                    <CompletionBadge student={student} />
                   </button>
                 ))}
               </div>
@@ -285,10 +311,56 @@ function CRStudentsModal({ classItem, onClose }: { classItem: ClassItem; onClose
   )
 }
 
+function CRSummaryModal({ classes, onClose }: { classes: ClassItem[]; onClose: () => void }) {
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content summary-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="summary-banner" style={{ paddingTop: '35px', paddingBottom: '35px' }}>
+          <div>
+            <h2 className="summary-banner-title">Tổng hợp CPR</h2>
+            <p className="summary-banner-sub">Danh sách lớp đã lọc</p>
+          </div>
+          <span className="summary-banner-badge">{classes.length} lớp</span>
+        </div>
+
+        <div className="summary-table-wrapper">
+          <table className="summary-table">
+            <thead>
+              <tr>
+                <th className="summary-fixed-col">#</th>
+                <th className="summary-fixed-col">Tên lớp</th>
+                <th>CS</th>
+                <th>Giáo viên</th>
+                <th>Tổng HV</th>
+                <th>Completed</th>
+                <th>CPR</th>
+              </tr>
+            </thead>
+            <tbody>
+              {classes.map((c, i) => (
+                <tr key={c.id}>
+                  <td>{i + 1}</td>
+                  <td><span className="summary-name summary-nowrap">{c.name}</span></td>
+                  <td><span className="summary-cs-name" title={getClassOperatorName(c)}>{getClassOperatorName(c)}</span></td>
+                  <td>{c.teachers[0]?.name || '—'}</td>
+                  <td style={{ textAlign: 'center' }}>{c.studentCount}</td>
+                  <td style={{ textAlign: 'center' }}>{c.completedCount}</td>
+                  <td style={{ textAlign: 'center' }}>{c.completionRate}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function CRPage() {
   const { classes, loading, error } = useClasses({ includeSlots: false })
   const [filters, setFilters] = useState<CRFilters>({ area: '', centre: '', block: '', mentor: '', rateFilter: '', endDateFrom: '', endDateTo: '' })
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null)
+  const [showSummary, setShowSummary] = useState(false)
 
   // Chỉ lấy lớp FINISHED và chính quy
   const finishedClasses = useMemo(
@@ -455,6 +527,10 @@ export default function CRPage() {
           <label className="filter-label">&nbsp;</label>
           <button className="btn-reset" onClick={resetFilters}>Xóa bộ lọc</button>
         </div>
+        <div className="filter-group">
+          <label className="filter-label">&nbsp;</label>
+          <button className="btn-summary" onClick={() => setShowSummary(true)}>📋 Tổng hợp</button>
+        </div>
       </div>
 
       {/* Bảng CR */}
@@ -471,8 +547,8 @@ export default function CRPage() {
                 <th>Khối</th>
                 <th>Khóa học</th>
                 <th>Giáo viên</th>
+                <th>CS</th>
                 <th>Tổng HV</th>
-                <th>HV đi học</th>
                 <th>Completed</th>
                 <th>Completion Rate</th>
               </tr>
@@ -487,6 +563,9 @@ export default function CRPage() {
       )}
       {selectedClass && (
         <CRStudentsModal classItem={selectedClass} onClose={() => setSelectedClass(null)} />
+      )}
+      {showSummary && (
+        <CRSummaryModal classes={filtered} onClose={() => setShowSummary(false)} />
       )}
     </div>
   )
@@ -506,8 +585,10 @@ function CRRow({ item, index, onSelect }: { item: ClassItem; index: number; onSe
       <td>{item.block || '—'}</td>
       <td>{item.course || '—'}</td>
       <td>{item.teachers[0]?.name || '—'}</td>
+      <td className="cr-td-cs" title={getClassOperatorName(item)}>
+        <span className="cr-td-cs-text">{getClassOperatorName(item)}</span>
+      </td>
       <td className="cr-td-center">{item.studentCount}</td>
-      <td className="cr-td-center">{item.attendedCount}</td>
       <td className="cr-td-center">{item.completedCount}</td>
       <td className="cr-td-bar">
         <CRBar rate={item.completionRate} />

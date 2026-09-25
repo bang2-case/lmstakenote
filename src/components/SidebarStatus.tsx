@@ -126,7 +126,7 @@ export default function SidebarStatus() {
             style={{
               background: '#1f2937', color: '#e5e7eb', borderRadius: 10,
               padding: 20, maxWidth: 700, width: '100%', maxHeight: '80vh',
-              overflow: 'auto', fontFamily: 'monospace', fontSize: 12,
+              overflow: 'auto', fontFamily: 'Cambria, Georgia, serif', fontSize: 12,
               whiteSpace: 'pre-wrap', wordBreak: 'break-all'
             }}
             onClick={(e) => e.stopPropagation()}

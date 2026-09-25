@@ -386,6 +386,7 @@ def read_classes_db(
     for item in classes:
         cid = item["id"]
         item.pop("updatedAt", None)
+        item["operator"] = _decode_json(item.get("operator"), item.get("operator"))
         item["teachers"] = teachers_map.get(cid, [])
         item["slots"] = slots_map.get(cid, [])
         item["incompleteStudents"] = incomplete_map.get(cid, [])

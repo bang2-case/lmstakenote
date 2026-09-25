@@ -4,6 +4,16 @@ export interface Teacher {
   role?: string
 }
 
+export interface ClassOperator {
+  id?: string
+  email?: string | null
+  firstName?: string | null
+  middleName?: string | null
+  lastName?: string | null
+  displayName?: string | null
+  username?: string | null
+}
+
 export interface Slot {
   id: string
   date: string
@@ -79,6 +89,7 @@ export interface ClassItem {
   status: string
   course: string | null
   centre: string | null
+  operator?: ClassOperator | null
   teachers: Teacher[]
   sessions: number | null
   createdAt: string

@@ -12,7 +12,8 @@ import os
 import base64
 import re
 import subprocess
-from datetime import datetime, timezone, timedelta
+import time as time_module
+from datetime import datetime, timezone, timedelta, time as dt_time
 from urllib.parse import quote
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -36,6 +37,16 @@ GRAPHQL_URL = "https://lms-api.mindx.edu.vn/"
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 ENV_PATH = os.path.join(PROJECT_ROOT, ".env")
 IDTOKEN_SCRIPT = os.path.join(PROJECT_ROOT, "get-idtoken.js")
+VN_TZ = timezone(timedelta(hours=7))
+DEMO_CLASS_STATUSES = ["RUNNING", "FINISHED"]
+EXCLUDED_DEMO_STATUSES = {
+    "ABANDONED",
+    "CANCELLED",
+    "CANCELED",
+    "REJECT",
+    "REJECTED",
+    "SUSPENDED",
+}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
@@ -160,16 +171,96 @@ def is_running_class(item) -> bool:
     return get_class_status(item) == "RUNNING"
 
 
+def is_demo_class(item) -> bool:
+    """Lớp hợp lệ cho DEMO: không lấy lớp hủy/từ chối/tạm dừng."""
+    status = get_class_status(item)
+    if status in EXCLUDED_DEMO_STATUSES:
+        return False
+    return True
+
+
+def parse_ymd(value: str) -> datetime:
+    return datetime.strptime(value, "%Y-%m-%d")
+
+
+def normalize_date_range(date_from: str, date_to: str = "") -> tuple[str, str]:
+    start = parse_ymd(date_from)
+    end = parse_ymd(date_to or date_from)
+    if end < start:
+        start, end = end, start
+    return start.strftime("%Y-%m-%d"), end.strftime("%Y-%m-%d")
+
+
+def iso_to_datetime(iso: str) -> datetime | None:
+    if not iso:
+        return None
+    value = str(iso).strip()
+    if not value:
+        return None
+    try:
+        if value.endswith("Z"):
+            value = value[:-1] + "+00:00"
+        dt = datetime.fromisoformat(value)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except Exception:
+        return None
+
+
+def to_vn_datetime(iso: str) -> datetime | None:
+    dt = iso_to_datetime(iso)
+    return dt.astimezone(VN_TZ) if dt else None
+
+
+def to_lms_utc_iso(dt: datetime) -> str:
+    return dt.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+
+
+def lms_date_bounds(date_from: str, date_to: str) -> tuple[str, str]:
+    start_date = parse_ymd(date_from).date()
+    end_date = parse_ymd(date_to).date()
+    start_local = datetime.combine(start_date, dt_time.min, tzinfo=VN_TZ)
+    end_local = datetime.combine(end_date, dt_time.max, tzinfo=VN_TZ)
+    return to_lms_utc_iso(start_local), to_lms_utc_iso(end_local)
+
+
+def get_student_count(item: dict) -> int:
+    if not isinstance(item, dict):
+        return 0
+    students = item.get("students")
+    if isinstance(students, list):
+        return len(students)
+    count = item.get("student_count") or item.get("studentCount") or 0
+    try:
+        return int(count)
+    except Exception:
+        return 0
+
+
+def slot_reference_iso(slot: dict) -> str:
+    return slot.get("startTime") or slot.get("date") or slot.get("endTime") or ""
+
+
+def slot_sort_key(slot: dict) -> tuple[str, str]:
+    dt = iso_to_datetime(slot_reference_iso(slot))
+    if dt:
+        return (dt.isoformat(), slot.get("_id", "") or slot.get("id", ""))
+    fallback = slot.get("date", "") or slot.get("startTime", "") or slot.get("endTime", "")
+    return (str(fallback), slot.get("_id", "") or slot.get("id", ""))
+
+
 def fmt_time_utc7(iso: str) -> str:
     """Format ISO time string sang HH:MM (UTC+7)."""
     if not iso:
         return ""
     try:
-        dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
-        local = dt + timedelta(hours=7)
-        return local.strftime("%H:%M")
+        local = to_vn_datetime(iso)
+        if local:
+            return local.strftime("%H:%M")
     except Exception:
-        return iso[11:16] if len(iso) > 15 else iso
+        pass
+    return iso[11:16] if len(iso) > 15 else iso
 
 
 def date_utc7(iso: str) -> str:
@@ -178,13 +269,12 @@ def date_utc7(iso: str) -> str:
         return ""
     raw = iso[:10]
     try:
-        dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
-        if dt.tzinfo is None:
-            return raw
-        local = dt.astimezone(timezone(timedelta(hours=7)))
-        return local.strftime("%Y-%m-%d")
+        local = to_vn_datetime(iso)
+        if local:
+            return local.strftime("%Y-%m-%d")
     except Exception:
-        return raw
+        pass
+    return raw
 
 
 def fmt_date_vn(date_str: str) -> str:
@@ -214,12 +304,12 @@ def day_of_week_vn(date_str: str) -> str:
 # GraphQL query — chỉ lấy fields cần thiết, không lấy studentAttendance
 # ─────────────────────────────────────────────────────────────────────────────
 
-DEMO_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $status: String, $pageIndex: Int!, $itemsPerPage: Int!) {
+DEMO_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $statuses: [String], $pageIndex: Int!, $itemsPerPage: Int!) {
   classes(payload: {
     centre_in: $centres,
     haveSlot_from: $haveSlotFrom,
     haveSlot_to: $haveSlotTo,
-    status_equals: $status,
+    status_in: $statuses,
     pageIndex: $pageIndex,
     itemsPerPage: $itemsPerPage,
     orderBy: "createdAt_desc"
@@ -256,17 +346,16 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
         raise RuntimeError("Token đã hết hạn. Vui lòng cập nhật token mới.")
 
     try:
-        datetime.strptime(date_from, "%Y-%m-%d")
+        parse_ymd(date_from)
     except ValueError:
         raise ValueError(f"Ngày không hợp lệ: {date_from}. Định dạng: YYYY-MM-DD")
-
-    if not date_to:
-        date_to = date_from
-    else:
+    if date_to:
         try:
-            datetime.strptime(date_to, "%Y-%m-%d")
+            parse_ymd(date_to)
         except ValueError:
             raise ValueError(f"Ngày không hợp lệ: {date_to}. Định dạng: YYYY-MM-DD")
+    date_from, date_to = normalize_date_range(date_from, date_to)
+    api_date_from, api_date_to = lms_date_bounds(date_from, date_to)
 
     headers = {
         "Authorization": token,
@@ -277,110 +366,124 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
     }
 
     ITEMS_PER_PAGE = 100
+    MAX_WORKERS = 5
+    MAX_RETRIES = 3
 
-    TOTAL_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $status: String, $pageIndex: Int!, $itemsPerPage: Int!) {
-  classes(payload: { centre_in: $centres, haveSlot_from: $haveSlotFrom, haveSlot_to: $haveSlotTo, status_equals: $status, pageIndex: $pageIndex, itemsPerPage: $itemsPerPage }) {
+    TOTAL_QUERY = """query GetClasses($centres: [String], $haveSlotFrom: Date, $haveSlotTo: Date, $statuses: [String], $pageIndex: Int!, $itemsPerPage: Int!) {
+  classes(payload: { centre_in: $centres, haveSlot_from: $haveSlotFrom, haveSlot_to: $haveSlotTo, status_in: $statuses, pageIndex: $pageIndex, itemsPerPage: $itemsPerPage }) {
     pagination { total }
   }
 }"""
 
-    def fetch_page(page: int, from_date: str = date_from) -> list:
+    def post_lms(payload: dict, timeout: int = 30) -> dict:
+        last_error = ""
+        for attempt in range(MAX_RETRIES):
+            try:
+                res = requests.post(GRAPHQL_URL, headers=headers, json=payload, timeout=timeout)
+                if res.status_code != 200:
+                    last_error = f"HTTP {res.status_code}: {res.text[:300]}"
+                else:
+                    data = res.json()
+                    if "errors" in data:
+                        messages = [
+                            str(error.get("message", error))
+                            for error in data.get("errors", [])
+                        ]
+                        last_error = "; ".join(messages) or "GraphQL error"
+                    else:
+                        return data
+            except Exception as e:
+                last_error = str(e)
+
+            if attempt < MAX_RETRIES - 1:
+                time_module.sleep(0.8 * (attempt + 1))
+
+        raise RuntimeError(f"LMS API lỗi sau {MAX_RETRIES} lần thử: {last_error}")
+
+    def fetch_page(page: int) -> list:
         payload = {
             "operationName": "GetClasses",
             "variables": {
                 "centres": DEMO_CENTRE_IDS,
-                "haveSlotFrom": from_date,
-                "haveSlotTo": date_to,
-                "status": "RUNNING",
+                "haveSlotFrom": api_date_from,
+                "haveSlotTo": api_date_to,
+                "statuses": DEMO_CLASS_STATUSES,
                 "pageIndex": page,
                 "itemsPerPage": ITEMS_PER_PAGE,
             },
             "query": DEMO_QUERY,
         }
-        try:
-            res = requests.post(GRAPHQL_URL, headers=headers, json=payload, timeout=30)
-            if res.status_code != 200:
-                return []
-            data = res.json()
-            if "errors" in data:
-                return []
-            return (data.get("data") or {}).get("classes", {}).get("data") or []
-        except Exception:
-            return []
+        data = post_lms(payload, timeout=30)
+        return (data.get("data") or {}).get("classes", {}).get("data") or []
 
-    def get_total(from_date: str = date_from) -> int:
+    def get_total() -> int:
         payload = {
             "operationName": "GetClasses",
             "variables": {
                 "centres": DEMO_CENTRE_IDS,
-                "haveSlotFrom": from_date,
-                "haveSlotTo": date_to,
-                "status": "RUNNING",
+                "haveSlotFrom": api_date_from,
+                "haveSlotTo": api_date_to,
+                "statuses": DEMO_CLASS_STATUSES,
                 "pageIndex": 0,
                 "itemsPerPage": 1,
             },
             "query": TOTAL_QUERY,
         }
-        try:
-            res = requests.post(GRAPHQL_URL, headers=headers, json=payload, timeout=15)
-            if res.status_code != 200:
-                raise RuntimeError(f"LMS API trả về HTTP {res.status_code}")
-            data = res.json()
-            if "errors" in data:
-                err_msg = data["errors"][0].get("message", "GraphQL error")
-                raise RuntimeError(f"LMS API lỗi: {err_msg}")
-            return (data.get("data") or {}).get("classes", {}).get("pagination", {}).get("total", 0)
-        except RuntimeError:
-            raise
-        except Exception as e:
-            raise RuntimeError(f"Không thể kết nối LMS API: {e}")
+        data = post_lms(payload, timeout=15)
+        return (data.get("data") or {}).get("classes", {}).get("pagination", {}).get("total", 0)
 
-    # Lấy tổng số lớp
-    # Lùi haveSlotFrom 1 ngày để bắt được slot UTC buổi tối ngày trước
-    # (buổi học VN 08:00 = UTC 01:00 cùng ngày, nhưng buổi học 18:00 VN = UTC 11:00 cùng ngày)
-    # Thực tế các lớp học VN đều > UTC+7 nên slot.date UTC luôn = ngày VN, nhưng
-    # để an toàn lùi 1 ngày, filter sau bằng date_utc7() vẫn đảm bảo đúng
-    from datetime import timedelta as _td
-    try:
-        _dt_from = datetime.strptime(date_from, "%Y-%m-%d")
-        api_date_from = (_dt_from - _td(days=1)).strftime("%Y-%m-%d")
-    except Exception:
-        api_date_from = date_from
-
-    total = get_total(api_date_from)
+    total = get_total()
     num_pages = max(1, (total + ITEMS_PER_PAGE - 1) // ITEMS_PER_PAGE)
 
-    # Fetch song song tất cả pages với api_date_from (lùi 1 ngày)
+    # Fetch song song tất cả pages trong range ngày VN đã đổi sang UTC.
     import concurrent.futures
     all_raw = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(fetch_page, p, api_date_from): p for p in range(num_pages)}
+    page_errors = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {executor.submit(fetch_page, p): p for p in range(num_pages)}
         for future in concurrent.futures.as_completed(futures):
+            page = futures[future]
             try:
                 all_raw.extend(future.result())
-            except Exception:
-                pass
+            except Exception as e:
+                page_errors.append(f"page {page}: {e}")
+
+    if page_errors:
+        detail = "; ".join(page_errors[:3])
+        if len(page_errors) > 3:
+            detail += f"; ... +{len(page_errors) - 3} page"
+        raise RuntimeError(f"Không lấy đủ dữ liệu DEMO từ LMS: {detail}")
+
+    raw_by_id = {}
+    for item in all_raw:
+        class_id = item.get("id") if isinstance(item, dict) else None
+        if class_id and class_id not in raw_by_id:
+            raw_by_id[class_id] = item
 
     # Filter: chỉ lấy lớp có buổi 14 diễn ra trong khoảng date_from → date_to
     all_classes = []
-    for c in all_raw:
-        if not is_running_class(c):
+    for c in raw_by_id.values():
+        if not is_demo_class(c):
+            continue
+
+        student_count = get_student_count(c)
+        if student_count <= 0:
             continue
 
         centre_id = (c.get("centre") or {}).get("id", "")
         centre_name = (c.get("centre") or {}).get("name", "")
         centre_info = DEMO_CENTRES.get(centre_id, {"name": centre_name, "area": "?"})
 
-        slots = sorted(c.get("slots", []), key=lambda s: (
-            date_utc7(s.get("date", "") or s.get("startTime", "")),
-            s.get("startTime", "") or s.get("date", "")
-        ))
+        slots = sorted(
+            [s for s in c.get("slots", []) if isinstance(s, dict) and slot_reference_iso(s)],
+            key=slot_sort_key,
+        )
 
         if len(slots) < 14:
             continue
 
         slot_14 = slots[13]
-        slot_date = date_utc7(slot_14.get("date", "") or slot_14.get("startTime", ""))
+        slot_date = date_utc7(slot_reference_iso(slot_14))
 
         # Kiểm tra buổi 14 có nằm trong range không
         if slot_date < date_from or slot_date > date_to:
@@ -408,12 +511,14 @@ def fetch_demo_classes(date_from: str, date_to: str = "") -> list:
             "area":          centre_info["area"],
             "block":         get_block(c.get("name", "")),
             "teacher":       main_teacher,
-            "student_count": len(c.get("students", [])),
+            "student_count": student_count,
             "date":          fmt_date_vn(slot_date),
             "day_of_week":   day_of_week_vn(slot_date),
             "time":          time_range,
             "time_demo":     time_demo,
             "slot_14_date":  slot_date,
+            "slot_14_id":    slot_14.get("_id") or slot_14.get("id", ""),
+            "slot_14_start": slot_14.get("startTime", ""),
         })
 
     # Sort: block → area → date → time → name
@@ -508,12 +613,12 @@ def batch_update_spreadsheet(creds, sheet_id: str, requests_list: list[dict]):
     )
 
 
-def update_sheet_values(creds, sheet_id: str, tab_name: str, values: list[list]):
+def update_sheet_values(creds, sheet_id: str, tab_name: str, values: list[list], value_input_option: str = "USER_ENTERED"):
     return google_api_request(
         creds,
         "PUT",
         f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{sheet_range(tab_name, 'A1')}",
-        params={"valueInputOption": "USER_ENTERED"},
+        params={"valueInputOption": value_input_option},
         json={"values": values},
     )
 
@@ -546,7 +651,7 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
     creds = load_google_credentials(scopes)
 
     sheet_id = load_sheet_id()
-    classes = [c for c in classes if is_running_class(c)]
+    classes = [c for c in classes if is_demo_class(c) and get_student_count(c) > 0]
     spreadsheet_meta = get_spreadsheet(
         creds,
         sheet_id,
@@ -722,7 +827,7 @@ def export_to_sheet(classes: list, date_from: str, date_to: str = "") -> dict:
                  ["Tổng", "", "", "", "", str(len(art)),      "", "", "", "", ""] + [""])
     all_rows.append(total_row)
 
-    update_sheet_values(creds, sheet_id, tab_name, all_rows)
+    update_sheet_values(creds, sheet_id, tab_name, all_rows, value_input_option="RAW")
 
     # ── Helpers ───────────────────────────────────────────────────────────
     def rng(r0, r1, c0, c1):

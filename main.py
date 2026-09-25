@@ -364,6 +364,15 @@ def build_payload(page_index):
         name
         shortName
       }
+      operator {
+        id
+        email
+        firstName
+        middleName
+        lastName
+        displayName
+        username
+      }
       numberOfSessions
       teachers {
         teacher {
@@ -649,6 +658,7 @@ def fetch_all():
                 "status": c.get("status"),
                 "course": c.get("course", {}).get("name"),
                 "centre": centre_name,
+                "operator": c.get("operator"),
                 "teachers": teachers,
                 "sessions": c.get("numberOfSessions"),
                 "createdAt": c.get("createdAt"),
@@ -675,6 +685,61 @@ def fetch_all():
         time.sleep(0.2)
 
     return all_data
+
+
+def fetch_class_operators() -> list[dict]:
+    """Fetch only class CS data so an operator backfill stays lightweight."""
+    query = """query GetClassOperators($centres: [String], $statusIn: [String], $pageIndex: Int!, $itemsPerPage: Int!) {
+  classes(payload: {centre_in: $centres, status_in: $statusIn, pageIndex: $pageIndex, itemsPerPage: $itemsPerPage}) {
+    data {
+      id
+      operator {
+        id
+        email
+        firstName
+        middleName
+        lastName
+        displayName
+        username
+      }
+    }
+    pagination {
+      total
+    }
+  }
+}
+"""
+    operators = []
+    page = 0
+
+    while True:
+        payload = {
+            "operationName": "GetClassOperators",
+            "variables": {
+                "centres": CENTRE_IDS,
+                "statusIn": CLASS_STATUSES_TO_FETCH,
+                "pageIndex": page,
+                "itemsPerPage": 100,
+            },
+            "query": query,
+        }
+        response = requests.post(GRAPHQL_URL, headers=HEADERS, json=payload, timeout=30)
+        response.raise_for_status()
+        body = response.json()
+        if body.get("errors"):
+            raise RuntimeError(f"Không tải được CS lớp: {body['errors'][0].get('message', body['errors'][0])}")
+
+        result = (body.get("data") or {}).get("classes") or {}
+        rows = result.get("data") or []
+        total = (result.get("pagination") or {}).get("total") or 0
+        operators.extend({"id": row.get("id"), "operator": row.get("operator")} for row in rows if row.get("id"))
+        print(f"  → CS trang {page}: {len(rows)} lớp (tổng: {total})")
+
+        if not rows or (page + 1) * 100 >= total:
+            break
+        page += 1
+
+    return operators
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TEACHER FETCH
@@ -861,6 +926,29 @@ def get_sqlite_conn():
     return conn
 
 
+def save_class_operators_to_sqlite(data: list[dict]):
+    """Update operator without replacing the rest of each cached class."""
+    from scripts.init_db import init_db
+
+    init_db()
+    conn = get_sqlite_conn()
+    try:
+        conn.executemany(
+            "UPDATE classes SET operator=? WHERE id=?",
+            [
+                (
+                    json.dumps(item.get("operator"), ensure_ascii=False) if item.get("operator") else None,
+                    item["id"],
+                )
+                for item in data
+            ],
+        )
+        conn.commit()
+        print(f"✅ Đã cập nhật CS cho {len(data)} lớp trong SQLite")
+    finally:
+        conn.close()
+
+
 def save_classes_to_sqlite(data: list):
     """Upsert classes, teachers, slots, incomplete_students vào SQLite."""
     from scripts.init_db import init_db
@@ -896,6 +984,9 @@ def save_classes_to_sqlite(data: list):
         """)
         c.execute("CREATE INDEX IF NOT EXISTS idx_slot_students_classId ON slot_students(classId)")
         c.execute("CREATE INDEX IF NOT EXISTS idx_slot_students_slotId  ON slot_students(slotId)")
+        columns = {row[1] for row in c.execute("PRAGMA table_info(classes)").fetchall()}
+        if "operator" not in columns:
+            c.execute("ALTER TABLE classes ADD COLUMN operator TEXT")
         c.execute("""
             CREATE TABLE IF NOT EXISTS class_students (
                 id              TEXT PRIMARY KEY,
@@ -919,14 +1010,16 @@ def save_classes_to_sqlite(data: list):
             cid = item["id"]
             c.execute("""
                 INSERT OR REPLACE INTO classes
-                (id, name, status, course, centre, block, level, sessions,
+                (id, name, status, course, centre, operator, block, level, sessions,
                  studentCount, attendedCount, completedCount, completionRate,
                  commentPercentage, totalSlotsWithStudents, slotsWithFullComments,
                  startDate, endDate, createdAt)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, (
                 cid, item.get("name"), item.get("status"), item.get("course"),
-                item.get("centre"), item.get("block"), item.get("level"),
+                item.get("centre"),
+                json.dumps(item.get("operator"), ensure_ascii=False) if item.get("operator") else None,
+                item.get("block"), item.get("level"),
                 item.get("sessions"), item.get("studentCount", 0),
                 item.get("attendedCount", 0), item.get("completedCount", 0),
                 item.get("completionRate", 0), item.get("commentPercentage", 0),
@@ -2559,8 +2652,14 @@ if __name__ == "__main__":
         print(f"🔄 Fetch module: {only_module}")
 
         if only_module == "classes":
+            operators = fetch_class_operators()
+            save_class_operators_to_sqlite(operators)
             data = fetch_all()
             save(data)
+
+        elif only_module == "class-operators":
+            operators = fetch_class_operators()
+            save_class_operators_to_sqlite(operators)
 
         elif only_module == "teachers":
             teachers = fetch_teachers()

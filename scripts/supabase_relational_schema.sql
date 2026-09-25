@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS lms.classes (
   status text,
   course text,
   centre text,
+  operator text,
   block text,
   level text,
   sessions integer,
@@ -21,6 +22,7 @@ CREATE TABLE IF NOT EXISTS lms.classes (
   createdat text,
   updatedat timestamptz DEFAULT now()
 );
+ALTER TABLE lms.classes ADD COLUMN IF NOT EXISTS operator text;
 
 CREATE TABLE IF NOT EXISTS lms.class_teachers (
   id bigint PRIMARY KEY,

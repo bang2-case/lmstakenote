@@ -19,6 +19,7 @@ def init_db():
         status          TEXT,
         course          TEXT,
         centre          TEXT,
+        operator        TEXT,
         block           TEXT,
         level           TEXT,
         sessions        INTEGER,
@@ -35,6 +36,9 @@ def init_db():
         updatedAt       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+    columns = {row[1] for row in c.execute("PRAGMA table_info(classes)").fetchall()}
+    if "operator" not in columns:
+        c.execute("ALTER TABLE classes ADD COLUMN operator TEXT")
 
     # ── Teachers per class ───────────────────────────────────────────────────
     c.execute("""
